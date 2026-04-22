@@ -1,0 +1,300 @@
+[  +46 ms] executing: uname -m
+[   +6 ms] Exit code 0 from: uname -m
+[        ] x86_64
+[  +14 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterSdk' is not required, skipping update.
+[        ] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
+[   +1 ms] executing: [/home/abishek/flutter/] git -c log.showSignature=false log HEAD -n 1 --pretty=format:%ad --date=iso
+[   +7 ms] Exit code 0 from: git -c log.showSignature=false log HEAD -n 1 --pretty=format:%ad --date=iso
+[        ] 2026-03-03 16:03:22 -0800
+[  +20 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterEngineStamp' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[   +4 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[  +57 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterEngineStamp' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterSdk' is not required, skipping update.
+[        ] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[   +2 ms] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
+[  +15 ms] Skipping pub get: version match.
+[  +89 ms] Found plugin video_player at /home/abishek/.pub-cache/hosted/pub.dev/video_player-2.11.0/
+[   +9 ms] Found plugin video_player_web at /home/abishek/.pub-cache/hosted/pub.dev/video_player_web-2.4.0/
+[  +16 ms] Found plugin video_player_avfoundation at /home/abishek/.pub-cache/hosted/pub.dev/video_player_avfoundation-2.9.4/
+[   +6 ms] Found plugin video_player_android at /home/abishek/.pub-cache/hosted/pub.dev/video_player_android-2.9.4/
+[  +10 ms] Found plugin media_kit_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_video-1.3.1/
+[   +9 ms] Found plugin wakelock_plus at /home/abishek/.pub-cache/hosted/pub.dev/wakelock_plus-1.4.0/
+[  +12 ms] Found plugin package_info_plus at /home/abishek/.pub-cache/hosted/pub.dev/package_info_plus-9.0.0/
+[  +23 ms] Found plugin volume_controller at /home/abishek/.pub-cache/hosted/pub.dev/volume_controller-3.4.2/
+[   +8 ms] Found plugin screen_brightness_android at /home/abishek/.pub-cache/hosted/pub.dev/screen_brightness_android-2.1.3/
+[  +26 ms] Found plugin media_kit_libs_windows_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_windows_video-1.0.11/
+[   +2 ms] Found plugin media_kit_libs_macos_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_macos_video-1.1.4/
+[   +2 ms] Found plugin media_kit_libs_linux at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_linux-1.2.1/
+[   +2 ms] Found plugin media_kit_libs_ios_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_ios_video-1.1.4/
+[   +2 ms] Found plugin media_kit_libs_android_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_android_video-1.3.8/
+[  +68 ms] Found plugin video_player at /home/abishek/.pub-cache/hosted/pub.dev/video_player-2.11.0/
+[   +2 ms] Found plugin video_player_web at /home/abishek/.pub-cache/hosted/pub.dev/video_player_web-2.4.0/
+[   +7 ms] Found plugin video_player_avfoundation at /home/abishek/.pub-cache/hosted/pub.dev/video_player_avfoundation-2.9.4/
+[   +1 ms] Found plugin video_player_android at /home/abishek/.pub-cache/hosted/pub.dev/video_player_android-2.9.4/
+[   +4 ms] Found plugin media_kit_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_video-1.3.1/
+[   +2 ms] Found plugin wakelock_plus at /home/abishek/.pub-cache/hosted/pub.dev/wakelock_plus-1.4.0/
+[   +6 ms] Found plugin package_info_plus at /home/abishek/.pub-cache/hosted/pub.dev/package_info_plus-9.0.0/
+[  +10 ms] Found plugin volume_controller at /home/abishek/.pub-cache/hosted/pub.dev/volume_controller-3.4.2/
+[   +4 ms] Found plugin screen_brightness_android at /home/abishek/.pub-cache/hosted/pub.dev/screen_brightness_android-2.1.3/
+[   +6 ms] Found plugin media_kit_libs_windows_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_windows_video-1.0.11/
+[   +1 ms] Found plugin media_kit_libs_macos_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_macos_video-1.1.4/
+[   +1 ms] Found plugin media_kit_libs_linux at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_linux-1.2.1/
+[   +1 ms] Found plugin media_kit_libs_ios_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_ios_video-1.1.4/
+[   +1 ms] Found plugin media_kit_libs_android_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_android_video-1.3.8/
+[  +12 ms] Skipping generating web_plugin_registrant.dart because it is up-to-date.
+[  +19 ms] Found plugin video_player at /home/abishek/.pub-cache/hosted/pub.dev/video_player-2.11.0/
+[   +1 ms] Found plugin video_player_web at /home/abishek/.pub-cache/hosted/pub.dev/video_player_web-2.4.0/
+[   +3 ms] Found plugin video_player_avfoundation at /home/abishek/.pub-cache/hosted/pub.dev/video_player_avfoundation-2.9.4/
+[   +1 ms] Found plugin video_player_android at /home/abishek/.pub-cache/hosted/pub.dev/video_player_android-2.9.4/
+[   +2 ms] Found plugin media_kit_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_video-1.3.1/
+[   +2 ms] Found plugin wakelock_plus at /home/abishek/.pub-cache/hosted/pub.dev/wakelock_plus-1.4.0/
+[   +5 ms] Found plugin package_info_plus at /home/abishek/.pub-cache/hosted/pub.dev/package_info_plus-9.0.0/
+[   +6 ms] Found plugin volume_controller at /home/abishek/.pub-cache/hosted/pub.dev/volume_controller-3.4.2/
+[   +2 ms] Found plugin screen_brightness_android at /home/abishek/.pub-cache/hosted/pub.dev/screen_brightness_android-2.1.3/
+[   +5 ms] Found plugin media_kit_libs_windows_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_windows_video-1.0.11/
+[        ] Found plugin media_kit_libs_macos_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_macos_video-1.1.4/
+[        ] Found plugin media_kit_libs_linux at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_linux-1.2.1/
+[        ] Found plugin media_kit_libs_ios_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_ios_video-1.1.4/
+[        ] Found plugin media_kit_libs_android_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_android_video-1.3.8/
+[   +3 ms] Generating /home/abishek/Documents/GitHub/sriher_display_application/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+[   +1 ms] Skipping generating GeneratedPluginRegistrant.java because it is up-to-date.
+[   +5 ms] Skipping generating generated_plugin_registrant.h because it is up-to-date.
+[        ] Skipping generating generated_plugin_registrant.cc because it is up-to-date.
+[   +1 ms] Skipping generating generated_plugins.cmake because it is up-to-date.
+[   +1 ms] Skipping generating generated_plugin_registrant.h because it is up-to-date.
+[        ] Skipping generating generated_plugin_registrant.cc because it is up-to-date.
+[   +1 ms] Skipping generating generated_plugins.cmake because it is up-to-date.
+[   +2 ms] Skipping generating GeneratedPluginRegistrant.h because it is up-to-date.
+[   +1 ms] Skipping generating GeneratedPluginRegistrant.m because it is up-to-date.
+[   +1 ms] Skipping generating GeneratedPluginRegistrant.swift because it is up-to-date.
+[ +106 ms] Building Linux application...
+[   +5 ms] executing: [/home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug/] cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DFLUTTER_TARGET_PLATFORM=linux-x64 /home/abishek/Documents/GitHub/sriher_display_application/linux
+[  +65 ms] -- ALSA found: /usr/lib/x86_64-linux-gnu/libasound.so
+[   +5 ms] -- Configuring done (0.0s)
+[  +19 ms] -- Generating done (0.0s)
+[  +23 ms] -- Build files have been written to: /home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug
+[  +28 ms] executing: ninja -C /home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug install
+[  +33 ms] ninja: Entering directory `/home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug'
+[+16635 ms] [1/16] Generating /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/libflutter_linux_gtk.so, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_basic_message_channel.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_binary_codec.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_binary_messenger.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_dart_project.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_engine.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_json_message_codec.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_json_method_codec.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_message_codec.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_method_call.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_method_channel.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_method_codec.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_method_response.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_plugin_registrar.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_plugin_registry.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_standard_message_codec.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_standard_method_codec.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_string_codec.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_value.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/fl_view.h, /home/abishek/Documents/GitHub/sriher_display_application/linux/flutter/ephemeral/flutter_linux/flutter_linux.h, _phony_
+[        ] [  +27 ms] executing: uname -m
+[        ] [   +4 ms] Exit code 0 from: uname -m
+[        ] [        ] x86_64
+[        ] [  +12 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterSdk' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[   +2 ms] [        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
+[        ] [  +10 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterEngineStamp' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[   +1 ms] [   +2 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[   +2 ms] [        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[        ] [  +50 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterEngineStamp' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterSdk' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] [   +1 ms] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[   +1 ms] [        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[   +1 ms] [        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
+[        ] [        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
+[        ] [  +44 ms] Initializing file store
+[        ] [  +25 ms] dart_build: Starting due to {}
+[   +1 ms] [   +1 ms] Skipping target: gen_localizations
+[        ] [   +1 ms] gen_dart_plugin_registrant: Starting due to {InvalidatedReasonKind.outputSetAddition: The following outputs were added to the output set: /home/abishek/Documents/GitHub/sriher_display_application/.dart_tool/flutter_build/dart_plugin_registrant.dart, InvalidatedReasonKind.inputChanged: The following inputs have updated contents: /home/abishek/Documents/GitHub/sriher_display_application/.dart_tool/package_config.json}
+[   +2 ms] [   +3 ms] unpack_linux: Starting due to {}
+[        ] [  +87 ms] unpack_linux: Complete
+[        ] [+1463 ms] No packages with native assets. Skipping native assets compilation.
+[        ] [   +2 ms] dart_build: Complete
+[        ] [   +1 ms] install_code_assets: Starting due to {}
+[        ] [  +16 ms] Writing native assets json to file:///home/abishek/Documents/GitHub/sriher_display_application/.dart_tool/flutter_build/6b4c17b8699a6824d1646cd1983c074f/native_assets.json.
+[        ] [   +4 ms] Writing /home/abishek/Documents/GitHub/sriher_display_application/.dart_tool/flutter_build/6b4c17b8699a6824d1646cd1983c074f/native_assets.json done.
+[        ] [        ] install_code_assets: Complete
+[        ] [  +21 ms] Found plugin video_player at /home/abishek/.pub-cache/hosted/pub.dev/video_player-2.11.0/
+[        ] [   +4 ms] Found plugin video_player_web at /home/abishek/.pub-cache/hosted/pub.dev/video_player_web-2.4.0/
+[        ] [   +6 ms] Found plugin video_player_avfoundation at /home/abishek/.pub-cache/hosted/pub.dev/video_player_avfoundation-2.9.4/
+[        ] [   +3 ms] Found plugin video_player_android at /home/abishek/.pub-cache/hosted/pub.dev/video_player_android-2.9.4/
+[        ] [   +6 ms] Found plugin media_kit_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_video-1.3.1/
+[        ] [   +4 ms] Found plugin wakelock_plus at /home/abishek/.pub-cache/hosted/pub.dev/wakelock_plus-1.4.0/
+[        ] [  +39 ms] Found plugin package_info_plus at /home/abishek/.pub-cache/hosted/pub.dev/package_info_plus-9.0.0/
+[        ] [  +14 ms] Found plugin volume_controller at /home/abishek/.pub-cache/hosted/pub.dev/volume_controller-3.4.2/
+[        ] [   +6 ms] Found plugin screen_brightness_android at /home/abishek/.pub-cache/hosted/pub.dev/screen_brightness_android-2.1.3/
+[        ] [  +13 ms] Found plugin media_kit_libs_windows_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_windows_video-1.0.11/
+[   +1 ms] [   +1 ms] Found plugin media_kit_libs_macos_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_macos_video-1.1.4/
+[        ] [   +2 ms] Found plugin media_kit_libs_linux at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_linux-1.2.1/
+[        ] [   +2 ms] Found plugin media_kit_libs_ios_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_ios_video-1.1.4/
+[        ] [   +1 ms] Found plugin media_kit_libs_android_video at /home/abishek/.pub-cache/hosted/pub.dev/media_kit_libs_android_video-1.3.8/
+[        ] [  +20 ms] Skipping generating dart_plugin_registrant.dart because it is up-to-date.
+[        ] [        ] gen_dart_plugin_registrant: Complete
+[        ] [   +4 ms] kernel_snapshot_program: Starting due to {}
+[  +20 ms] [  +11 ms] /home/abishek/flutter/bin/cache/dart-sdk/bin/dartaotruntime /home/abishek/flutter/bin/cache/dart-sdk/bin/snapshots/frontend_server_aot.dart.snapshot --sdk-root /home/abishek/flutter/bin/cache/artifacts/engine/common/flutter_patched_sdk/ --target=flutter --no-print-incremental-dependencies -DFLUTTER_VERSION=3.41.4 -DFLUTTER_CHANNEL=stable -DFLUTTER_GIT_URL=https://github.com/flutter/flutter.git -DFLUTTER_FRAMEWORK_REVISION=ff37bef603 -DFLUTTER_ENGINE_REVISION=e4b8dca3f1 -DFLUTTER_DART_VERSION=3.11.1 -Ddart.vm.profile=false -Ddart.vm.product=false --enable-asserts --track-widget-creation --packages /home/abishek/Documents/GitHub/sriher_display_application/.dart_tool/package_config.json --output-dill /home/abishek/Documents/GitHub/sriher_display_application/.dart_tool/flutter_build/6b4c17b8699a6824d1646cd1983c074f/app.dill --depfile /home/abishek/Documents/GitHub/sriher_display_application/.dart_tool/flutter_build/6b4c17b8699a6824d1646cd1983c074f/kernel_snapshot_program.d --incremental --initialize-from-dill /home/abishek/Documents/GitHub/sriher_display_application/.dart_tool/flutter_build/6b4c17b8699a6824d1646cd1983c074f/app.dill --source file:///home/abishek/Documents/GitHub/sriher_display_application/.dart_tool/flutter_build/dart_plugin_registrant.dart --source package:flutter/src/dart_plugin_registrant.dart -Dflutter.dart_plugin_registrant=file:///home/abishek/Documents/GitHub/sriher_display_application/.dart_tool/flutter_build/dart_plugin_registrant.dart --verbosity=error package:sriher_display_application/main.dart
+[   +1 ms] [+10801 ms] kernel_snapshot_program: Complete
+[        ] [+1217 ms] debug_bundle_linux-x64_assets: Starting due to {}
+[        ] [ +160 ms] Manifest contained wildcard assets. Inserting missing file into build graph to force rerun. for more information see #56466.
+[   +3 ms] [   +7 ms] shaderc command: [/home/abishek/flutter/bin/cache/artifacts/engine/linux-x64/impellerc, --sksl, --runtime-stage-gles, --runtime-stage-gles3, --runtime-stage-vulkan, --iplr, --sl=/home/abishek/Documents/GitHub/sriher_display_application/build/flutter_assets/shaders/ink_sparkle.frag, --spirv=/home/abishek/Documents/GitHub/sriher_display_application/build/flutter_assets/shaders/ink_sparkle.frag.spirv, --input=/home/abishek/flutter/packages/flutter/lib/src/material/shaders/ink_sparkle.frag, --input-type=frag, --include=/home/abishek/flutter/packages/flutter/lib/src/material/shaders, --include=/home/abishek/flutter/bin/cache/artifacts/engine/linux-x64/shader_lib]
+[   +3 ms] [   +1 ms] shaderc command: [/home/abishek/flutter/bin/cache/artifacts/engine/linux-x64/impellerc, --sksl, --runtime-stage-gles, --runtime-stage-gles3, --runtime-stage-vulkan, --iplr, --sl=/home/abishek/Documents/GitHub/sriher_display_application/build/flutter_assets/shaders/stretch_effect.frag, --spirv=/home/abishek/Documents/GitHub/sriher_display_application/build/flutter_assets/shaders/stretch_effect.frag.spirv, --input=/home/abishek/flutter/packages/flutter/lib/src/material/shaders/stretch_effect.frag, --input-type=frag, --include=/home/abishek/flutter/packages/flutter/lib/src/material/shaders, --include=/home/abishek/flutter/bin/cache/artifacts/engine/linux-x64/shader_lib]
+[        ] [ +781 ms] debug_bundle_linux-x64_assets: Complete
+[        ] [ +964 ms] Persisting file store
+[        ] [  +11 ms] Done persisting file store
+[   +2 ms] [  +28 ms] build succeeded.
+[        ] [   +1 ms] "flutter assemble" took 15,861ms.
+[        ] [  +56 ms] Running 1 shutdown hook
+[        ] [   +1 ms] Shutdown hooks complete
+[        ] [ +117 ms] exiting with code 0
+[ +600 ms] [2/16] Building CXX object plugins/media_kit_video/CMakeFiles/media_kit_video_plugin.dir/texture_sw.cc.o
+[  +10 ms] [3/16] Building CXX object plugins/media_kit_libs_linux/CMakeFiles/media_kit_libs_linux_plugin.dir/media_kit_libs_linux_plugin.cc.o
+[ +136 ms] [4/16] Linking CXX shared library plugins/media_kit_libs_linux/libmedia_kit_libs_linux_plugin.so
+[  +79 ms] [5/16] Building CXX object plugins/media_kit_video/CMakeFiles/media_kit_video_plugin.dir/video_output_manager.cc.o
+[ +174 ms] [6/16] Building CXX object runner/CMakeFiles/sriher_display_application.dir/__/flutter/generated_plugin_registrant.cc.o
+[  +41 ms] [7/16] Building CXX object plugins/media_kit_video/CMakeFiles/media_kit_video_plugin.dir/media_kit_video_plugin.cc.o
+[  +43 ms] [8/16] Building CXX object runner/CMakeFiles/sriher_display_application.dir/my_application.cc.o
+[  +83 ms] [9/16] Building CXX object plugins/media_kit_video/CMakeFiles/media_kit_video_plugin.dir/texture_gl.cc.o
+[  +82 ms] [10/16] Building CXX object plugins/volume_controller/CMakeFiles/volume_controller_plugin.dir/volume_controller_plugin.cc.o
+[ +182 ms] [11/16] Building CXX object plugins/media_kit_video/CMakeFiles/media_kit_video_plugin.dir/video_output.cc.o
+[   +3 ms] [12/16] Building CXX object plugins/volume_controller/CMakeFiles/volume_controller_plugin.dir/volume_controller.cc.o
+[ +135 ms] [13/16] Linking CXX shared library plugins/volume_controller/libvolume_controller_plugin.so
+[   +9 ms] [14/16] Linking CXX shared library plugins/media_kit_video/libmedia_kit_video_plugin.so
+[ +684 ms] [15/16] Linking CXX executable intermediates_do_not_run/sriher_display_application
+[        ] [15/16] Install the project...
+[  +11 ms] -- Install configuration: "Debug"
+[  +11 ms] -- Installing: /home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug/bundle/sriher_display_application
+[        ] -- Set non-toolchain portion of runtime path of "/home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug/bundle/sriher_display_application" to "$ORIGIN/lib"
+[        ] -- Installing: /home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug/bundle/data/icudtl.dat
+[        ] -- Installing: /home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug/bundle/lib/libflutter_linux_gtk.so
+[  +77 ms] -- Installing: /home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug/bundle/lib/libmedia_kit_libs_linux_plugin.so
+[        ] -- Installing: /home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug/bundle/lib/libmedia_kit_video_plugin.so
+[        ] -- Installing: /home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug/bundle/lib/libvolume_controller_plugin.so
+[   +1 ms] CMake Error at cmake_install.cmake:154 (file):
+[   +2 ms]   file INSTALL cannot find
+[        ]   "/home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug/flutter_assets":
+[        ]   No such file or directory.
+[        ] FAILED: CMakeFiles/install.util 
+[        ] cd /home/abishek/Documents/GitHub/sriher_display_application/build/linux/x64/debug && /usr/bin/cmake -P cmake_install.cmake
+[        ] ninja: build stopped: subcommand failed.
+[   +2 ms] Building Linux application... (completed in 19.3s)
+[        ] "flutter linux" took 19,897ms.
+[  +54 ms] Build process failed
+[        ] 
+           #0      throwToolExit (package:flutter_tools/src/base/common.dart:34:3)
+           #1      _runBuild (package:flutter_tools/src/linux/build_linux.dart:219:5)
+           <asynchronous suspension>
+           #2      buildLinux (package:flutter_tools/src/linux/build_linux.dart:100:5)
+           <asynchronous suspension>
+           #3      BuildLinuxCommand.runCommand (package:flutter_tools/src/commands/build_linux.dart:95:5)
+           <asynchronous suspension>
+           #4      FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1590:27)
+           <asynchronous suspension>
+           #5      AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #6      CommandRunner.runCommand (package:args/command_runner.dart:212:13)
+           <asynchronous suspension>
+           #7      FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:496:9)
+           <asynchronous suspension>
+           #8      AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #9      FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:431:5)
+           <asynchronous suspension>
+           #10     FlutterCommandRunner.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:307:33)
+           <asynchronous suspension>
+           #11     run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:104:11)
+           <asynchronous suspension>
+           #12     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+           <asynchronous suspension>
+           #13     main (package:flutter_tools/executable.dart:103:3)
+           <asynchronous suspension>
+
+
+[        ] Running 1 shutdown hook
+[   +1 ms] Shutdown hooks complete
+[ +113 ms] exiting with code 1

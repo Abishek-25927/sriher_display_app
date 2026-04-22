@@ -1,0 +1,41 @@
+Resolving dependencies...
+Downloading packages...
+  meta 1.17.0 (1.18.1 available)
+Got dependencies!
+1 package has newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Analyzing sriher_display_application...                         
+
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/dashboard_view.dart:62:37 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/file_master.dart/file_upload.dart:159:17 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/department.dart:153:17 • deprecated_member_use
+warning • The declaration '_buildTableRow' isn't referenced • lib/views/masters.dart/device_master.dart:181:12 • unused_element
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/device_master.dart:209:17 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/location_master.dart:199:17 • deprecated_member_use
+warning • The declaration '_buildTableRow' isn't referenced • lib/views/masters.dart/mapping.dart:168:12 • unused_element
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/mapping.dart:196:17 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/role.dart:230:17 • deprecated_member_use
+   info • The file name 'assign_Device.dart' isn't a lower_case_with_underscores identifier • lib/views/schedule_allocate.dart/assign_Device.dart:1:1 • file_names
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/schedule_allocate.dart/assign_Device.dart:94:7 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/assign_Device.dart:148:54 • deprecated_member_use
+   info • Unnecessary 'const' keyword • lib/views/schedule_allocate.dart/copy_wipeoff.dart:12:11 • unnecessary_const
+   info • Unnecessary 'const' keyword • lib/views/schedule_allocate.dart/copy_wipeoff.dart:20:11 • unnecessary_const
+  error • The constructor being called isn't a const constructor • lib/views/schedule_allocate.dart/copy_wipeoff.dart:23:57 • const_with_non_const
+   info • Unnecessary 'const' keyword • lib/views/schedule_allocate.dart/copy_wipeoff.dart:26:24 • unnecessary_const
+   info • Unnecessary 'const' keyword • lib/views/schedule_allocate.dart/copy_wipeoff.dart:38:29 • unnecessary_const
+  error • The method '_buildCircularAddButton' isn't defined for the type 'CopyWipeoffView' • lib/views/schedule_allocate.dart/copy_wipeoff.dart:39:29 • undefined_method
+   info • Unnecessary 'const' keyword • lib/views/schedule_allocate.dart/copy_wipeoff.dart:43:23 • unnecessary_const
+   info • Unnecessary 'const' keyword • lib/views/schedule_allocate.dart/copy_wipeoff.dart:49:19 • unnecessary_const
+   info • Unnecessary 'const' keyword • lib/views/schedule_allocate.dart/copy_wipeoff.dart:52:50 • unnecessary_const
+   info • Unnecessary 'const' keyword • lib/views/schedule_allocate.dart/copy_wipeoff.dart:54:42 • unnecessary_const
+  error • The constructor being called isn't a const constructor • lib/views/schedule_allocate.dart/copy_wipeoff.dart:55:77 • const_with_non_const
+   info • Unnecessary 'const' keyword • lib/views/schedule_allocate.dart/copy_wipeoff.dart:58:38 • unnecessary_const
+   info • Unnecessary 'const' keyword • lib/views/schedule_allocate.dart/copy_wipeoff.dart:66:23 • unnecessary_const
+   info • Unnecessary 'const' keyword • lib/views/schedule_allocate.dart/copy_wipeoff.dart:73:29 • unnecessary_const
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/schedule_allocate.dart/schedule_allocate_main.dart:160:7 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/schedule_allocate.dart/schedule_allocate_main.dart:233:17 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/template_master.dart/create_template.dart:151:17 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/template_master.dart/default_template.dart:151:17 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/template_master.dart/select_template.dart:177:7 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/template_master.dart/select_template.dart:262:17 • deprecated_member_use
+

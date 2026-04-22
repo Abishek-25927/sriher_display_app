@@ -1,0 +1,487 @@
+import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+/**
+ * CreateTemplateView Master Module
+ * * This module handles the administrative lifecycle of digital templates.
+ * Headings: TEMPLATE NAME, EDIT, ACTION (Delete/Status Toggle).
+ * Key Fix: Maps 'temp_name' from the backend API response to the table.
+ */
+class CreateTemplateView extends StatefulWidget {
+  const CreateTemplateView({super.key});
+
+  @override
+  State<CreateTemplateView> createState() => _CreateTemplateViewState();
+}
+
+class _CreateTemplateViewState extends State<CreateTemplateView> {
+  // ─── API CONFIGURATION ───────────────────────────────────────────────────
+  final String _apiKey = "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
+  final String _baseUrl = "https://display.sriher.com";
+
+  // ─── STATE PROPERTIES ────────────────────────────────────────────────────
+  List<dynamic> templateList = [];
+  bool isLoading = true;
+  bool isSubmitting = false;
+  int? editingId; // Track if we are updating an existing record
+
+  // Table Configuration
+  String entriesValue = "10";
+  int currentPage = 1;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
+
+  // Form Controller
+  final TextEditingController _templateNameController = TextEditingController();
+
+  // ─── LIFECYCLE ───────────────────────────────────────────────────────────
+  @override
+  void initState() {
+    super.initState();
+    _initializeData();
+    _searchController.addListener(() {
+      if (mounted) {
+        setState(() {
+          _searchQuery = _searchController.text.toLowerCase();
+          currentPage = 1;
+        });
+      }
+    });
+  }
+
+  Future<void> _initializeData() async {
+    await fetchTemplatesFromServer();
+  }
+
+  @override
+  void dispose() {
+    _templateNameController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // API INTEGRATION SERVICES
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // API 1: FETCH DATA (Mapping temp_name correctly)
+  Future<void> fetchTemplatesFromServer() async {
+    setState(() => isLoading = true);
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/new_templateview'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"api_key": _apiKey}),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        List<dynamic> data = decoded['data'] ?? [];
+        
+        // Sorting: Latest IDs first
+        data.sort((a, b) => (int.tryParse(b['id'].toString()) ?? 0)
+            .compareTo(int.tryParse(a['id'].toString()) ?? 0));
+
+        setState(() {
+          templateList = data;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      _showSnackBar("Fetch Error: Connection to cloud repository failed.");
+      setState(() => isLoading = false);
+    }
+  }
+
+  // API 2: INSERT DATA
+  Future<void> insertTemplateAction() async {
+    if (_templateNameController.text.trim().isEmpty) {
+      _showSnackBar("Validation Error: Please enter a template name.");
+      return;
+    }
+
+    setState(() => isSubmitting = true);
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/insertNew_templateview'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "api_key": _apiKey,
+          "template_name": _templateNameController.text.trim()
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        _showSnackBar("Record saved and stored in database.");
+        _templateNameController.clear();
+        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+        await fetchTemplatesFromServer(); 
+      }
+    } catch (e) {
+      _showSnackBar("Insertion Protocol Failed.");
+    } finally {
+      if (mounted) setState(() => isSubmitting = false);
+    }
+  }
+
+  // API 3: EDIT-FETCH (Load specific data)
+  Future<void> loadTemplateDetails(dynamic id) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/new_templateEditview'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"api_key": _apiKey, "id": id}),
+      );
+
+      if (response.statusCode == 200) {
+        final raw = jsonDecode(response.body);
+        final data = raw['data'] ?? raw;
+        setState(() {
+          editingId = int.parse(id.toString());
+          // Key mapping from edit view
+          _templateNameController.text = data['temp_name'] ?? data['template_name'] ?? "";
+        });
+        _showTemplateDialog(); // Open dialog after loading data
+      }
+    } catch (e) {
+      _showSnackBar("Record Retrieval Error.");
+    }
+  }
+
+  // API 4: UPDATE DATA
+  Future<void> updateTemplateAction() async {
+    if (editingId == null) return;
+    setState(() => isSubmitting = true);
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/new_templateUpdateview'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "api_key": _apiKey,
+          "id": editingId,
+          "template_name": _templateNameController.text.trim()
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        _showSnackBar("Template metadata updated.");
+        _templateNameController.clear();
+        setState(() => editingId = null);
+        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+        fetchTemplatesFromServer();
+      }
+    } catch (e) {
+      _showSnackBar("Update execution failed.");
+    } finally {
+      if (mounted) setState(() => isSubmitting = false);
+    }
+  }
+
+  // API 5: STATUS UPDATE (optimistic local update — no full refetch to avoid blink)
+  Future<void> toggleStatus(dynamic id, dynamic current) async {
+    final int next = (current == 1) ? 0 : 1;
+    final int idx = templateList.indexWhere((item) => item['id'].toString() == id.toString());
+    if (idx == -1) return;
+
+    // Optimistically update the local list immediately (no blink)
+    setState(() {
+      templateList[idx] = Map<String, dynamic>.from(templateList[idx])..['status'] = next;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/new_templateStatusUpdateview'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"api_key": _apiKey, "id": id, "status": next}),
+      );
+      if (response.statusCode != 200) {
+        // Revert on failure
+        setState(() {
+          templateList[idx] = Map<String, dynamic>.from(templateList[idx])..['status'] = current;
+        });
+        _showSnackBar("Status update failed. Reverted.");
+      }
+    } catch (e) {
+      // Revert on error
+      setState(() {
+        templateList[idx] = Map<String, dynamic>.from(templateList[idx])..['status'] = current;
+      });
+      debugPrint("Status toggle fail: $e");
+    }
+  }
+
+  // API 6: DELETE
+  Future<void> deleteTemplateAction(dynamic id) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/deleteNew_templateview'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"api_key": _apiKey, "id": id}),
+      );
+      if (response.statusCode == 200) {
+        _showSnackBar("Template removed from system.");
+        fetchTemplatesFromServer();
+      }
+    } catch (e) {
+      _showSnackBar("Deletion protocol failed.");
+    }
+  }
+
+  // ─── HELPERS ─────────────────────────────────────────────────────────────
+
+  void _showSnackBar(String m) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+  }
+
+  List<dynamic> get _filteredList {
+    if (_searchQuery.isEmpty) return templateList;
+    return templateList.where((item) {
+      return (item['temp_name'] ?? '').toString().toLowerCase().contains(_searchQuery);
+    }).toList();
+  }
+
+  List<dynamic> get _pagedList {
+    final per = int.tryParse(entriesValue) ?? 10;
+    final filtered = _filteredList;
+    final start = (currentPage - 1) * per;
+    if (start >= filtered.length) return [];
+    return filtered.sublist(start, (start + per).clamp(0, filtered.length));
+  }
+
+  // ─── POPUP DIALOG FOR TEMPLATE ───────────────────────────────────────────
+  void _showTemplateDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              titlePadding: EdgeInsets.zero,
+              title: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF000000),
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      editingId == null ? "Create New Template" : "Edit Template",
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () {
+                        setState(() {
+                          editingId = null;
+                          _templateNameController.clear();
+                        });
+                        Navigator.pop(context);
+                      }, 
+                    )
+                  ],
+                ),
+              ),
+              content: SizedBox(
+                width: 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _templateNameController,
+                      decoration: const InputDecoration(
+                          hintText: 'Template name',
+                          border: OutlineInputBorder()),
+                    ),
+                    const SizedBox(height: 25),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF000000),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
+                          ),
+                          onPressed: isSubmitting
+                              ? null
+                              : (editingId == null ? insertTemplateAction : updateTemplateAction),
+                          child: isSubmitting
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : Text(editingId == null ? 'Submit' : 'Update Record'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ─── UI BUILDER ──────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFF000000),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header Area
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Template List",
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                    
+                  ],
+                ),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 4,
+                  ),
+                  onPressed: _showTemplateDialog,
+                  icon: const Icon(Icons.dashboard_customize_rounded, size: 20),
+                  label: const Text("CREATE TEMPLATE", style: TextStyle(fontWeight: FontWeight.bold,fontSize:12)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Templates List Card
+            Expanded(
+              child: Card(
+                color: Colors.white,
+                elevation: 5,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      _buildListHeader(),
+                      const SizedBox(height: 15),
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade200),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: isLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : _buildDataTable(),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      _buildPaginationControls(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDataTable() {
+    return LayoutBuilder(builder: (context, constraints) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: constraints.maxWidth),
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(const Color(0xFF000000)),
+              columns: [
+                _buildCol('TEMPLATE NAME'),
+                _buildCol('EDIT'),
+                _buildCol('ACTION'),
+              ],
+              rows: _pagedList.map((item) {
+                return DataRow(cells: [
+                  DataCell(Text(item['temp_name'] ?? "-", style: const TextStyle(fontWeight: FontWeight.w500))),
+                  DataCell(IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () => loadTemplateDetails(item['id']))),
+                  DataCell(Row(
+                    children: [
+                      Switch(
+                        value: item['status'] == 1,
+                        activeColor: Colors.green,
+                        onChanged: (v) => toggleStatus(item['id'], item['status']),
+                      ),
+                       
+                    ],
+                  )),
+                ]);
+              }).toList(),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  DataColumn _buildCol(String label) {
+    return DataColumn(label: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)));
+  }
+
+  Widget _buildListHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(children: [
+          const Text("Show ", style: TextStyle(fontSize: 12)),
+          DropdownButton<String>(
+            value: entriesValue,
+            items: ["10", "25", "50"].map((v) => DropdownMenuItem<String>(value: v, child: Text(v))).toList(),
+            onChanged: (v) => setState(() { entriesValue = v!; currentPage = 1; }),
+          ),
+          const Text(" entries", style: TextStyle(fontSize: 12)),
+        ]),
+        SizedBox(width: 200, height: 40, child: TextField(controller: _searchController, decoration: const InputDecoration(hintText: "Search...", border: OutlineInputBorder(), prefixIcon: Icon(Icons.search)))),
+      ],
+    );
+  }
+
+  Widget _buildPaginationControls() {
+    int total = _filteredList.length;
+    int max = (total / int.parse(entriesValue)).ceil();
+    if (max == 0) max = 1;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text("Showing ${_pagedList.length} of $total records", style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+        Row(children: [
+          OutlinedButton(onPressed: currentPage > 1 ? () => setState(() => currentPage--) : null, child: const Text("Previous")),
+          const SizedBox(width: 10),
+          Text("$currentPage / $max"),
+          const SizedBox(width: 10),
+          OutlinedButton(onPressed: currentPage < max ? () => setState(() => currentPage++) : null, child: const Text("Next")),
+        ])
+      ],
+    );
+  }
+}
