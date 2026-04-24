@@ -34,6 +34,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String? _userName;
   String? _userRole;
 
+  // Navigation Arguments for Schedule Allocate
+  Map<String, dynamic>? _scheduleEditData;
+  bool _isScheduleExtend = false;
+
   late AnimationController _sidebarController;
   late AnimationController _viewController;
   late Animation<double> _sidebarFade;
@@ -50,11 +54,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _sidebarFade = CurvedAnimation(parent: _sidebarController, curve: Curves.easeOut);
-    _sidebarSlide = Tween<Offset>(
-      begin: const Offset(-1, 0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _sidebarController, curve: Curves.easeOutCubic));
+    _sidebarFade = CurvedAnimation(
+      parent: _sidebarController,
+      curve: Curves.easeOut,
+    );
+    _sidebarSlide = Tween<Offset>(begin: const Offset(-1, 0), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _sidebarController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     // View content transition
     _viewController = AnimationController(
@@ -62,10 +72,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 350),
     );
     _viewFade = CurvedAnimation(parent: _viewController, curve: Curves.easeOut);
-    _viewSlide = Tween<Offset>(
-      begin: const Offset(0.04, 0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _viewController, curve: Curves.easeOutCubic));
+    _viewSlide = Tween<Offset>(begin: const Offset(0.04, 0), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _viewController, curve: Curves.easeOutCubic),
+        );
 
     _sidebarController.forward();
     _viewController.forward();
@@ -79,15 +89,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _userRole = prefs.getString('userRole');
     });
   }
-List<String> _generateTimeSlots() {
-  List<String> slots = [];
-  for (int i = 0; i < 24; i++) {
-    String hour = i.toString().padLeft(2, '0');
-    slots.add("$hour:00");
-    slots.add("$hour:30");
+
+  List<String> _generateTimeSlots() {
+    List<String> slots = [];
+    for (int i = 0; i < 24; i++) {
+      String hour = i.toString().padLeft(2, '0');
+      slots.add("$hour:00");
+      slots.add("$hour:30");
+    }
+    return slots;
   }
-  return slots;
-}
+
   @override
   void dispose() {
     _sidebarController.dispose();
@@ -96,10 +108,35 @@ List<String> _generateTimeSlots() {
   }
 
   void _selectIndex(int index) {
-    if (_selectedIndex == index) return;
+    if (_selectedIndex == index) {
+      // If we are selecting the same index, we might still want to clear edit data if it was set
+      if (index != 6) {
+        _scheduleEditData = null;
+        _isScheduleExtend = false;
+      }
+      return;
+    }
     setState(() {
       _previousIndex = _selectedIndex;
       _selectedIndex = index;
+      // Clear edit data when navigating away from Schedule Allocate or to other views
+      if (index != 6) {
+        _scheduleEditData = null;
+        _isScheduleExtend = false;
+      }
+    });
+    _viewController.forward(from: 0.0);
+  }
+
+  void _navigateToScheduleAllocate({
+    Map<String, dynamic>? editData,
+    bool isExtend = false,
+  }) {
+    setState(() {
+      _scheduleEditData = editData;
+      _isScheduleExtend = isExtend;
+      _previousIndex = _selectedIndex;
+      _selectedIndex = 6; // Schedule Allocate index
     });
     _viewController.forward(from: 0.0);
   }
@@ -109,215 +146,333 @@ List<String> _generateTimeSlots() {
     return AnimatedBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-      body: Column(
-        children: [
-          // --- GLOBAL HEADER ---
-          Container(
-            decoration: const BoxDecoration(
-              color: Colors.black, // Dark Theme Header
-              boxShadow: [
-                BoxShadow(color: Colors.black54, blurRadius: 10, offset: Offset(0, 2)),
-              ],
-            ),
-            padding: const EdgeInsets.only(left: 16, right: 16, top: 18, bottom: 8),
-            child: Row(
-              children: [
-                _buildDynamicHeader(),
-                const Spacer(),
-                // User name chip with avatar
-                if (_userName != null)
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeOutBack,
-                    builder: (context, v, child) =>
-                        Transform.scale(scale: v, child: child),
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A), // Darker chip
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFF333333)), // Subtle border
+        body: Column(
+          children: [
+            // --- GLOBAL HEADER ---
+            Container(
+              decoration: const BoxDecoration(
+                color: Colors.black, // Dark Theme Header
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black54,
+                    blurRadius: 10,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 18,
+                bottom: 8,
+              ),
+              child: Row(
+                children: [
+                  _buildDynamicHeader(),
+                  const Spacer(),
+                  // User name chip with avatar
+                  if (_userName != null)
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOutBack,
+                      builder: (context, v, child) =>
+                          Transform.scale(scale: v, child: child),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A1A1A), // Darker chip
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0xFF333333),
+                          ), // Subtle border
+                        ),
+                        child: Text(
+                          _userName!,
+                          style: const TextStyle(
+                            color: Colors.white, // White text
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
                       ),
-                      child: Text(
-                        _userName!,
-                        style: const TextStyle(
-                          color: Colors.white, // White text
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.3,
+                    ),
+                  // Animated power button (Logout)
+                  _AnimatedIconButton(
+                    icon: Icons.logout_rounded,
+                    color: Colors.white70, // White icon
+                    onPressed: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.clear();
+                      if (!mounted) return;
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginPage(),
+                        ),
+                        (route) => false,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+
+            // --- MAIN CONTENT ---
+            Expanded(
+              child: Row(
+                children: [
+                  // --- Animated Sidebar ---
+                  SlideTransition(
+                    position: _sidebarSlide,
+                    child: FadeTransition(
+                      opacity: _sidebarFade,
+                      child: Container(
+                        width: 230,
+                        margin: const EdgeInsets.only(left: 12, bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(
+                            0.4,
+                          ), // Glassmorphism dark
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.1),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 12,
+                              offset: const Offset(2, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 20),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
+                              child: Row(
+                                children: [
+                                  Image.asset(
+                                    'assets/images/sriher_logo.png',
+                                    height: 24,
+                                    width: 24,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(
+                                              Icons.display_settings,
+                                              size: 24,
+                                              color: Color(0xFF64FFDA),
+                                            ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text(
+                                    "SRIHER Display",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Divider(color: Colors.white12),
+                            Expanded(
+                              child: ListView(
+                                padding: EdgeInsets.zero,
+                                children: [
+                                  _buildSidebarItem(
+                                    Icons.dashboard,
+                                    'Dashboard',
+                                    0,
+                                  ),
+
+                                  // Authentication
+                                  _buildExpansionTile(
+                                    icon: Icons.security,
+                                    title: 'Authentication',
+                                    children: [
+                                      _buildSidebarItem(
+                                        Icons.person_add,
+                                        'Add User',
+                                        1,
+                                        isSub: true,
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Masters
+                                  _buildExpansionTile(
+                                    icon: Icons.storage,
+                                    title: 'Masters',
+                                    initiallyExpanded: _selectedIndex >= 11,
+                                    children: [
+                                      _buildSidebarItem(
+                                        Icons.admin_panel_settings,
+                                        'Role',
+                                        11,
+                                        isSub: true,
+                                      ),
+                                      _buildSidebarItem(
+                                        Icons.devices,
+                                        'Device Master',
+                                        12,
+                                        isSub: true,
+                                      ),
+                                      _buildSidebarItem(
+                                        Icons.domain,
+                                        'Department',
+                                        13,
+                                        isSub: true,
+                                      ),
+                                      _buildSidebarItem(
+                                        Icons.location_on,
+                                        'Location Master',
+                                        14,
+                                        isSub: true,
+                                      ),
+                                      _buildSidebarItem(
+                                        Icons.map,
+                                        'Mapping',
+                                        15,
+                                        isSub: true,
+                                      ),
+                                    ],
+                                  ),
+
+                                  // File Master
+                                  _buildExpansionTile(
+                                    icon: Icons.folder,
+                                    title: 'File Master',
+                                    children: [
+                                      _buildSidebarItem(
+                                        Icons.upload_file,
+                                        'File Upload',
+                                        2,
+                                        isSub: true,
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Template Master
+                                  _buildExpansionTile(
+                                    icon: Icons.art_track,
+                                    title: 'Template Master',
+                                    initiallyExpanded:
+                                        _selectedIndex >= 3 &&
+                                        _selectedIndex <= 5,
+                                    children: [
+                                      _buildSidebarItem(
+                                        Icons.create,
+                                        'Create Template',
+                                        3,
+                                        isSub: true,
+                                      ),
+                                      _buildSidebarItem(
+                                        Icons.branding_watermark,
+                                        'Default Template',
+                                        4,
+                                        isSub: true,
+                                      ),
+                                      _buildSidebarItem(
+                                        Icons.select_all,
+                                        'Select Template',
+                                        5,
+                                        isSub: true,
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Schedule
+                                  _buildExpansionTile(
+                                    icon: Icons.schedule,
+                                    title: 'Schedule',
+                                    initiallyExpanded:
+                                        _selectedIndex >= 6 &&
+                                        _selectedIndex <= 10,
+                                    children: [
+                                      _buildSidebarItem(
+                                        Icons.calendar_today,
+                                        'Schedule Allocate',
+                                        6,
+                                        isSub: true,
+                                      ),
+                                      _buildSidebarItem(
+                                        Icons.assignment_ind,
+                                        'Assign Device',
+                                        7,
+                                        isSub: true,
+                                      ),
+                                      _buildSidebarItem(
+                                        Icons.list,
+                                        'Schedule List',
+                                        8,
+                                        isSub: true,
+                                      ),
+                                      _buildSidebarItem(
+                                        Icons.date_range,
+                                        'Specific Ranges',
+                                        9,
+                                        isSub: true,
+                                      ),
+                                      _buildSidebarItem(
+                                        Icons.delete_sweep,
+                                        'Copy and Wipe Off',
+                                        10,
+                                        isSub: true,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                // Animated power button (Logout)
-                _AnimatedIconButton(
-                  icon: Icons.logout_rounded,
-                  color: Colors.white70, // White icon
-                  onPressed: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.clear();
-                    if (!mounted) return;
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
-                      (route) => false,
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
 
-          // --- MAIN CONTENT ---
-          Expanded(
-            child: Row(
-              children: [
-                // --- Animated Sidebar ---
-                SlideTransition(
-                  position: _sidebarSlide,
-                  child: FadeTransition(
-                    opacity: _sidebarFade,
+                  const SizedBox(width: 12), // Gap between sidebar and content
+
+                  // --- Animated View Panel ---
+                  Expanded(
                     child: Container(
-                      width: 230,
-                      margin: const EdgeInsets.only(left: 12, bottom: 12),
+                      margin: const EdgeInsets.only(bottom: 12, right: 12),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.4), // Glassmorphism dark
+                        color: Colors.black.withOpacity(
+                          0.1,
+                        ), // Keep main panel mostly transparent
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withOpacity(0.1)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 12,
-                            offset: const Offset(2, 2),
-                          ),
-                        ],
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.05),
+                        ),
                       ),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 20),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Row(
-                              children: [
-                                Image.asset(
-                                  'assets/images/sriher_logo.png',
-                                  height: 24,
-                                  width: 24,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.display_settings, size: 24, color: Color(0xFF64FFDA)),
-                                ),
-                                const SizedBox(width: 10),
-                                const Text(
-                                  "SRIHER Display",
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
-                                ),
-                              ],
-                            ),
-                          ),
-                           const Divider(color: Colors.white12),
-                          Expanded(
-                            child: ListView(
-                              padding: EdgeInsets.zero,
-                              children: [
-                                _buildSidebarItem(Icons.dashboard, 'Dashboard', 0),
-
-                                // Authentication
-                                _buildExpansionTile(
-                                  icon: Icons.security,
-                                  title: 'Authentication',
-                                  children: [
-                                    _buildSidebarItem(Icons.person_add, 'Add User', 1, isSub: true),
-                                  ],
-                                ),
-
-                                // Masters
-                                _buildExpansionTile(
-                                  icon: Icons.storage,
-                                  title: 'Masters',
-                                  initiallyExpanded: _selectedIndex >= 11,
-                                  children: [
-                                    _buildSidebarItem(Icons.admin_panel_settings, 'Role', 11, isSub: true),
-                                    _buildSidebarItem(Icons.devices, 'Device Master', 12, isSub: true),
-                                    _buildSidebarItem(Icons.domain, 'Department', 13, isSub: true),
-                                    _buildSidebarItem(Icons.location_on, 'Location Master', 14, isSub: true),
-                                    _buildSidebarItem(Icons.map, 'Mapping', 15, isSub: true),
-                                  ],
-                                ),
-
-                                // File Master
-                                _buildExpansionTile(
-                                  icon: Icons.folder,
-                                  title: 'File Master',
-                                  children: [
-                                    _buildSidebarItem(Icons.upload_file, 'File Upload', 2, isSub: true),
-                                  ],
-                                ),
-
-                                // Template Master
-                                _buildExpansionTile(
-                                  icon: Icons.art_track,
-                                  title: 'Template Master',
-                                  initiallyExpanded: _selectedIndex >= 3 && _selectedIndex <= 5,
-                                  children: [
-                                    _buildSidebarItem(Icons.create, 'Create Template', 3, isSub: true),
-                                    _buildSidebarItem(Icons.branding_watermark, 'Default Template', 4, isSub: true),
-                                    _buildSidebarItem(Icons.select_all, 'Select Template', 5, isSub: true),
-                                  ],
-                                ),
-
-                                // Schedule
-                                _buildExpansionTile(
-                                  icon: Icons.schedule,
-                                  title: 'Schedule',
-                                  initiallyExpanded: _selectedIndex >= 6 && _selectedIndex <= 10,
-                                  children: [
-                                    _buildSidebarItem(Icons.calendar_today, 'Schedule Allocate', 6, isSub: true),
-                                    _buildSidebarItem(Icons.assignment_ind, 'Assign Device', 7, isSub: true),
-                                    _buildSidebarItem(Icons.list, 'Schedule List', 8, isSub: true),
-                                    _buildSidebarItem(Icons.date_range, 'Specific Ranges', 9, isSub: true),
-                                    _buildSidebarItem(Icons.delete_sweep, 'Copy and Wipe Off', 10, isSub: true),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                      child: FadeTransition(
+                        opacity: _viewFade,
+                        child: SlideTransition(
+                          position: _viewSlide,
+                          child: _getSelectedView(),
+                        ),
                       ),
                     ),
                   ),
-                ),
-
-                const SizedBox(width: 12), // Gap between sidebar and content
-                // --- Animated View Panel ---
-                
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12, right: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.1), // Keep main panel mostly transparent
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.05)),
-                    ),
-                    child: FadeTransition(
-                      opacity: _viewFade,
-                      child: SlideTransition(
-                        position: _viewSlide,
-                        child: _getSelectedView(),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   // --- Dynamic Header Helper ---
   Widget _buildDynamicHeader() {
@@ -351,13 +506,20 @@ List<String> _generateTimeSlots() {
   }
 
   // --- Sidebar UI Helpers ---
-  Widget _buildSidebarItem(IconData icon, String title, int index, {bool isSub = false}) {
+  Widget _buildSidebarItem(
+    IconData icon,
+    String title,
+    int index, {
+    bool isSub = false,
+  }) {
     final bool isSelected = _selectedIndex == index;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: isSelected
-            ? const Color(0xFF64FFDA).withValues(alpha: 0.1) // Teal accent for dark theme
+            ? const Color(0xFF64FFDA).withValues(
+                alpha: 0.1,
+              ) // Teal accent for dark theme
             : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
@@ -400,10 +562,20 @@ List<String> _generateTimeSlots() {
     bool initiallyExpanded = false,
   }) {
     return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent, unselectedWidgetColor: Colors.white54),
+      data: Theme.of(context).copyWith(
+        dividerColor: Colors.transparent,
+        unselectedWidgetColor: Colors.white54,
+      ),
       child: ExpansionTile(
-        leading: Icon(icon, color: Colors.blueAccent, size: 20), 
-        title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white70)),
+        leading: Icon(icon, color: Colors.blueAccent, size: 20),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.white70,
+          ),
+        ),
         iconColor: Colors.white,
         collapsedIconColor: Colors.white54,
         initiallyExpanded: initiallyExpanded,
@@ -416,30 +588,54 @@ List<String> _generateTimeSlots() {
 
   Widget _getSelectedView() {
     switch (_selectedIndex) {
-      case 0: return const DashboardView();
-      case 1: return const AddUserView();
-      case 2: return const FileUploadView();
-      case 3: return const CreateTemplateView();
-      case 4: return const DefaultTemplateView();
-      case 5: return const SelectTemplateView();
-      case 6: return const ScheduleAllocateView();
-      case 7: return const AssignDeviceView();
-      case 8: return const ScheduleListView();
-      case 9: return const SpecificRangesView();
-      case 10: return const CopyWipeoffView();
-      case 11: return const RoleView();
-      case 12: return const DeviceMasterView();
-      case 13: return const DepartmentView();
-      case 14: return const LocationMasterView();
-      case 15: return const MappingView();
-      default: return const DashboardView();
+      case 0:
+        return const DashboardView();
+      case 1:
+        return const AddUserView();
+      case 2:
+        return const FileUploadView();
+      case 3:
+        return const CreateTemplateView();
+      case 4:
+        return const DefaultTemplateView();
+      case 5:
+        return const SelectTemplateView();
+      case 6:
+        return ScheduleAllocateView(
+          editData: _scheduleEditData,
+          isExtend: _isScheduleExtend,
+        );
+      case 7:
+        return const AssignDeviceView();
+      case 8:
+        return ScheduleListView(
+          onEdit: (data) =>
+              _navigateToScheduleAllocate(editData: data, isExtend: false),
+          onExtend: (data) =>
+              _navigateToScheduleAllocate(editData: data, isExtend: true),
+        );
+      case 9:
+        return const SpecificRangesView();
+      case 10:
+        return const CopyWipeoffView();
+      case 11:
+        return const RoleView();
+      case 12:
+        return const DeviceMasterView();
+      case 13:
+        return const DepartmentView();
+      case 14:
+        return const LocationMasterView();
+      case 15:
+        return const MappingView();
+      default:
+        return const DashboardView();
     }
   }
 }
 
 /// Animated icon button with scale on press
 class _AnimatedIconButton extends StatefulWidget {
-  
   final IconData icon;
   final Color color;
   final VoidCallback onPressed;
@@ -462,7 +658,13 @@ class _AnimatedIconButtonState extends State<_AnimatedIconButton>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 100), lowerBound: 0.85, upperBound: 1.0, value: 1.0);
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.85,
+      upperBound: 1.0,
+      value: 1.0,
+    );
     _scale = _ctrl;
   }
 
@@ -471,14 +673,13 @@ class _AnimatedIconButtonState extends State<_AnimatedIconButton>
     _ctrl.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _scale,
-      builder: (context, child) => Transform.scale(
-        scale: _scale.value,
-        child: child,
-      ),
+      builder: (context, child) =>
+          Transform.scale(scale: _scale.value, child: child),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.1),
@@ -489,7 +690,6 @@ class _AnimatedIconButtonState extends State<_AnimatedIconButton>
             await _ctrl.reverse();
             await _ctrl.forward();
             widget.onPressed();
-        
           },
           icon: Icon(widget.icon),
           color: widget.color,

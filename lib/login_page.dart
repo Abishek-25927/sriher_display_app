@@ -46,13 +46,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       value: 1.0,
     );
 
-    _fadeAnim = CurvedAnimation(parent: _entryController, curve: Curves.easeOut);
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.12),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _entryController, curve: Curves.easeOutCubic));
+    _fadeAnim = CurvedAnimation(
+      parent: _entryController,
+      curve: Curves.easeOut,
+    );
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _entryController, curve: Curves.easeOutCubic),
+        );
 
-    _scaleAnim = CurvedAnimation(parent: _entryController, curve: Curves.easeOutBack);
+    _scaleAnim = CurvedAnimation(
+      parent: _entryController,
+      curve: Curves.easeOutBack,
+    );
 
     _entryController.forward();
   }
@@ -67,38 +73,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   Future<void> _handleLogin() async {
-    // ──────────────────────────────────────────────────────────────────────────
-    // QUICK BYPASS FOR DESIGN TESTING
-    // ──────────────────────────────────────────────────────────────────────────
-    
+    if (!_formKey.currentState!.validate()) return;
+
     // Play button animation
     await _buttonController.reverse();
     await _buttonController.forward();
 
-    setState(() => _isLoggingIn = true);
-
-    // Simulate a tiny delay to see the loader if you want, then jump
-    await Future.delayed(const Duration(milliseconds: 300));
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', true);
-    await prefs.setString('userName', "Test User"); // Dummy Data
-    await prefs.setString('userRole', "Admin");     // Dummy Data
-
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 500),
-      ),
-    );
-
-    /* // ORIGINAL API LOGIC (HIDDEN FOR NOW)
-    if (!_formKey.currentState!.validate()) return;
     setState(() {
       _isLoggingIn = true;
       _errorMessage = null;
@@ -113,7 +93,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               'Accept': 'application/json',
             },
             body: jsonEncode({
-              'api_key': '933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2',
+              'api_key':
+                  '933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2',
               'user_id': _userIdController.text.trim(),
               'password': _passwordController.text.trim(),
             }),
@@ -124,22 +105,59 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final bool success = data is Map &&
+        final bool success =
+            data is Map &&
             (data['status']?.toString().toLowerCase() == 'success' ||
-             data['Success']?.toString().toLowerCase() == 'success');
+                data['Success']?.toString().toLowerCase() == 'success');
 
         if (success) {
-          // ... (Rest of your original shared prefs logic)
+          final userInfo = data['data'];
+          String name = "User";
+          String role = "Admin";
+
+          if (userInfo is Map) {
+            name =
+                userInfo['user_name']?.toString() ??
+                userInfo['username']?.toString() ??
+                userInfo['name']?.toString() ??
+                userInfo['user_id']?.toString() ??
+                _userIdController.text.trim();
+            role = userInfo['role_name'] ?? userInfo['role'] ?? "Admin";
+          } else if (data['username'] != null) {
+            name = data['username'].toString();
+          }
+
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isLoggedIn', true);
+          await prefs.setString('userName', name);
+          await prefs.setString('userRole', role);
+
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  const HomeScreen(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+              transitionDuration: const Duration(milliseconds: 500),
+            ),
+          );
         } else {
-          setState(() => _errorMessage = "The Email or Password is wrong");
+          setState(() {
+            _errorMessage = data['message'] ?? "The Email or Password is wrong";
+          });
         }
+      } else {
+        setState(() => _errorMessage = "Server error: ${response.statusCode}");
       }
     } catch (e) {
-       _showError('Connection failed');
+      _showError('Connection failed: $e');
     } finally {
       if (mounted) setState(() => _isLoggingIn = false);
     }
-    */
   }
 
   void _showError(String message) {
@@ -213,7 +231,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.85),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.black.withOpacity(0.1), width: 1.0),
+            border: Border.all(
+              color: Colors.black.withOpacity(0.1),
+              width: 1.0,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
@@ -280,8 +301,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   controller: _userIdController,
                   hint: 'Email / User ID',
                   icon: Icons.person_outline,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Enter your Email or User ID' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Enter your Email or User ID'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
@@ -289,8 +311,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   hint: 'Password',
                   icon: Icons.lock_outline,
                   isPassword: true,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Enter your password' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Enter your password'
+                      : null,
                 ),
                 const SizedBox(height: 28),
                 ScaleTransition(
@@ -315,7 +338,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : const Text(
@@ -351,7 +376,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       style: const TextStyle(color: Colors.black, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.black.withOpacity(0.45), fontSize: 13),
+        hintStyle: TextStyle(
+          color: Colors.black.withOpacity(0.45),
+          fontSize: 13,
+        ),
         prefixIcon: Icon(icon, color: Colors.black.withOpacity(0.7), size: 20),
         suffixIcon: isPassword
             ? IconButton(
@@ -377,7 +405,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF0A192F), width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
+        ),
       ),
     );
   }

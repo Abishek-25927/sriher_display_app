@@ -322,27 +322,35 @@ class _AssignDeviceViewState extends State<AssignDeviceView>
     required List<dynamic> items,
     required ValueChanged<int?> onChanged,
   }) {
-    return SizedBox(
-      height: 40,
-      child: DropdownButtonFormField<int>(
-        initialValue: value,
-        hint: Text(hint, style: const TextStyle(fontSize: 13)),
-        isExpanded: true,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 10),
-        ),
-        items: items.map((e) {
-          final id = int.tryParse(e['id'].toString());
-          final name =
-              e['device_name'] ?? e['schedule_name'] ?? e['device_code'] ?? '';
-          return DropdownMenuItem<int>(
-            value: id,
-            child: Text(name, style: const TextStyle(fontSize: 13)),
-          );
-        }).toList(),
-        onChanged: onChanged,
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return DropdownMenu<int>(
+          initialSelection: value,
+          hintText: hint,
+          width: constraints.maxWidth,
+          menuHeight: 300,
+          inputDecorationTheme: const InputDecorationTheme(
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(horizontal: 10),
+          ),
+          onSelected: onChanged,
+          dropdownMenuEntries: items.map((e) {
+            final id = int.tryParse(e['id'].toString());
+            final name =
+                e['device_name'] ??
+                e['schedule_name'] ??
+                e['device_code'] ??
+                '';
+            return DropdownMenuEntry<int>(
+              value: id ?? 0,
+              label: name,
+              style: MenuItemButton.styleFrom(
+                textStyle: const TextStyle(fontSize: 13),
+              ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 

@@ -4,7 +4,10 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 
 class ScheduleAllocateView extends StatefulWidget {
-  const ScheduleAllocateView({super.key});
+  final Map<String, dynamic>? editData;
+  final bool isExtend;
+
+  const ScheduleAllocateView({super.key, this.editData, this.isExtend = false});
 
   @override
   State<ScheduleAllocateView> createState() => _ScheduleAllocateViewState();
@@ -44,6 +47,35 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
     super.initState();
     _fetchSchedules();
     _fetchTemplates();
+
+    if (widget.editData != null) {
+      // Handle various possible key names for schedule/template IDs
+      selectedScheduleId =
+          int.tryParse(widget.editData!['schedule_id']?.toString() ?? '') ??
+          int.tryParse(widget.editData!['id']?.toString() ?? '');
+
+      selectedTemplateId =
+          int.tryParse(widget.editData!['temp_id']?.toString() ?? '') ??
+          int.tryParse(widget.editData!['template_id']?.toString() ?? '');
+
+      _fromDateController.text =
+          widget.editData!['from_date']?.toString() ?? '';
+      _toDateController.text = widget.editData!['to_date']?.toString() ?? '';
+      _fromTimeController.text =
+          widget.editData!['from_time']?.toString() ?? '';
+
+      if (selectedTemplateId != null) {
+        _fetchTemplateFiles(selectedTemplateId!);
+      }
+
+      // If we have a from_time, pre-select that slot in the grid for each day
+      if (_fromTimeController.text.isNotEmpty &&
+          _fromDateController.text.isNotEmpty &&
+          _toDateController.text.isNotEmpty) {
+        _prepopulateSlots();
+      }
+    }
+
     _durationPanelController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -100,6 +132,34 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
       pairs.add("$h1:30 - $h2:00");
     }
     return pairs;
+  }
+
+  void _prepopulateSlots() {
+    try {
+      DateTime start = DateFormat('yyyy-MM-dd').parse(_fromDateController.text);
+      DateTime end = DateFormat('yyyy-MM-dd').parse(_toDateController.text);
+      String time = _fromTimeController.text;
+
+      // Find which slot this time falls into
+      String? matchedSlot;
+      for (var pair in slotPairs) {
+        if (pair.startsWith(time)) {
+          matchedSlot = pair;
+          break;
+        }
+      }
+
+      if (matchedSlot != null) {
+        for (int i = 0; i <= end.difference(start).inDays; i++) {
+          String key = DateFormat(
+            'yyyy-MM-dd',
+          ).format(start.add(Duration(days: i)));
+          selectedSlotsByDay[key] = [matchedSlot];
+        }
+      }
+    } catch (e) {
+      debugPrint("Error pre-populating slots: $e");
+    }
   }
 
   // ──────────────────────────── API CALLS ────────────────────────────────────
@@ -266,25 +326,24 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
       _wasSelectionComplete = false;
     }
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.only(
-          top: 10,
-          left: 20,
-          right: 20,
-          bottom: 20,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left Column
-            Expanded(
-              flex: 5,
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      alignment: Alignment.topLeft,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left Column (Fixed position)
+          Expanded(
+            flex: 5,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildSectionTitle("SCHEDULE"),
+                  _buildSectionTitle(
+                    widget.isExtend ? "Extend Schedule" : "Schedule",
+                  ),
                   const SizedBox(height: 15),
                   Card(
                     color: Colors.white,
@@ -370,7 +429,6 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                                           ).parse(_toDateController.text);
                                           if (end.isBefore(start)) end = start;
                                           for (
-                                            
                                             int i = 0;
                                             i <= end.difference(start).inDays;
                                             i++
@@ -441,12 +499,14 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                 ],
               ),
             ),
-            const SizedBox(width: 20),
-            // Right Column
-            Expanded(
-              flex: 5,
-              child: isSelectionComplete
-                  ? Column(
+          ),
+          // Right Column
+          Expanded(
+            flex: 5,
+            child: isSelectionComplete
+                ? SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _buildSectionTitle("TEMPLATE DURATION"),
@@ -463,72 +523,100 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                               children: [
                                 _buildListHeader(),
                                 const SizedBox(height: 16),
-                                ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxHeight: 500,
-                                  ),
-                                  child: LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      return SingleChildScrollView(
-                                        scrollDirection: Axis.vertical,
-                                        child: SingleChildScrollView(
-                                          scrollDirection: Axis.horizontal,
-                                          child: ConstrainedBox(
-                                            constraints: BoxConstraints(
-                                              minWidth: constraints.maxWidth,
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    if (isLoadingFiles) {
+                                      return const SizedBox(
+                                        height: 200,
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            color: Colors.blueAccent,
+                                          ),
+                                        ),
+                                      );
+                                    }
+
+                                    if (templateFiles.isEmpty) {
+                                      return const SizedBox(
+                                        height: 100,
+                                        child: Center(
+                                          child: Text(
+                                            "No files found for this template",
+                                            style: TextStyle(
+                                              color: Colors.black54,
+                                              fontStyle: FontStyle.italic,
                                             ),
-                                            child: DataTable(
-                                              columnSpacing: 25,
-                                              horizontalMargin: 10,
-                                              headingRowColor:
-                                                  WidgetStateProperty.all(
-                                                    Colors.black,
+                                          ),
+                                        ),
+                                      );
+                                    }
+
+                                    return SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          minWidth: constraints.maxWidth,
+                                        ),
+                                        child: DataTable(
+                                          columnSpacing: 25,
+                                          horizontalMargin: 10,
+                                          dataRowMinHeight: 65,
+                                          dataRowMaxHeight: 75,
+                                          headingRowColor:
+                                              WidgetStateProperty.all(
+                                                Colors.black,
+                                              ),
+                                          headingRowHeight: 40,
+                                          columns: [
+                                            _buildSortableColumn('Play order'),
+                                            _buildSortableColumn('File'),
+                                            _buildSortableColumn('File Name'),
+                                            _buildSortableColumn('Duration'),
+                                          ],
+                                          rows: templateFiles.map((file) {
+                                            final index =
+                                                templateFiles.indexOf(file) + 1;
+                                            return DataRow(
+                                              cells: [
+                                                DataCell(
+                                                  Text(
+                                                    index.toString(),
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
+                                                    ),
                                                   ),
-                                              headingRowHeight: 40,
-                                              columns: [
-                                                _buildSortableColumn(
-                                                  'Play order',
                                                 ),
-                                                _buildSortableColumn('File'),
-                                                _buildSortableColumn(
-                                                  'File Name',
-                                                ),
-                                                _buildSortableColumn(
-                                                  'Duration',
-                                                ),
-                                              ],
-                                              rows: templateFiles.map((file) {
-                                                final index =
-                                                    templateFiles.indexOf(
-                                                      file,
-                                                    ) +
-                                                    1;
-                                                return DataRow(
-                                                  cells: [
-                                                    DataCell(
-                                                      Text(
-                                                        index.toString(),
-                                                        style: const TextStyle(
-                                                          fontSize: 11,
+                                                DataCell(
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 6.0,
+                                                        ),
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        border: Border.all(
+                                                          color: Colors
+                                                              .grey
+                                                              .shade300,
                                                         ),
                                                       ),
-                                                    ),
-                                                    DataCell(
-                                                      file['file_name'] != null
+                                                      child:
+                                                          file['file_name'] !=
+                                                              null
                                                           ? Image.network(
                                                               "$_baseUrl/uploads/${file['file_name']}",
-                                                              height: 50,
-                                                              width: 50,
+                                                              height: 55,
+                                                              width: 45,
                                                               fit: BoxFit.cover,
                                                               errorBuilder:
                                                                   (
                                                                     context,
                                                                     error,
                                                                     stackTrace,
-                                                                  ) => Icon(
+                                                                  ) => const Icon(
                                                                     Icons
                                                                         .broken_image,
-                                                                    size: 40,
+                                                                    size: 30,
                                                                   ),
                                                             )
                                                           : const Icon(
@@ -536,33 +624,33 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                                                               size: 20,
                                                             ),
                                                     ),
-                                                    DataCell(
-                                                      Text(
-                                                        file['user_filename'] ??
-                                                            file['file_name'] ??
-                                                            '-',
-                                                        style: const TextStyle(
-                                                          fontSize: 11,
-                                                        ),
-                                                      ),
+                                                  ),
+                                                ),
+                                                DataCell(
+                                                  Text(
+                                                    file['user_filename'] ??
+                                                        file['file_name'] ??
+                                                        '-',
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
                                                     ),
-                                                    DataCell(
-                                                      Text(
-                                                        "${file['duration'] ?? '30'}s",
-                                                        style: const TextStyle(
-                                                          fontSize: 11,
-                                                        ),
-                                                      ),
+                                                  ),
+                                                ),
+                                                DataCell(
+                                                  Text(
+                                                    "${file['duration'] ?? '30'}s",
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
                                                     ),
-                                                  ],
-                                                );
-                                              }).toList(),
-                                            ),
-                                          ),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          }).toList(),
                                         ),
-                                      );
-                                    },
-                                  ),
+                                      ),
+                                    );
+                                  },
                                 ),
                                 const SizedBox(height: 16),
                                 _buildPagination(),
@@ -571,11 +659,11 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                           ),
                         ),
                       ],
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
-        ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }
@@ -599,28 +687,22 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
     required List<dynamic> items,
     required Function(int?) onChanged,
   }) {
-    return DropdownButtonFormField<int>(
-      value: value,
-      menuMaxHeight: 300, // Keeps list below
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(fontSize: 13),
+    return DropdownMenu<int>(
+      key: ValueKey(value),
+      initialSelection: value,
+      hintText: hint,
+      width: 250, // Adjust as needed
+      menuHeight: 300,
+      inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
-      items: items.map((e) {
+      onSelected: onChanged,
+      dropdownMenuEntries: items.map((e) {
         final id = int.tryParse(e['id'].toString());
         final name = e['schedule_name'] ?? e['temp_name'] ?? '';
-        return DropdownMenuItem<int>(
-          value: id,
-          child: Text(
-            name,
-            style: const TextStyle(fontSize: 13),
-            overflow: TextOverflow.ellipsis,
-          ),
-        );
+        return DropdownMenuEntry<int>(value: id ?? 0, label: name);
       }).toList(),
-      onChanged: onChanged,
     );
   }
 
@@ -641,38 +723,31 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
           ),
         ),
         const SizedBox(height: 5),
-        DropdownButtonFormField<String>(
-          value: controller.text.isEmpty ? null : controller.text,
-          menuMaxHeight: 300, // Forces scroll below
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(fontSize: 13, color: Colors.black45),
+        DropdownMenu<String>(
+          initialSelection: controller.text.isEmpty ? null : controller.text,
+          hintText: hint,
+          width: 250, // Match other dropdowns
+          menuHeight: 300,
+          enabled: enabled,
+          inputDecorationTheme: InputDecorationTheme(
             filled: true,
             fillColor: enabled ? Colors.white : Colors.grey.shade200,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 10,
             ),
           ),
-
-          items: enabled
+          onSelected: (v) {
+            if (v != null) {
+              setState(() => controller.text = v);
+            }
+          },
+          dropdownMenuEntries: enabled
               ? _generateTimeSlots().map((String time) {
-                  return DropdownMenuItem<String>(
-                    value: time,
-                    child: Text(
-                      time,
-                      style: const TextStyle(fontSize: 13, color: Colors.black),
-                    ),
-                  );
+                  return DropdownMenuEntry<String>(value: time, label: time);
                 }).toList()
-              : null,
-          onChanged: enabled
-              ? (v) => setState(() => controller.text = v!)
-              : null,
+              : [],
         ),
       ],
     );
@@ -741,28 +816,15 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Expanded(
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: "Search...",
-              hintStyle: TextStyle(fontSize: 12),
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 8),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
+        // 1. Entries dropdown now on the LEFT
         Row(
           children: [
-            const Text(
-              "Show ",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-            ),
             SizedBox(
               width: 70,
               height: 35,
               child: DropdownButtonFormField<String>(
-                initialValue: entriesValue,
+                value:
+                    entriesValue, // Use 'value' instead of 'initialValue' if it changes via setState
                 items: ["10", "25", "50"]
                     .map(
                       (e) => DropdownMenuItem(
@@ -783,6 +845,22 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
             ),
           ],
+        ),
+
+        const SizedBox(width: 20), // Spacing between the two sections
+        // 2. Search field now on the RIGHT
+        Expanded(
+          child: SizedBox(
+            height: 35, // Matching height with the dropdown for symmetry
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: "Search...",
+                hintStyle: TextStyle(fontSize: 12),
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 8),
+              ),
+            ),
+          ),
         ),
       ],
     );

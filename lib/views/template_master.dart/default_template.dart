@@ -578,6 +578,7 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
         borderRadius: BorderRadius.circular(4),
       ),
       child: DropdownButtonHideUnderline(
+        
         child: DropdownButton<String>(
           isExpanded: true,
           value: items.any((i) => i[idKey].toString() == value) ? value : null,

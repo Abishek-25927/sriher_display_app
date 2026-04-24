@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class ScheduleListView extends StatefulWidget {
-  const ScheduleListView({super.key});
+  final Function(Map<String, dynamic>)? onEdit;
+  final Function(Map<String, dynamic>)? onExtend;
+
+  const ScheduleListView({super.key, this.onEdit, this.onExtend});
 
   @override
   State<ScheduleListView> createState() => _ScheduleListViewState();
@@ -11,12 +15,16 @@ class ScheduleListView extends StatefulWidget {
 
 class _ScheduleListViewState extends State<ScheduleListView> {
   final String _baseUrl = "https://display.sriher.com";
-  final String _apiKey = "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
+  final String _apiKey =
+      "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
 
   List<dynamic> scheduleData = [];
   bool isLoading = true;
   String entriesValue = "10";
-  bool showActive = true; // Toggle between Active and Inactive APIs
+  bool showActive = true;
+
+  // Inactive Popup State
+  final TextEditingController _dateRangeController = TextEditingController();
 
   @override
   void initState() {
@@ -28,20 +36,36 @@ class _ScheduleListViewState extends State<ScheduleListView> {
 
   Future<void> _fetchSchedules() async {
     setState(() => isLoading = true);
-    final endpoint = showActive ? "scheduleList_activeListview" : "scheduleList_inactiveListview";
-    
+    final endpoint = showActive
+        ? "scheduleList_activeListview"
+        : "scheduleList_inactiveListview";
+
     Map<String, dynamic> body = {"api_key": _apiKey};
     if (!showActive) {
-      body["from_date"] = "2026-01-01"; 
-      body["to_date"] = "2026-03-31";
+      // Use selected date for inactive lookup
+      if (_dateRangeController.text.isNotEmpty) {
+        DateTime selected = DateFormat(
+          'yyyy-MM-dd',
+        ).parse(_dateRangeController.text);
+        body["from_date"] = DateFormat('yyyy-MM-01').format(selected);
+        // Find last day of month
+        DateTime nextMonth = DateTime(selected.year, selected.month + 1, 1);
+        DateTime lastDay = nextMonth.subtract(const Duration(days: 1));
+        body["to_date"] = DateFormat('yyyy-MM-dd').format(lastDay);
+      } else {
+        body["from_date"] = "2026-01-01";
+        body["to_date"] = "2026-12-31";
+      }
     }
 
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/$endpoint'),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/$endpoint'),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -78,12 +102,14 @@ class _ScheduleListViewState extends State<ScheduleListView> {
 
   void _showSnack(String msg, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: isError ? Colors.red.shade800 : Colors.green.shade800,
-      behavior: SnackBarBehavior.floating,
-      margin: const EdgeInsets.all(16),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: isError ? Colors.red.shade800 : Colors.green.shade800,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   // ──────────────────────────── BUILD ────────────────────────────────────────
@@ -109,33 +135,55 @@ class _ScheduleListViewState extends State<ScheduleListView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        showActive ? "ACTIVE SCHEDULE LIST" : "INACTIVE SCHEDULE LIST",
+                        showActive
+                            ? "Active Schedule List"
+                            : "InActive Schedule List",
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 20,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      
+
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue.shade800,
                           foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         onPressed: () {
-                          setState(() => showActive = !showActive);
-                          _fetchSchedules();
+                          if (showActive) {
+                            _showInactivePopup(context);
+                          } else {
+                            setState(() {
+                              showActive = true;
+                              scheduleData = [];
+                            });
+                            _fetchSchedules();
+                          }
                         },
-                        icon: Icon(showActive ? Icons.history : Icons.check_circle),
-                        label: Text(showActive ? "View Inactive" : "View Active"),
-                      )
+                        icon: Icon(
+                          showActive ? Icons.history : Icons.check_circle,
+                        ),
+                        label: Text(
+                          showActive ? "View Inactive" : "View Active",
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 15),
                   Expanded(
                     child: Card(
                       color: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       elevation: 4,
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -145,7 +193,9 @@ class _ScheduleListViewState extends State<ScheduleListView> {
                             const SizedBox(height: 16),
                             Expanded(
                               child: isLoading
-                                  ? const Center(child: CircularProgressIndicator())
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
                                   : _buildTableContainer(),
                             ),
                             const SizedBox(height: 16),
@@ -164,19 +214,22 @@ class _ScheduleListViewState extends State<ScheduleListView> {
     );
   }
 
-  
   Widget _buildTableContainer() {
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: ConstrainedBox(
-          constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width * 0.9),
+          constraints: BoxConstraints(
+            minWidth: MediaQuery.of(context).size.width * 0.8,
+          ),
           child: DataTable(
             border: TableBorder.all(color: Colors.grey.shade300),
             headingRowHeight: 50,
             dataRowMaxHeight: 55,
-            headingRowColor: WidgetStateProperty.all(const Color(0xFF000000)), // BLACK HEADER
+            headingRowColor: WidgetStateProperty.all(
+              const Color(0xFF000000),
+            ), // BLACK HEADER
             columns: [
               _buildCol('SCHEDULE NAME'),
               _buildCol('TEMPLATE NAME'),
@@ -197,32 +250,30 @@ class _ScheduleListViewState extends State<ScheduleListView> {
     bool isActive = (item['status'] == 1 || item['status'] == '1');
     int id = int.tryParse(item['id'].toString()) ?? 0;
 
-    return DataRow(cells: [
-      DataCell(Text(item['schedule_name'] ?? '-')),
-      DataCell(Text(item['temp_name'] ?? '-')),
-      DataCell(Text("${item['duration'] ?? '0'}s")),
-      DataCell(Text(item['from_date'] ?? '-')),
-      DataCell(Text(item['to_date'] ?? '-')),
-      // WIFI STYLE TOGGLE
-      DataCell(
-        Center(
-          child: Transform.scale(
-            scale: 0.8,
-            child: Switch(
-              value: isActive,
-              activeColor: Colors.green,
-              onChanged: (val) => _updateStatus(id, val ? 1 : 0),
+    return DataRow(
+      cells: [
+        DataCell(Text(item['schedule_name'] ?? '-')),
+        DataCell(Text(item['temp_name'] ?? '-')),
+        DataCell(Text("${item['duration'] ?? '0'}s")),
+        DataCell(Text(item['from_date'] ?? '-')),
+        DataCell(Text(item['to_date'] ?? '-')),
+        // WIFI STYLE TOGGLE
+        DataCell(
+          Center(
+            child: Transform.scale(
+              scale: 0.8,
+              child: Switch(
+                value: isActive,
+                activeColor: Colors.green,
+                onChanged: (val) => _updateStatus(id, val ? 1 : 0),
+              ),
             ),
           ),
         ),
-      ),
-      // SETTINGS + DOWN ARROW DROPDOWN
-      DataCell(
-        Center(
-          child: _buildChangesButton(item),
-        ),
-      ),
-    ]);
+        // SETTINGS + DOWN ARROW DROPDOWN
+        DataCell(Center(child: _buildChangesButton(item))),
+      ],
+    );
   }
 
   Widget _buildChangesButton(dynamic item) {
@@ -246,9 +297,9 @@ class _ScheduleListViewState extends State<ScheduleListView> {
       ),
       onSelected: (value) {
         if (value == 'edit') {
-          _showSnack("Edit clicked for ${item['schedule_name']}");
+          if (widget.onEdit != null) widget.onEdit!(item);
         } else if (value == 'extend') {
-          _showSnack("Extend clicked for ${item['schedule_name']}");
+          if (widget.onExtend != null) widget.onExtend!(item);
         }
       },
       itemBuilder: (context) => [
@@ -284,7 +335,11 @@ class _ScheduleListViewState extends State<ScheduleListView> {
           children: [
             Text(
               label,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
             ),
             const SizedBox(width: 4),
             const Icon(Icons.unfold_more, color: Colors.white70, size: 14),
@@ -300,22 +355,33 @@ class _ScheduleListViewState extends State<ScheduleListView> {
       children: [
         Row(
           children: [
-            const Text("Show ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const Text(
+              "Show ",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
             SizedBox(
-              width: 75,
-              height: 38,
-              child: DropdownButtonFormField<String>(
-                value: entriesValue,
-                decoration: const InputDecoration(
+              width: 85,
+              child: DropdownMenu<String>(
+                initialSelection: entriesValue,
+                inputDecorationTheme: const InputDecorationTheme(
                   contentPadding: EdgeInsets.symmetric(horizontal: 10),
                   border: OutlineInputBorder(),
                 ),
-                items: ['10', '25', '50'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-                onChanged: (v) => setState(() => entriesValue = v!),
+                onSelected: (v) {
+                  if (v != null) setState(() => entriesValue = v);
+                },
+                dropdownMenuEntries: [
+                  '10',
+                  '25',
+                  '50',
+                ].map((v) => DropdownMenuEntry(value: v, label: v)).toList(),
               ),
             ),
-             
-            const Text(" entries", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+
+            const Text(
+              " entries",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
           ],
         ),
         SizedBox(
@@ -323,8 +389,8 @@ class _ScheduleListViewState extends State<ScheduleListView> {
           height: 38,
           child: TextField(
             decoration: InputDecoration(
-              hintText: 'Search Schedule...',
-              hintStyle: const TextStyle(fontSize: 12),
+              hintText: 'Search Schedule',
+              hintStyle: const TextStyle(fontSize: 14),
               border: const OutlineInputBorder(),
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               suffixIcon: const Icon(Icons.search, size: 20),
@@ -341,7 +407,11 @@ class _ScheduleListViewState extends State<ScheduleListView> {
       children: [
         Text(
           "Showing ${scheduleData.length} entries",
-          style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 12),
+          style: const TextStyle(
+            color: Colors.black54,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
         ),
         Row(
           children: [
@@ -354,7 +424,11 @@ class _ScheduleListViewState extends State<ScheduleListView> {
     );
   }
 
-  Widget _buildPageBtn(String label, {bool active = false, bool enabled = true}) {
+  Widget _buildPageBtn(
+    String label, {
+    bool active = false,
+    bool enabled = true,
+  }) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2),
       height: 35,
@@ -362,13 +436,124 @@ class _ScheduleListViewState extends State<ScheduleListView> {
         style: OutlinedButton.styleFrom(
           backgroundColor: active ? Colors.blue : Colors.white,
           foregroundColor: active ? Colors.white : Colors.blue,
-          
+
           side: BorderSide(color: Colors.grey.shade400),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
           padding: const EdgeInsets.symmetric(horizontal: 12),
         ),
         onPressed: enabled ? () {} : null,
-        child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  void _showInactivePopup(BuildContext context) {
+    int selectedYear = DateTime.now().year;
+    int selectedMonth = DateTime.now().month;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setPopupState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          title: const Center(
+            child: Text(
+              "Select Year and Month",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Divider(),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  // Year Dropdown
+                  Expanded(
+                    child: DropdownMenu<int>(
+                      initialSelection: selectedYear,
+                      label: const Text("Year"),
+                      width: 120,
+                      onSelected: (y) => setPopupState(() => selectedYear = y!),
+                      dropdownMenuEntries:
+                          List.generate(
+                                10,
+                                (index) => DateTime.now().year - 5 + index,
+                              )
+                              .map(
+                                (y) => DropdownMenuEntry(
+                                  value: y,
+                                  label: y.toString(),
+                                ),
+                              )
+                              .toList(),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Month Dropdown
+                  Expanded(
+                    child: DropdownMenu<int>(
+                      initialSelection: selectedMonth,
+                      label: const Text("Month"),
+                      width: 120,
+                      onSelected: (m) =>
+                          setPopupState(() => selectedMonth = m!),
+                      dropdownMenuEntries:
+                          List.generate(12, (index) => index + 1)
+                              .map(
+                                (m) => DropdownMenuEntry(
+                                  value: m,
+                                  label: DateFormat(
+                                    'MMM',
+                                  ).format(DateTime(2024, m)),
+                                ),
+                              )
+                              .toList(),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        showActive = false;
+                        _dateRangeController.text =
+                            "$selectedYear-${selectedMonth.toString().padLeft(2, '0')}-01";
+                        scheduleData = [];
+                      });
+                      _fetchSchedules();
+                      Navigator.pop(context);
+                    },
+                    child: const Text("VIEW"),
+                  ),
+                  const SizedBox(width: 15),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade300,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("CLOSE"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
