@@ -32,7 +32,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF050505), // Deep Black
+      backgroundColor: Colors.white, // Pure White
       body: Stack(
         children: [
           AnimatedBuilder(
@@ -93,10 +93,10 @@ class ParticlePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (var particle in particles) {
       particle.update();
-      
+
       // Draw "Bubble" effect
       final paint = Paint()
-        ..color = Colors.white.withOpacity(particle.opacity)
+        ..color = Colors.blue.withOpacity(particle.opacity)
         ..style = PaintingStyle.fill
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12); // Airy feel
 
@@ -105,13 +105,13 @@ class ParticlePainter extends CustomPainter {
         particle.size,
         paint,
       );
-      
+
       // Subtle rim light for the bubble
       final rimPaint = Paint()
-        ..color = Colors.white.withOpacity(particle.opacity * 0.5)
+        ..color = Colors.blue.withOpacity(particle.opacity * 0.5)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5;
-      
+
       canvas.drawCircle(
         Offset(particle.x * size.width, particle.y * size.height),
         particle.size,

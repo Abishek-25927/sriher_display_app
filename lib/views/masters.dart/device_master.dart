@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
+import '../../widgets/animated_heading.dart';
 
 class DeviceMasterView extends StatefulWidget {
   const DeviceMasterView({super.key});
@@ -12,14 +12,15 @@ class DeviceMasterView extends StatefulWidget {
 
 class _DeviceMasterViewState extends State<DeviceMasterView> {
   // --- API CONFIGURATION ---
-  final String _apiKey = "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
+  final String _apiKey =
+      "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
   final String _baseUrl = "https://display.sriher.com";
 
   // --- STATE MANAGEMENT ---
   List<dynamic> deviceList = [];
   bool isLoading = true;
   String entriesValue = "10";
-  int? editingId; 
+  int? editingId;
 
   // --- FORM CONTROLLERS ---
   final TextEditingController _deviceCodeController = TextEditingController();
@@ -74,18 +75,21 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
         final dynamic decoded = jsonDecode(response.body);
         // Debug logging to help identify correct keys
         debugPrint("API Response: $decoded");
-        
+
         setState(() {
           if (decoded is List) {
             deviceList = decoded;
           } else if (decoded is Map) {
             final data = decoded['data'];
             if (data is Map) {
-              deviceList = (data['DeviceMasters'] is List) ? data['DeviceMasters'] : [];
+              deviceList = (data['DeviceMasters'] is List)
+                  ? data['DeviceMasters']
+                  : [];
             } else if (data is List) {
               deviceList = data;
             } else {
-              final otherPossibility = decoded['device_list'] ?? decoded['device_data'];
+              final otherPossibility =
+                  decoded['device_list'] ?? decoded['device_data'];
               deviceList = (otherPossibility is List) ? otherPossibility : [];
             }
           } else {
@@ -106,13 +110,16 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
   // 2. INSERT OR UPDATE DEVICE
   Future<void> handleFormSubmit() async {
     // Basic Validation
-    if (_deviceCodeController.text.isEmpty || _deviceNameController.text.isEmpty) {
+    if (_deviceCodeController.text.isEmpty ||
+        _deviceNameController.text.isEmpty) {
       _showSnackBar("Please fill the Device ID and Name");
       return;
     }
 
     final bool isUpdate = editingId != null;
-    final String endPoint = isUpdate ? '/deviceUpdateview' : '/insertDeviceview';
+    final String endPoint = isUpdate
+        ? '/deviceUpdateview'
+        : '/insertDeviceview';
     final url = Uri.parse('$_baseUrl$endPoint');
 
     final Map<String, dynamic> body = {
@@ -144,12 +151,18 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
         final status = resData['status']?.toString().toLowerCase();
         // Sriher API uses 'Success', '1', or sometimes just status: 1
         if (status == 'success' || status == '1' || resData['status'] == 1) {
-          _showSnackBar(isUpdate ? "Device Updated Successfully" : "Device Created Successfully");
+          _showSnackBar(
+            isUpdate
+                ? "Device Updated Successfully"
+                : "Device Created Successfully",
+          );
           _clearForm();
           if (mounted && Navigator.canPop(context)) Navigator.pop(context);
           await fetchDevices(); // Ensure we await the refresh
         } else {
-          _showSnackBar("Server Error: ${resData['Message'] ?? resData['message'] ?? 'Unknown Error'}");
+          _showSnackBar(
+            "Server Error: ${resData['Message'] ?? resData['message'] ?? 'Unknown Error'}",
+          );
         }
       }
     } catch (e) {
@@ -170,19 +183,25 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
 
       if (response.statusCode == 200) {
         final dynamic data = jsonDecode(response.body);
-        final device = (data is Map) ? (data['device_data'] ?? data['data']) : null;
+        final device = (data is Map)
+            ? (data['device_data'] ?? data['data'])
+            : null;
 
         if (device != null && device is Map) {
           setState(() {
             editingId = intId ?? (id is int ? id : null);
-            _deviceCodeController.text = device['device_code']?.toString() ?? "";
-            _deviceNameController.text = device['device_name']?.toString() ?? "";
+            _deviceCodeController.text =
+                device['device_code']?.toString() ?? "";
+            _deviceNameController.text =
+                device['device_name']?.toString() ?? "";
             _modelController.text = device['device_model']?.toString() ?? "";
             _osController.text = device['device_os']?.toString() ?? "";
             _yearController.text = device['device_yr_model']?.toString() ?? "";
-            _warrantyController.text = device['device_warranty']?.toString() ?? "";
+            _warrantyController.text =
+                device['device_warranty']?.toString() ?? "";
             _serialNoController.text = device['device_s_no']?.toString() ?? "";
-            _manufacturerController.text = device['Manufacture']?.toString() ?? "";
+            _manufacturerController.text =
+                device['Manufacture']?.toString() ?? "";
             selectedDeviceType = device['type_of_device']?.toString();
           });
           _showDeviceDialog(); // Open dialog after data is loaded
@@ -205,7 +224,10 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"api_key": _apiKey, "id": int.tryParse(id.toString()) ?? id}),
+        body: jsonEncode({
+          "api_key": _apiKey,
+          "id": int.tryParse(id.toString()) ?? id,
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -250,22 +272,31 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               titlePadding: EdgeInsets.zero,
               title: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
                   color: Color(0xFF000000),
                   borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      editingId == null ? "Create New Device" : "Edit Device Details",
+                      editingId == null
+                          ? "Create New Device"
+                          : "Edit Device Details",
                       style: const TextStyle(
-                          color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
@@ -273,7 +304,7 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
                         _clearForm();
                         Navigator.pop(context);
                       },
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -290,7 +321,12 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
                             child: _buildDropdownField(
                               hint: "Type of Device",
                               value: selectedDeviceType,
-                              items: ["Android Smart TV", "LED Display", "Projector", "Linux Player"],
+                              items: [
+                                "Android Smart TV",
+                                "LED Display",
+                                "Projector",
+                                "Linux Player",
+                              ],
                               onChanged: (val) {
                                 setDialogState(() => selectedDeviceType = val);
                                 setState(() => selectedDeviceType = val);
@@ -298,37 +334,77 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildTextField("Device ID/Code", _deviceCodeController)),
+                          Expanded(
+                            child: _buildTextField(
+                              "Device ID/Code",
+                              _deviceCodeController,
+                            ),
+                          ),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildTextField("Device Name", _deviceNameController)),
+                          Expanded(
+                            child: _buildTextField(
+                              "Device Name",
+                              _deviceNameController,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 15),
                       Row(
                         children: [
-                          Expanded(child: _buildTextField("Model Number", _modelController)),
+                          Expanded(
+                            child: _buildTextField(
+                              "Model Number",
+                              _modelController,
+                            ),
+                          ),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildTextField("OS System", _osController)),
+                          Expanded(
+                            child: _buildTextField("OS System", _osController),
+                          ),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildTextField("Year of Model", _yearController)),
+                          Expanded(
+                            child: _buildTextField(
+                              "Year of Model",
+                              _yearController,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 15),
                       Row(
                         children: [
-                          Expanded(child: _buildTextField("Warranty Status", _warrantyController)),
+                          Expanded(
+                            child: _buildTextField(
+                              "Warranty Status",
+                              _warrantyController,
+                            ),
+                          ),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildTextField("Serial Number", _serialNoController)),
+                          Expanded(
+                            child: _buildTextField(
+                              "Serial Number",
+                              _serialNoController,
+                            ),
+                          ),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildTextField("Manufacturer", _manufacturerController)),
-                        ],        
+                          Expanded(
+                            child: _buildTextField(
+                              "Manufacturer",
+                              _manufacturerController,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 25),
                     ],
                   ),
                 ),
               ),
-              actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              actionsPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               actions: [
                 OutlinedButton(
                   onPressed: () {
@@ -338,15 +414,12 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
                   child: const Text("Cancel"),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF000000),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
                   onPressed: () async {
                     await handleFormSubmit();
                   },
-                  child: Text(editingId == null ? "Save Device" : "Update Device"),
+                  child: Text(
+                    editingId == null ? "Save Device" : "Update Device",
+                  ),
                 ),
               ],
             );
@@ -362,57 +435,37 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF000000),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Area
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Devices List",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18)),
-                    
-                  ],
+                const AnimatedHeading(
+                  text: "Device List",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
                 ),
                 ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    elevation: 4,
-                  ),
                   onPressed: _showDeviceDialog,
                   icon: const Icon(Icons.add_to_queue_rounded, size: 20),
-                  label: const Text("CREATE DEVICE",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  label: const Text(
+                    "CREATE DEVICE",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
 
             // List Card
-            Expanded(
-              child: Card(
-                color: Colors.white,
-                elevation: 5,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: _buildListSection(),
-                ),
-              ),
-            ),
+            Expanded(child: _buildTableCard()),
           ],
         ),
       ),
@@ -424,62 +477,84 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
     return const SizedBox.shrink(); // No longer used directly
   }
 
-  Widget _buildListSection() {
-    return Card(
-      color: Colors.white, // Inner Small Card White
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      elevation: 4,
+  Widget _buildTableCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.grey.shade200),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             _buildListHeaderControls(),
             const SizedBox(height: 16),
-            
+
             // The Scrollable Table Container
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return Container(
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: Colors.white10),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Column(
                       children: [
-                        // Loading indicator at the very top (persistent headings below)
                         if (isLoading)
-                          const LinearProgressIndicator(minHeight: 3, backgroundColor: Colors.transparent),
-                        
+                          const LinearProgressIndicator(
+                            minHeight: 3,
+                            backgroundColor: Colors.transparent,
+                            color: Colors.white24,
+                          ),
+
                         Expanded(
                           child: SingleChildScrollView(
                             scrollDirection: Axis.vertical,
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: ConstrainedBox(
-                                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                                constraints: BoxConstraints(
+                                  minWidth: constraints.maxWidth,
+                                ),
                                 child: DataTable(
                                   columnSpacing: 20,
-                                  border: TableBorder.all(color: Colors.grey.shade200),
                                   headingRowHeight: 45,
-                                  headingRowColor: WidgetStateProperty.all(const Color(0xFF000000)), 
+                                  headingRowColor: WidgetStateProperty.all(
+                                    Colors.blue.shade50,
+                                  ),
+                                  border: TableBorder.all(
+                                    color: Colors.white10,
+                                  ),
                                   columns: _getColumns(),
-                                  rows: deviceList.map((device) => _getDataRow(device)).toList(),
+                                  rows: deviceList
+                                      .map((device) => _getDataRow(device))
+                                      .toList(),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        
-                        // Empty state message below headings
+
                         if (!isLoading && deviceList.isEmpty)
                           const Padding(
                             padding: EdgeInsets.all(40.0),
                             child: Center(
                               child: Text(
-                                "No devices found. Use the form above to add your first device.",
-                                style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                                "No devices found.",
+                                style: TextStyle(
+                                  color: Colors.white38,
+                                  fontWeight: FontWeight.bold,
+                                ),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -490,7 +565,7 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
                 },
               ),
             ),
-            
+
             const SizedBox(height: 20),
             _buildTableFooter(),
           ],
@@ -501,16 +576,38 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
 
   List<DataColumn> _getColumns() {
     return [
-      'Type of device', 'Device ID', 'Name', 'Model', 'OS', 'Year of Model', 'Warranty', 'Serial No', 'Edit','Action'
-    ].map((title) => DataColumn(
-      label: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11))
-    )).toList();
+          'Type of device',
+          'Device ID',
+          'Name',
+          'Model',
+          'OS',
+          'Year of Model',
+          'Warranty',
+          'Serial No',
+          'Edit',
+          'Action',
+        ]
+        .map(
+          (title) => DataColumn(
+            label: Text(
+              title,
+              style: TextStyle(
+                color: Colors.blue.shade800,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
+            ),
+          ),
+        )
+        .toList();
   }
 
   DataRow _getDataRow(dynamic device) {
     // Ensure device is treated as a Map for safe access
-    final Map<String, dynamic> data = (device is Map) ? Map<String, dynamic>.from(device) : {};
-    
+    final Map<String, dynamic> data = (device is Map)
+        ? Map<String, dynamic>.from(device)
+        : {};
+
     // Robust key search to handle server-side camelCase or snake_case variations
     String val(List<String> keys) {
       for (var k in keys) {
@@ -519,36 +616,81 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
       return "-";
     }
 
-    return DataRow(cells: [
-      DataCell(Text(val(['type_of_device', 'typeOfDevice', 'device_type', 'type']))), 
-      DataCell(Text(val(['device_code', 'deviceCode', 'code']))),
-      DataCell(Text(val(['device_name', 'deviceName', 'name']))),
-      DataCell(Text(val(['device_model', 'deviceModel', 'model']))),
-      DataCell(Text(val(['device_os', 'deviceOs', 'os']))),
-      DataCell(Text(val(['device_yr_model', 'deviceYrModel', 'year', 'year_of_model']))),
-      DataCell(Text(val(['device_warranty', 'deviceWarranty', 'warranty']))),
-      DataCell(Text(val(['device_s_no', 'deviceSNo', 'serial_number', 'serial']))),
-      DataCell(
-        IconButton(
-          icon: const Icon(Icons.edit, color: Colors.blue, size: 18),
-          onPressed: () => loadDeviceToEdit(data['id'] ?? data['ID']),
-        ),
-      ),
-     
-      DataCell(
-        Transform.scale(
-          scale: 0.7,
-          child: Switch(
-            // Use active_status or status based on your API
-            value: data['active_status'] == 1 || data['status'] == 1 || data['status'] == "1",
-            activeColor: Colors.green,
-            onChanged: (v) {
-              // Status toggle logic would go here
-            },
+    return DataRow(
+      cells: [
+        DataCell(
+          Text(
+            val(['type_of_device', 'typeOfDevice', 'device_type', 'type']),
+            style: const TextStyle(color: Colors.black87),
           ),
         ),
-      ),
-    ]);
+        DataCell(
+          Text(
+            val(['device_code', 'deviceCode', 'code']),
+            style: const TextStyle(color: Colors.black87),
+          ),
+        ),
+        DataCell(
+          Text(
+            val(['device_name', 'deviceName', 'name']),
+            style: const TextStyle(color: Colors.black87),
+          ),
+        ),
+        DataCell(
+          Text(
+            val(['device_model', 'deviceModel', 'model']),
+            style: const TextStyle(color: Colors.black87),
+          ),
+        ),
+        DataCell(
+          Text(
+            val(['device_os', 'deviceOs', 'os']),
+            style: const TextStyle(color: Colors.black87),
+          ),
+        ),
+        DataCell(
+          Text(
+            val(['device_yr_model', 'deviceYrModel', 'year', 'year_of_model']),
+            style: const TextStyle(color: Colors.black87),
+          ),
+        ),
+        DataCell(
+          Text(
+            val(['device_warranty', 'deviceWarranty', 'warranty']),
+            style: const TextStyle(color: Colors.black87),
+          ),
+        ),
+        DataCell(
+          Text(
+            val(['device_s_no', 'deviceSNo', 'serial_number', 'serial']),
+            style: const TextStyle(color: Colors.black87),
+          ),
+        ),
+        DataCell(
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.blue, size: 18),
+            onPressed: () => loadDeviceToEdit(data['id'] ?? data['ID']),
+          ),
+        ),
+
+        DataCell(
+          Transform.scale(
+            scale: 0.7,
+            child: Switch(
+              // Use active_status or status based on your API
+              value:
+                  data['active_status'] == 1 ||
+                  data['status'] == 1 ||
+                  data['status'] == "1",
+              activeColor: Colors.green,
+              onChanged: (v) {
+                // Status toggle logic would go here
+              },
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   // --- REUSABLE COMPONENTS ---
@@ -558,11 +700,14 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
       height: 42,
       child: TextFormField(
         controller: controller,
-        style: const TextStyle(fontSize: 13),
+        style: const TextStyle(fontSize: 13, color: Colors.white),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: const TextStyle(color: Colors.grey, fontSize: 12),
           border: const OutlineInputBorder(),
+          enabledBorder: const OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.white24),
+          ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 10),
         ),
       ),
@@ -570,21 +715,36 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
   }
 
   Widget _buildDropdownField({
-    required String hint, 
-    String? value, 
-    required List<String> items, 
-    required ValueChanged<String?> onChanged
+    required String hint,
+    String? value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
   }) {
     return SizedBox(
       height: 42,
       child: DropdownButtonFormField<String>(
         value: value,
-        hint: Text(hint, style: const TextStyle(fontSize: 12)),
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 10),
+        hint: Text(
+          hint,
+          style: const TextStyle(fontSize: 12, color: Colors.white),
         ),
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 13)))).toList(),
+        dropdownColor: Colors.white,
+        style: const TextStyle(color: Colors.black87),
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+        ),
+        items: items
+            .map(
+              (e) => DropdownMenuItem(
+                value: e,
+                child: Text(e, style: const TextStyle(fontSize: 13)),
+              ),
+            )
+            .toList(),
         onChanged: onChanged,
         isExpanded: true,
       ),
@@ -597,44 +757,75 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
       children: [
         Row(
           children: [
-            const Text("Show ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const Text(
+              "Show ",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.black87,
+              ),
+            ),
             SizedBox(
-              width: 75, height: 35,
+              width: 70,
+              height: 35,
               child: DropdownButtonFormField<String>(
                 value: entriesValue,
-                decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 8)),
-                items: ["10", "25", "50"].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                dropdownColor: Colors.white,
+                style: const TextStyle(color: Colors.black87, fontSize: 13),
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 5),
+                ),
+                items: ["10", "25", "50"]
+                    .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                    .toList(),
                 onChanged: (v) => setState(() => entriesValue = v!),
               ),
             ),
-            const Text(" entries", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const Text(
+              " entries",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.black87,
+              ),
+            ),
           ],
         ),
         SizedBox(
-          width: 180, height: 35,
+          width: 250,
+          height: 40,
           child: TextField(
+            onChanged: (val) {
+              setState(() {
+                // TODO: Implement actual filtering
+              });
+            },
             decoration: InputDecoration(
-              hintText: "Search devices...",
-              hintStyle: const TextStyle(fontSize: 11),
-              prefixIcon: const Icon(Icons.search, size: 16),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+              hintText: "Search Devices...",
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
           ),
-      ),
+        ),
       ],
     );
-    
   }
 
- 
   Widget _buildTableFooter() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           "Showing 1 to ${deviceList.length} of ${deviceList.length} entries",
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 11,
+            color: Colors.white54,
+          ),
         ),
         Row(
           children: [
@@ -650,17 +841,25 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
   }
 
   Widget _buildPageBtn(String label, {bool active = false}) {
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        backgroundColor: active ? const Color(0xFF000000) : Colors.white,
-        foregroundColor: active ? Colors.white : const Color(0xFF000000),
-        side: BorderSide(color: active ? Colors.transparent : Colors.grey.shade300),
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        minimumSize: const Size(40, 35),
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          backgroundColor: active ? Colors.blue : Colors.grey.shade100,
+          foregroundColor: active ? Colors.white : Colors.black87,
+          side: active
+              ? const BorderSide(color: Colors.blue)
+              : BorderSide(color: Colors.grey.shade300),
+          padding: EdgeInsets.symmetric(horizontal: label.length > 1 ? 15 : 12),
+          minimumSize: const Size(40, 36),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        ),
+        onPressed: () {},
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
       ),
-      onPressed: () {},
-      child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -669,15 +868,19 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Confirm Deletion"),
-        content: const Text("Are you sure you want to remove this device from the records?"),
+        content: const Text(
+          "Are you sure you want to remove this device from the records?",
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               deleteDevice(id);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text("Delete"),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../widgets/animated_heading.dart';
 
 class MappingView extends StatefulWidget {
   const MappingView({super.key});
@@ -17,8 +18,8 @@ class _MappingViewState extends State<MappingView> {
 
   // ─── STATE ────────────────────────────────────────────────────────────────
   List<dynamic> _mappingList = [];
-  List<dynamic> _deviceList = [];    // from deviceview → data.DeviceMasters
-  List<dynamic> _locationList = [];  // from locationview → data (flat list)
+  List<dynamic> _deviceList = []; // from deviceview → data.DeviceMasters
+  List<dynamic> _locationList = []; // from locationview → data (flat list)
 
   bool _tableLoading = true;
   bool _dropsLoading = true;
@@ -33,8 +34,8 @@ class _MappingViewState extends State<MappingView> {
 
   // ─── FORM STATE ───────────────────────────────────────────────────────────
   // Row 1: device code (dropdown) | device name (text) | device model (text)
-  String? _selDeviceId;       // id of selected device
-  final _devNameCtrl  = TextEditingController();
+  String? _selDeviceId; // id of selected device
+  final _devNameCtrl = TextEditingController();
   final _devModelCtrl = TextEditingController();
 
   // Row 2: location (dropdown) + Submit button
@@ -46,8 +47,12 @@ class _MappingViewState extends State<MappingView> {
     super.initState();
     _loadDropdowns();
     _fetchMappings();
-    _searchCtrl.addListener(() =>
-        setState(() { _searchQ = _searchCtrl.text.toLowerCase(); _page = 1; }));
+    _searchCtrl.addListener(
+      () => setState(() {
+        _searchQ = _searchCtrl.text.toLowerCase();
+        _page = 1;
+      }),
+    );
   }
 
   @override
@@ -67,9 +72,15 @@ class _MappingViewState extends State<MappingView> {
       final headers = {'Content-Type': 'application/json'};
 
       final devRes = await http.post(
-          Uri.parse('$_base/deviceview'), headers: headers, body: body);
+        Uri.parse('$_base/deviceview'),
+        headers: headers,
+        body: body,
+      );
       final locRes = await http.post(
-          Uri.parse('$_base/locationview'), headers: headers, body: body);
+        Uri.parse('$_base/locationview'),
+        headers: headers,
+        body: body,
+      );
 
       if (devRes.statusCode == 200) {
         final parsed = jsonDecode(devRes.body);
@@ -140,11 +151,13 @@ class _MappingViewState extends State<MappingView> {
     try {
       // Find the device entry to get device_name and device_model
       final dev = _deviceList.firstWhere(
-          (d) => d['id'].toString() == _selDeviceId,
-          orElse: () => {});
+        (d) => d['id'].toString() == _selDeviceId,
+        orElse: () => {},
+      );
       final loc = _locationList.firstWhere(
-          (l) => l['id'].toString() == _selLocationId,
-          orElse: () => {});
+        (l) => l['id'].toString() == _selLocationId,
+        orElse: () => {},
+      );
 
       final res = await http.post(
         Uri.parse('$_base/insertMappingview'),
@@ -211,8 +224,9 @@ class _MappingViewState extends State<MappingView> {
     setState(() => _submitting = true);
     try {
       final loc = _locationList.firstWhere(
-          (l) => l['id'].toString() == _selLocationId,
-          orElse: () => {});
+        (l) => l['id'].toString() == _selLocationId,
+        orElse: () => {},
+      );
 
       final res = await http.post(
         Uri.parse('$_base/mappingUpdateview'),
@@ -251,7 +265,10 @@ class _MappingViewState extends State<MappingView> {
         title: const Text('Confirm Delete'),
         content: const Text('Are you sure you want to delete this mapping?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
@@ -274,8 +291,7 @@ class _MappingViewState extends State<MappingView> {
       } else {
         _snack('Delete failed: ${res.statusCode}');
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   // ──────────────────────────── POPUP DIALOG ────────────────────────────────
@@ -288,14 +304,18 @@ class _MappingViewState extends State<MappingView> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               titlePadding: EdgeInsets.zero,
               title: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
                   color: Color(0xFF000000),
                   borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -303,7 +323,10 @@ class _MappingViewState extends State<MappingView> {
                     Text(
                       _editingId == null ? "Mapping" : "Edit Mapping Details",
                       style: const TextStyle(
-                          color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
@@ -311,7 +334,7 @@ class _MappingViewState extends State<MappingView> {
                         _clearForm();
                         Navigator.pop(context);
                       },
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -327,7 +350,14 @@ class _MappingViewState extends State<MappingView> {
                         children: [
                           Expanded(
                             child: _dropsLoading
-                                ? const Center(child: SizedBox(height: 48, child: CircularProgressIndicator(strokeWidth: 2)))
+                                ? const Center(
+                                    child: SizedBox(
+                                      height: 48,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  )
                                 : DropdownButtonFormField<String>(
                                     value: _selDeviceId,
                                     decoration: _inputDec('Select Device Code'),
@@ -336,7 +366,8 @@ class _MappingViewState extends State<MappingView> {
                                       return DropdownMenuItem<String>(
                                         value: d['id'].toString(),
                                         child: Text(
-                                          d['device_code']?.toString() ?? d['id'].toString(),
+                                          d['device_code']?.toString() ??
+                                              d['id'].toString(),
                                           style: const TextStyle(fontSize: 13),
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -370,16 +401,26 @@ class _MappingViewState extends State<MappingView> {
                         children: [
                           Expanded(
                             child: _dropsLoading
-                                ? const Center(child: SizedBox(height: 48, child: CircularProgressIndicator(strokeWidth: 2)))
+                                ? const Center(
+                                    child: SizedBox(
+                                      height: 48,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  )
                                 : DropdownButtonFormField<String>(
                                     value: _selLocationId,
-                                    decoration: _inputDec('Select Location Name'),
+                                    decoration: _inputDec(
+                                      'Select Location Name',
+                                    ),
                                     isExpanded: true,
                                     items: _locationList.map((l) {
                                       return DropdownMenuItem<String>(
                                         value: l['id'].toString(),
                                         child: Text(
-                                          l['location_name']?.toString() ?? l['id'].toString(),
+                                          l['location_name']?.toString() ??
+                                              l['id'].toString(),
                                           style: const TextStyle(fontSize: 13),
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -399,7 +440,10 @@ class _MappingViewState extends State<MappingView> {
                   ),
                 ),
               ),
-              actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              actionsPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               actions: [
                 OutlinedButton(
                   onPressed: () {
@@ -412,16 +456,23 @@ class _MappingViewState extends State<MappingView> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF000000),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                   ),
                   onPressed: _submitting
                       ? null
                       : (_editingId == null ? _insert : _update),
                   child: _submitting
                       ? const SizedBox(
-                          width: 20, height: 20,
+                          width: 20,
+                          height: 20,
                           child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
                       : Text(_editingId == null ? "Submit" : "Update"),
                 ),
               ],
@@ -459,88 +510,89 @@ class _MappingViewState extends State<MappingView> {
   void _snack(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating));
+      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+    );
   }
 
   List<dynamic> get _filtered {
     if (_searchQ.isEmpty) return _mappingList;
     return _mappingList.where((item) {
-      final code  = (item['device_code']   ?? '').toString().toLowerCase();
-      final name  = (item['device_name']   ?? '').toString().toLowerCase();
-      final model = (item['device_model']  ?? '').toString().toLowerCase();
-      final loc   = (item['location_name'] ?? '').toString().toLowerCase();
-      final floor = (item['floor']         ?? '').toString().toLowerCase();
-      final sub   = (item['sublocation']   ?? '').toString().toLowerCase();
-      return code.contains(_searchQ)  || name.contains(_searchQ)  ||
-             model.contains(_searchQ) || loc.contains(_searchQ)   ||
-             floor.contains(_searchQ) || sub.contains(_searchQ);
+      final code = (item['device_code'] ?? '').toString().toLowerCase();
+      final name = (item['device_name'] ?? '').toString().toLowerCase();
+      final model = (item['device_model'] ?? '').toString().toLowerCase();
+      final loc = (item['location_name'] ?? '').toString().toLowerCase();
+      final floor = (item['floor'] ?? '').toString().toLowerCase();
+      final sub = (item['sublocation'] ?? '').toString().toLowerCase();
+      return code.contains(_searchQ) ||
+          name.contains(_searchQ) ||
+          model.contains(_searchQ) ||
+          loc.contains(_searchQ) ||
+          floor.contains(_searchQ) ||
+          sub.contains(_searchQ);
     }).toList();
   }
 
   List<dynamic> get _paged {
-    final per    = int.tryParse(_entries) ?? 10;
-    final start  = (_page - 1) * per;
-    final list   = _filtered;
+    final per = int.tryParse(_entries) ?? 10;
+    final start = (_page - 1) * per;
+    final list = _filtered;
     if (start >= list.length) return [];
     return list.sublist(start, (start + per).clamp(0, list.length));
   }
 
-  int get _totalPages =>
-      ((_filtered.length) / (int.tryParse(_entries) ?? 10)).ceil().clamp(1, 9999);
+  int get _totalPages => ((_filtered.length) / (int.tryParse(_entries) ?? 10))
+      .ceil()
+      .clamp(1, 9999);
 
   // ─── BUILD ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF000000),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Area
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Mapping Devices",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18)),
-                  
-                  ],
+                const AnimatedHeading(
+                  text: "Device Mapping",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
                 ),
                 ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    elevation: 4,
-                  ),
                   onPressed: _showMappingDialog,
                   icon: const Icon(Icons.add_link_rounded, size: 20),
-                  label: const Text("CREATE MAPPING",
-                      style: TextStyle(fontWeight: FontWeight.bold,fontSize:12)),
+                  label: const Text(
+                    "CREATE MAPPING",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
 
             // List Card
             Expanded(
-              child: Card(
-                color: Colors.white,
-                elevation: 5,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: _buildTableCard(),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: Colors.grey.shade200),
                 ),
+                child: _buildTableCard(),
               ),
             ),
           ],
@@ -549,343 +601,510 @@ class _MappingViewState extends State<MappingView> {
     );
   }
 
-  Widget _sectionTitle(String t) => Text(t,
-      style: const TextStyle(
-          color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold));
+  Widget _sectionTitle(String t) => Text(
+    t,
+    style: const TextStyle(
+      color: Colors.white,
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+    ),
+  );
 
   // ─── FORM CARD ───────────────────────────────────────────────────────────
 
   Widget _buildFormCard() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 6,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Row 1: Device Code dropdown | Device Name text | Device Model text ──
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Device Code Dropdown
-                Expanded(
-                  child: _dropsLoading
-                      ? const Center(child: SizedBox(height: 48, child: CircularProgressIndicator(strokeWidth: 2)))
-                      : DropdownButtonFormField<String>(
-                          initialValue: _selDeviceId,
-                          decoration: _inputDec('Select Device Code'),
-                          isExpanded: true,
-                          items: _deviceList.map((d) {
-                            return DropdownMenuItem<String>(
-                              value: d['id'].toString(),
-                              child: Text(
-                                d['device_code']?.toString() ?? d['id'].toString(),
-                                style: const TextStyle(fontSize: 13),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (v) => setState(() => _selDeviceId = v),
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Row 1: Device Code dropdown | Device Name text | Device Model text ──
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Device Code Dropdown
+              Expanded(
+                child: _dropsLoading
+                    ? const Center(
+                        child: SizedBox(
+                          height: 48,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                ),
-                const SizedBox(width: 16),
-                // Device Name
-                Expanded(
-                  child: TextFormField(
-                    controller: _devNameCtrl,
-                    decoration: _hintDec('Device Name'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Device Model
-                Expanded(
-                  child: TextFormField(
-                    controller: _devModelCtrl,
-                    decoration: _hintDec('Device Model'),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 18),
-
-            // ── Row 2: Location Name dropdown | Submit button ──
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Location dropdown
-                Expanded(
-                  child: _dropsLoading
-                      ? const Center(child: SizedBox(height: 48, child: CircularProgressIndicator(strokeWidth: 2)))
-                      : DropdownButtonFormField<String>(
-                          initialValue: _selLocationId,
-                          decoration: _inputDec('Select Location Name'),
-                          isExpanded: true,
-                          items: _locationList.map((l) {
-                            return DropdownMenuItem<String>(
-                              value: l['id'].toString(),
-                              child: Text(
-                                l['location_name']?.toString() ?? l['id'].toString(),
-                                style: const TextStyle(fontSize: 13),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (v) => setState(() => _selLocationId = v),
-                        ),
-                ),
-                const SizedBox(width: 16),
-
-                // Submit / Update Button
-                SizedBox(
-                  height: 52,
-                  child: Row(
-                    children: [
-                      if (_editingId != null) ...[
-                        OutlinedButton(
-                          onPressed: _clearForm,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            side: const BorderSide(color: Colors.red),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: const Text('Cancel'),
-                        ),
-                        const SizedBox(width: 10),
-                      ],
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF000000),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        onPressed: _submitting
-                            ? null
-                            : (_editingId == null ? _insert : _update),
-                        child: _submitting
-                            ? const SizedBox(
-                                width: 20, height: 20,
-                                child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2))
-                            : Text(
-                                _editingId == null ? 'Submit' : 'Update',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                              ),
+                      )
+                    : DropdownButtonFormField<String>(
+                        initialValue: _selDeviceId,
+                        decoration: _inputDec('Select Device Code'),
+                        isExpanded: true,
+                        items: _deviceList.map((d) {
+                          return DropdownMenuItem<String>(
+                            value: d['id'].toString(),
+                            child: Text(
+                              d['device_code']?.toString() ??
+                                  d['id'].toString(),
+                              style: const TextStyle(fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (v) => setState(() => _selDeviceId = v),
                       ),
-                    ],
-                  ),
+              ),
+              const SizedBox(width: 16),
+              // Device Name
+              Expanded(
+                child: TextFormField(
+                  controller: _devNameCtrl,
+                  decoration: _hintDec('Device Name'),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+              const SizedBox(width: 16),
+              // Device Model
+              Expanded(
+                child: TextFormField(
+                  controller: _devModelCtrl,
+                  decoration: _hintDec('Device Model'),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 18),
+
+          // ── Row 2: Location Name dropdown | Submit button ──
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Location dropdown
+              Expanded(
+                child: _dropsLoading
+                    ? const Center(
+                        child: SizedBox(
+                          height: 48,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : DropdownButtonFormField<String>(
+                        initialValue: _selLocationId,
+                        decoration: _inputDec('Select Location Name'),
+                        isExpanded: true,
+                        items: _locationList.map((l) {
+                          return DropdownMenuItem<String>(
+                            value: l['id'].toString(),
+                            child: Text(
+                              l['location_name']?.toString() ??
+                                  l['id'].toString(),
+                              style: const TextStyle(fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (v) => setState(() => _selLocationId = v),
+                      ),
+              ),
+              const SizedBox(width: 16),
+
+              // Submit / Update Button
+              SizedBox(
+                height: 52,
+                child: Row(
+                  children: [
+                    if (_editingId != null) ...[
+                      OutlinedButton(
+                        onPressed: _clearForm,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF000000),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 36,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: _submitting
+                          ? null
+                          : (_editingId == null ? _insert : _update),
+                      child: _submitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              _editingId == null ? 'Submit' : 'Update',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   InputDecoration _inputDec(String label) => InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      );
+    labelText: label,
+    border: const OutlineInputBorder(),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+  );
 
   // hintText shows inside the field and disappears when typing
   InputDecoration _hintDec(String hint) => InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: Colors.grey),
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      );
+    hintText: hint,
+    hintStyle: const TextStyle(color: Colors.grey),
+    border: const OutlineInputBorder(),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+  );
 
   // ─── TABLE CARD ───────────────────────────────────────────────────────────
 
   Widget _buildTableCard() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 6,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Entries + search
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(children: [
-                  const Text('Show ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                  DropdownButton<String>(
-                    value: _entries,
-                    items: ['10', '25', '50']
-                        .map((v) => DropdownMenuItem(value: v, child: Text(v, style: const TextStyle(fontSize: 13))))
-                        .toList(),
-                    onChanged: (v) => setState(() { _entries = v!; _page = 1; }),
-                  ),
-                  const Text(' entries', style: TextStyle(fontSize: 13)),
-                ]),
-                SizedBox(
-                  width: 260,
-                  height: 42,
-                  child: TextField(
-                    controller: _searchCtrl,
-                    decoration: const InputDecoration(
-                      hintText: 'Search...',
-                      prefixIcon: Icon(Icons.search, size: 18),
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          // Entries + search
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    'Show ',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
-                    style: const TextStyle(fontSize: 13),
+                  ),
+                  SizedBox(
+                    width: 70,
+                    height: 35,
+                    child: DropdownButtonFormField<String>(
+                      value: _entries,
+                      dropdownColor: Colors.white,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black87,
+                      ),
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 5),
+                      ),
+                      items: ['10', '25', '50']
+                          .map(
+                            (v) => DropdownMenuItem(value: v, child: Text(v)),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() {
+                        _entries = v!;
+                        _page = 1;
+                      }),
+                    ),
+                  ),
+                  const Text(
+                    ' entries',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                width: 250,
+                height: 40,
+                child: TextField(
+                  controller: _searchCtrl,
+                  style: const TextStyle(color: Colors.black87, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Search mappings...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
 
-            Expanded(
-              child: _tableLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildTable(),
-            ),
+          Expanded(
+            child: _tableLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _buildTable(),
+          ),
 
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-            // Footer pagination
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Showing ${_paged.length} of ${_filtered.length} records',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+          // Footer pagination
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Showing ${_paged.length} of ${_filtered.length} records',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black54,
                 ),
-                Row(children: [
-                  ElevatedButton(
-                    onPressed: _page > 1 ? () => setState(() => _page--) : null,
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF000000),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
-                    child: const Text('Prev', style: TextStyle(fontSize: 12)),
+              ),
+              Row(
+                children: [
+                  _pageBtn(
+                    'Prev',
+                    enabled: _page > 1,
+                    onTap: () => setState(() => _page--),
                   ),
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text('$_page / $_totalPages',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  ),
+                  _pageNum('$_page / $_totalPages'),
                   const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: _page < _totalPages ? () => setState(() => _page++) : null,
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF000000),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
-                    child: const Text('Next', style: TextStyle(fontSize: 12)),
+                  _pageBtn(
+                    'Next',
+                    enabled: _page < _totalPages,
+                    onTap: () => setState(() => _page++),
                   ),
-                ]),
-              ],
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTable() {
+    final rows = _paged;
+    return LayoutBuilder(
+      builder: (ctx, constraints) {
+        return SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: DataTable(
+                headingRowHeight: 46,
+                dataRowMinHeight: 40,
+                dataRowMaxHeight: 48,
+                headingRowColor: WidgetStateProperty.all(Colors.blue.shade50),
+                border: TableBorder.all(color: Colors.grey.shade100, width: 1),
+                columns: [
+                  _col('S.No'),
+                  _col('Device Code'),
+                  _col('Device Name'),
+                  _col('Device Model'),
+                  _col('Location'),
+                  _col('Floor'),
+                  _col('Sub Location'),
+                  _col('Edit'),
+                  _col('Delete'),
+                ],
+                rows: rows.isEmpty
+                    ? [
+                        DataRow(
+                          cells: List.generate(
+                            9,
+                            (i) => DataCell(
+                              i == 0
+                                  ? const Text(
+                                      'No data available',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    )
+                                  : const SizedBox(),
+                            ),
+                          ),
+                        ),
+                      ]
+                    : List.generate(rows.length, (i) {
+                        final item = rows[i];
+                        final sno =
+                            (_page - 1) * (int.tryParse(_entries) ?? 10) +
+                            i +
+                            1;
+                        return DataRow(
+                          color: WidgetStateProperty.resolveWith(
+                            (s) =>
+                                i.isEven ? Colors.grey.shade50 : Colors.white,
+                          ),
+                          cells: [
+                            DataCell(
+                              Text(
+                                '$sno',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                item['device_code']?.toString() ?? '-',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                item['device_name']?.toString() ?? '-',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                item['device_model']?.toString() ?? '-',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                item['location_name']?.toString() ?? '-',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                item['floor']?.toString() ?? '-',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                item['sublocation']?.toString() ?? '-',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Colors.blue,
+                                  size: 18,
+                                ),
+                                tooltip: 'Edit',
+                                onPressed: () => _loadForEdit(item['id']),
+                              ),
+                            ),
+                            DataCell(
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                  size: 18,
+                                ),
+                                tooltip: 'Delete',
+                                onPressed: () => _delete(item['id']),
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+              ),
             ),
-          ],
+          ),
+        );
+      },
+    );
+  }
+
+  DataColumn _col(String label) => DataColumn(
+    label: Text(
+      label,
+      style: TextStyle(
+        color: Colors.blue.shade800,
+        fontWeight: FontWeight.bold,
+        fontSize: 11,
+      ),
+    ),
+  );
+
+  Widget _pageBtn(String label, {bool enabled = true, VoidCallback? onTap}) {
+    return ElevatedButton(
+      onPressed: enabled ? onTap : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: enabled ? Colors.blue.shade50 : Colors.grey.shade50,
+        foregroundColor: enabled ? Colors.blue.shade800 : Colors.black26,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: enabled ? Colors.blue.shade100 : Colors.grey.shade200,
+          ),
+        ),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _pageNum(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
         ),
       ),
     );
   }
-  
-  Widget _buildTable() {
-    final rows = _paged;
-    return LayoutBuilder(builder: (ctx, constraints) {
-      return SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: constraints.maxWidth),
-            child: DataTable(
-            headingRowHeight: 46,
-            dataRowMinHeight: 40,
-            dataRowMaxHeight: 48,
-            headingRowColor: WidgetStateProperty.all(const Color(0xFF000000)),
-            border: TableBorder.all(color: Colors.grey.shade200, width: 1),
-            columns: [
-              _col('S.No'),
-              _col('Device Code'),
-              _col('Device Name'),
-              _col('Device Model'),
-              _col('Location'),
-              _col('Floor'),
-              _col('Sub Location'),
-              _col('Edit'),
-              _col('Delete'),
-            ],
-            rows: rows.isEmpty
-                ? [
-                    DataRow(cells: List.generate(
-                      9,
-                      (i) => DataCell(i == 0
-                          ? const Text('No data available',
-                              style: TextStyle(fontSize: 12, color: Colors.grey))
-                          : const SizedBox()),
-                    ))
-                  ]
-                : List.generate(rows.length, (i) {
-                    final item = rows[i];
-                    final sno = (_page - 1) * (int.tryParse(_entries) ?? 10) + i + 1;
-                    return DataRow(
-                      color: WidgetStateProperty.resolveWith(
-                          (s) => i.isEven ? Colors.grey.shade50 : Colors.white),
-                      cells: [
-                        DataCell(Text('$sno',
-                            style: const TextStyle(fontSize: 12))),
-                        DataCell(Text(
-                            item['device_code']?.toString() ?? '-',
-                            style: const TextStyle(fontSize: 12))),
-                        DataCell(Text(
-                            item['device_name']?.toString() ?? '-',
-                            style: const TextStyle(fontSize: 12))),
-                        DataCell(Text(
-                            item['device_model']?.toString() ?? '-',
-                            style: const TextStyle(fontSize: 12))),
-                        DataCell(Text(
-                            item['location_name']?.toString() ?? '-',
-                            style: const TextStyle(fontSize: 12))),
-                        DataCell(Text(
-                            item['floor']?.toString() ?? '-',
-                            style: const TextStyle(fontSize: 12))),
-                        DataCell(Text(
-                            item['sublocation']?.toString() ?? '-',
-                            style: const TextStyle(fontSize: 12))),
-                        DataCell(IconButton(
-                          icon: const Icon(Icons.edit,
-                              color: Colors.blue, size: 18),
-                          tooltip: 'Edit',
-                          onPressed: () => _loadForEdit(item['id']),
-                        )),
-                        DataCell(IconButton(
-                          icon: const Icon(Icons.delete,
-                              color: Colors.red, size: 18),
-                          tooltip: 'Delete',
-                          onPressed: () => _delete(item['id']),
-                        )),
-                        ],
-                      );
-                    }),
-            ),
-          ),
-        ),
-      );
-    });
-  }
-
-  DataColumn _col(String label) => DataColumn(
-        label: Text(label,
-            style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 11)),
-      );
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../widgets/animated_heading.dart';
 
 class DefaultTemplateView extends StatefulWidget {
   const DefaultTemplateView({super.key});
@@ -257,7 +258,7 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
               title: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
-                  color: Color(0xFF000000),
+                  color: Colors.blue,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
@@ -319,17 +320,28 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.grey.shade600,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                          ),
+                          child: const Text("CANCEL"),
+                        ),
+                        const SizedBox(width: 12),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF000000),
+                            backgroundColor: Colors.blue,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 18,
-                              
+                              horizontal: 24,
+                              vertical: 12,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           onPressed: _isSubmitting ? null : _submitAction,
@@ -338,14 +350,14 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
-                                    color: Colors.white,
                                     strokeWidth: 2,
+                                    color: Colors.white,
                                   ),
                                 )
                               : Text(
                                   _editingId == null
-                                      ? 'Submit'
-                                      : 'Update Record',
+                                      ? 'SUBMIT'
+                                      : 'UPDATE RECORD',
                                 ),
                         ),
                       ],
@@ -366,43 +378,24 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF000000),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Area
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Device List",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                const AnimatedHeading(
+                  text: "Default Templates",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
                 ),
                 ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 15,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 4,
-                  ),
                   onPressed: _showDefaultTemplateDialog,
                   icon: const Icon(Icons.settings_applications, size: 20),
                   label: const Text(
@@ -412,20 +405,24 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
 
-            // List Card
             Expanded(
-              child: Card(
-                color: Colors.white,
-                elevation: 5,
-                shape: RoundedRectangleBorder(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: Colors.grey.shade200),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: _buildRightListContent(),
-                ),
+                padding: const EdgeInsets.all(16.0),
+                child: _buildRightListContent(),
               ),
             ),
           ],
@@ -482,7 +479,10 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
                             child: DataTable(
                               headingRowHeight: 45,
                               headingRowColor: WidgetStateProperty.all(
-                                const Color(0xFF000000),
+                                Colors.blue.shade50,
+                              ),
+                              border: TableBorder.all(
+                                color: Colors.grey.shade100,
                               ),
                               columns: [
                                 _buildTableCol('Device Name'),
@@ -554,7 +554,7 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
   // WIDGET HELPERS
   // ──────────────────────────────────────────────────────────────────────────
 
-  Widget _buildLabel(String text, {Color color = Colors.white}) => Padding(
+  Widget _buildLabel(String text, {Color color = Colors.black87}) => Padding(
     padding: const EdgeInsets.only(bottom: 8.0),
     child: Text(
       text,
@@ -574,21 +574,28 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButtonHideUnderline(
-        
         child: DropdownButton<String>(
           isExpanded: true,
+          dropdownColor: Colors.white,
           value: items.any((i) => i[idKey].toString() == value) ? value : null,
-          hint: Text(hint, style: const TextStyle(fontSize: 13)),
+          hint: Text(
+            hint,
+            style: const TextStyle(fontSize: 13, color: Colors.black45),
+          ),
+          style: const TextStyle(color: Colors.black87),
+          menuMaxHeight: 300,
+          alignment:
+              AlignmentDirectional.topStart, // Helps keep menu below the button
           items: items.map((item) {
             return DropdownMenuItem<String>(
               value: item[idKey].toString(),
               child: Text(
                 item[nameKey] ?? "",
-                style: const TextStyle(fontSize: 13),
+                style: const TextStyle(fontSize: 13, color: Colors.black87),
               ),
             );
           }).toList(),
@@ -606,53 +613,59 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
           children: [
             const Text(
               "Show ",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
-            Container(
-              height: 35,
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(4),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.black87,
               ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _entriesValue,
-                  items: ["10", "25", "50"]
-                      .map(
-                        (v) => DropdownMenuItem(
-                          value: v,
-                          child: Text(v, style: const TextStyle(fontSize: 12)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() {
-                    _entriesValue = v!;
-                    _currentPage = 1;
-                  }),
+            ),
+            SizedBox(
+              width: 70,
+              height: 35,
+              child: DropdownButtonFormField<String>(
+                value: _entriesValue,
+                dropdownColor: Colors.white,
+                style: const TextStyle(color: Colors.black87, fontSize: 13),
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 5),
                 ),
+                items: ["10", "25", "50"]
+                    .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                    .toList(),
+                onChanged: (v) => setState(() {
+                  _entriesValue = v!;
+                  _currentPage = 1;
+                }),
               ),
             ),
             const Text(
               " entries",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.black87,
+              ),
             ),
           ],
         ),
         SizedBox(
-          width: 200,
-          height: 35,
+          width: 250,
+          height: 40,
           child: TextField(
+            controller: _searchController,
             onChanged: (v) => setState(() {
               _searchQuery = v;
               _currentPage = 1;
             }),
-            decoration: const InputDecoration(
-              hintText: "Search...",
-              prefixIcon: Icon(Icons.search, size: 18),
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.zero,
+            style: const TextStyle(color: Colors.black87, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: "Search devices...",
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
           ),
         ),
@@ -663,8 +676,8 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
   DataColumn _buildTableCol(String label) => DataColumn(
     label: Text(
       label,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: Colors.blue.shade800,
         fontWeight: FontWeight.bold,
         fontSize: 12,
       ),
@@ -683,7 +696,11 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
         children: [
           Text(
             "Showing ${total == 0 ? 0 : start} to $end of $total entries",
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
           ),
           Row(
             children: [
@@ -754,19 +771,21 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isActive
-              ? const Color(0xFF0A192F)
-              : (enabled ? Colors.white : Colors.grey.shade100),
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(4),
+              ? Colors.blue
+              : (enabled ? Colors.white : Colors.grey.shade50),
+          border: Border.all(
+            color: isActive ? Colors.blue : Colors.grey.shade300,
+          ),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
           label,
           style: TextStyle(
             color: isActive
                 ? Colors.white
-                : (enabled ? Colors.black : Colors.grey),
+                : (enabled ? Colors.black87 : Colors.black26),
             fontSize: 11,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

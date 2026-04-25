@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import '../widgets/animated_heading.dart';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -17,8 +18,11 @@ const _kBaseUrl = 'https://display.sriher.com/uploads/';
 
 class _DashboardData {
   final int totalDevice;
+  final int activeDevice;
   final int totTemp;
+  final int totScheTemp;
   final int totLocation;
+  final int activeLoc;
   final int imgFile;
   final int vidFile;
   final List<String> imageUrls;
@@ -30,8 +34,11 @@ class _DashboardData {
 
   _DashboardData({
     required this.totalDevice,
+    required this.activeDevice,
     required this.totTemp,
+    required this.totScheTemp,
     required this.totLocation,
+    required this.activeLoc,
     required this.imgFile,
     required this.vidFile,
     required this.imageUrls,
@@ -61,8 +68,11 @@ class _DashboardData {
 
     return _DashboardData(
       totalDevice: json['totaldevice'] ?? 0,
+      activeDevice: json['active_device'] ?? 0,
       totTemp: json['tot_temp'] ?? 0,
+      totScheTemp: json['tot_sche_temp'] ?? 0,
       totLocation: json['tot_location'] ?? 0,
+      activeLoc: json['active_loc'] ?? 0,
       imgFile: json['img_file'] ?? 0,
       vidFile: json['vid_file'] ?? 0,
       imageUrls: imgs,
@@ -119,6 +129,10 @@ class _DashboardViewState extends State<DashboardView>
 
   // Bottom table
   String _selectedCategory = 'Devices';
+  String _searchQuery = "";
+  final TextEditingController _searchController = TextEditingController();
+  int _entriesPerPage = 10;
+  int _currentPage = 1;
 
   @override
   void initState() {
@@ -267,6 +281,7 @@ class _DashboardViewState extends State<DashboardView>
     _bufferingSub?.cancel();
     _errorSub?.cancel();
     _videoReadyTimer?.cancel();
+    _searchController.dispose();
     _controller.dispose();
     _slideTimer?.cancel();
     _pageCtrl.dispose();
@@ -279,48 +294,71 @@ class _DashboardViewState extends State<DashboardView>
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: Colors.orange),
-            SizedBox(height: 14),
-            Text('Loading Dashboard…', style: TextStyle(color: Colors.white70)),
-          ],
+      return Container(
+        color: Colors.white,
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.orange),
+              SizedBox(height: 14),
+              Text(
+                'Loading Dashboard…',
+                style: TextStyle(color: Colors.black54),
+              ),
+            ],
+          ),
         ),
       );
     }
     if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.wifi_off, color: Colors.redAccent, size: 48),
-            const SizedBox(height: 10),
-            Text(_error!, style: const TextStyle(color: Colors.white70)),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _fetchDashboard,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
+      return Container(
+        color: Colors.white,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.wifi_off, color: Colors.redAccent, size: 48),
+              const SizedBox(height: 10),
+              Text(_error!, style: const TextStyle(color: Colors.black54)),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _fetchDashboard,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     final d = _data!;
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _topCards(d),
-          const SizedBox(height: 16),
-          _midSection(d),
-          const SizedBox(height: 28),
-          _bottomSection(d),
-          const SizedBox(height: 24),
-        ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFFF1F7FF), // Light blue mix below the top header
+            Colors.white,
+          ],
+          stops: const [0.0, 0.35],
+        ),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _topCards(d),
+            const SizedBox(height: 16),
+            _midSection(d),
+            const SizedBox(height: 28),
+            _bottomSection(d),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
@@ -335,37 +373,33 @@ class _DashboardViewState extends State<DashboardView>
           _menuCard(
             'DEVICE DETAILS',
             Icons.tv,
-            '${d.totalDevice}',
-            const LinearGradient(
-              colors: [Color(0xFFFF9800), Color(0xFFFFB74D)],
-            ),
+            '${d.activeDevice} / ${d.totalDevice}',
+            const Color.fromARGB(255, 228, 210, 18), // Light Yellow
+            const Color.fromARGB(255, 245, 212, 48), // Bright Yellow
             _cardAnimations[0],
           ),
           _menuCard(
             'TEMPLATE DETAILS',
             Icons.dashboard_customize,
-            '${d.totTemp}',
-            const LinearGradient(
-              colors: [Color(0xFF1976D2), Color(0xFF64B5F6)],
-            ),
+            '${d.totScheTemp} / ${d.totTemp}',
+            const Color.fromARGB(255, 9, 74, 121), // Light Blue
+            const Color.fromARGB(22, 1, 16, 29), // Bright Blue
             _cardAnimations[1],
           ),
           _menuCard(
             'LOCATION',
             Icons.location_on,
-            '${d.totLocation}',
-            const LinearGradient(
-              colors: [Color(0xFF388E3C), Color(0xFF81C784)],
-            ),
+            '${d.activeLoc} / ${d.totLocation}',
+            const Color(0xFFE8F5E9), // Light Green
+            const Color(0xFF43A047), // Bright Green
             _cardAnimations[2],
           ),
           _menuCard(
             'FILES',
             Icons.insert_drive_file,
             '${d.imgFile}',
-            const LinearGradient(
-              colors: [Color(0xFF546E7A), Color(0xFF90A4AE)],
-            ),
+            const Color(0xFFF3E5F5), // Light Violet
+            const Color(0xFF8E24AA), // Bright Violet
             _cardAnimations[3],
           ),
         ],
@@ -377,23 +411,28 @@ class _DashboardViewState extends State<DashboardView>
     String title,
     IconData icon,
     String count,
-    LinearGradient grad,
+    Color bgColor,
+    Color accentColor,
     Animation<double> anim,
   ) {
     return Expanded(
       child: ScaleTransition(
         scale: anim,
         child: Container(
-          height: 80,
+          height: 85,
           margin: const EdgeInsets.symmetric(horizontal: 5),
           decoration: BoxDecoration(
-            gradient: grad,
+            color: bgColor, // Switched to specific light background
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: accentColor.withOpacity(0.15),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black45, // Darker shadow
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -409,10 +448,11 @@ class _DashboardViewState extends State<DashboardView>
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -421,8 +461,8 @@ class _DashboardViewState extends State<DashboardView>
                       Text(
                         count,
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
+                          color: Colors.black87,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -432,10 +472,12 @@ class _DashboardViewState extends State<DashboardView>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Colors.white.withOpacity(
+                      0.8,
+                    ), // Bright container behind logo
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: Colors.white, size: 22),
+                  child: Icon(icon, color: accentColor, size: 24),
                 ),
               ],
             ),
@@ -478,14 +520,14 @@ class _DashboardViewState extends State<DashboardView>
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.35), // Big card is black/transparent
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -901,30 +943,35 @@ class _DashboardViewState extends State<DashboardView>
               children: [
                 ScaleTransition(
                   scale: _cardAnimations[6],
-                  child: Card(
-                    elevation: 4,
-                    color: Colors.black.withOpacity(0.4),
-                    shape: RoundedRectangleBorder(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(color: Colors.white10),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 20),
-                          const Text(
-                            'Progress Track',
+                          const SizedBox(height: 10),
+                          const AnimatedHeading(
+                            text: 'Progress Track',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Colors.blue,
                               fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              letterSpacing: 0.5,
+                              fontSize: 16,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          const Divider(color: Colors.white12),
+                          const SizedBox(height: 10),
+                          Divider(color: Colors.grey.shade100),
                           _categoryRow(
                             Icons.tv,
                             Colors.orange,
@@ -979,17 +1026,86 @@ class _DashboardViewState extends State<DashboardView>
           // Right: dynamic table
           Expanded(
             flex: 4,
-            child: ScaleTransition(
-              scale: _cardAnimations[7],
-              child: Card(
-                elevation: 4,
-                color: Colors.white,
-                clipBehavior: Clip.antiAlias,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      "Show ",
+                      style: TextStyle(color: Colors.black87, fontSize: 13),
+                    ),
+                    Container(
+                      // 1. Reduced horizontal padding and added fixed height
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      height: 32, // Controlled height to make it "very little"
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(
+                          6,
+                        ), // Slightly tighter radius
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        // 2. Cleaner way to remove underline
+                        child: DropdownButton<int>(
+                          value: _entriesPerPage,
+                          dropdownColor: Colors.white,
+                          // 3. Set dense to true to reduce internal vertical padding
+                          isDense: true,
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontSize:
+                                12, // Slightly smaller font to fit the smaller box
+                          ),
+                          items: [5, 10, 20, 50].map((int value) {
+                            return DropdownMenuItem<int>(
+                              value: value,
+                              child: Text(value.toString()),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _entriesPerPage = val;
+                                _currentPage = 1;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      " entries",
+                      style: TextStyle(color: Colors.black87, fontSize: 13),
+                    ),
+                  ],
                 ),
-                child: Column(children: [_tableHeader(), _tableBody(d)]),
-              ),
+                ScaleTransition(
+                  scale: _cardAnimations[7],
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        _tableHeader(),
+                        _tableBody(d),
+                        _tableFooter(d),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1001,18 +1117,26 @@ class _DashboardViewState extends State<DashboardView>
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: InkWell(
-        onTap: () => setState(() => _selectedCategory = label),
+        onTap: () {
+          _searchController.clear();
+          setState(() {
+            _selectedCategory = label;
+            _currentPage = 1; // Reset to page 1 on category change
+            _searchQuery = "";
+            _searchController.clear();
+          });
+        },
         borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? Colors.tealAccent.withOpacity(0.1)
+                ? Colors.white.withOpacity(0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected
-                  ? Colors.tealAccent.withValues(alpha: 0.5)
+                  ? Colors.white.withValues(alpha: 0.5)
                   : Colors.white10,
             ),
           ),
@@ -1020,25 +1144,21 @@ class _DashboardViewState extends State<DashboardView>
             children: [
               Icon(
                 icon,
-                color: isSelected ? Colors.tealAccent : Colors.white70,
+                color: isSelected ? Colors.white : Colors.white70,
                 size: 18,
               ),
               const SizedBox(width: 12),
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? Colors.tealAccent : Colors.white70,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   fontSize: 13,
+                  color: Colors.white,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
               const Spacer(),
               if (isSelected)
-                const Icon(
-                  Icons.check_circle,
-                  color: Colors.tealAccent,
-                  size: 14,
-                ),
+                const Icon(Icons.check_circle, color: Colors.white, size: 14),
             ],
           ),
         ),
@@ -1052,7 +1172,13 @@ class _DashboardViewState extends State<DashboardView>
 
     return InkWell(
       borderRadius: BorderRadius.circular(8),
-      onTap: () => setState(() => _selectedCategory = label),
+      onTap: () {
+        _searchController.clear();
+        setState(() {
+          _selectedCategory = label;
+          _searchQuery = "";
+        });
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
@@ -1076,15 +1202,16 @@ class _DashboardViewState extends State<DashboardView>
                   label,
                   style: TextStyle(
                     fontSize: 12,
+                    color: Colors.black87,
                     fontWeight: sel ? FontWeight.bold : FontWeight.w500,
                   ),
                 ),
                 const Spacer(),
                 Text(
                   '$count',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11,
-                    color: color,
+                    color: Colors.black54,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -1136,9 +1263,10 @@ class _DashboardViewState extends State<DashboardView>
   }
 
   List<List<String>> _rows(_DashboardData d) {
+    List<List<String>> allRows = [];
     switch (_selectedCategory) {
       case 'Devices':
-        return d.deviceList
+        allRows = d.deviceList
             .map(
               (e) => [
                 (e['device_name'] ?? '-').toString(),
@@ -1147,8 +1275,9 @@ class _DashboardViewState extends State<DashboardView>
               ],
             )
             .toList();
+        break;
       case 'Templates':
-        return d.tempList
+        allRows = d.tempList
             .map(
               (e) => [
                 (e['temp_name'] ?? '-').toString(),
@@ -1156,8 +1285,9 @@ class _DashboardViewState extends State<DashboardView>
               ],
             )
             .toList();
+        break;
       case 'Locations':
-        return d.locationList
+        allRows = d.locationList
             .map(
               (e) => [
                 (e['location_name'] ?? '-').toString(),
@@ -1166,9 +1296,10 @@ class _DashboardViewState extends State<DashboardView>
               ],
             )
             .toList();
+        break;
       case 'Over Views':
-        if (d.overview.isEmpty) return [];
-        return d.overview
+        if (d.overview.isEmpty) break;
+        allRows = d.overview
             .map(
               (e) => [
                 (e['device_name'] ?? '-').toString(),
@@ -1179,24 +1310,33 @@ class _DashboardViewState extends State<DashboardView>
               ],
             )
             .toList();
-      default:
-        return [];
+        break;
     }
+
+    if (_searchQuery.isEmpty) return allRows;
+    return allRows.where((row) {
+      return row.any(
+        (cell) => cell.toLowerCase().contains(_searchQuery.toLowerCase()),
+      );
+    }).toList();
   }
 
   Widget _tableHeader() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: const BoxDecoration(color: Color(0xFF0A192F)),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        border: Border(bottom: BorderSide(color: Colors.blue.shade100)),
+      ),
       child: Row(
         children: _headers
             .map(
               (h) => Expanded(
                 child: Text(
                   h,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: Colors.blue.shade800,
                     fontWeight: FontWeight.bold,
                     fontSize: 11,
                   ),
@@ -1209,8 +1349,8 @@ class _DashboardViewState extends State<DashboardView>
   }
 
   Widget _tableBody(_DashboardData d) {
-    final rows = _rows(d);
-    if (rows.isEmpty) {
+    final allRows = _rows(d);
+    if (allRows.isEmpty) {
       return SizedBox(
         height: 200,
         child: Center(
@@ -1221,28 +1361,39 @@ class _DashboardViewState extends State<DashboardView>
               const SizedBox(height: 10),
               Text(
                 'No data for $_selectedCategory',
-                style: const TextStyle(color: Colors.grey, fontSize: 13),
+                style: const TextStyle(color: Colors.black54, fontSize: 13),
               ),
             ],
           ),
         ),
       );
     }
+
+    final startIndex = (_currentPage - 1) * _entriesPerPage;
+    final endIndex = (startIndex + _entriesPerPage).clamp(0, allRows.length);
+    final rows = allRows.sublist(startIndex, endIndex);
+
     return SizedBox(
-      height: 220,
+      height: 350,
       child: SingleChildScrollView(
         child: Column(
           children: List.generate(rows.length, (i) {
             return Container(
-              color: i.isEven ? Colors.grey.shade50 : Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              decoration: BoxDecoration(
+                color: i.isEven ? Colors.grey.shade50 : Colors.white,
+                border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               child: Row(
                 children: rows[i]
                     .map(
                       (cell) => Expanded(
                         child: Text(
                           cell,
-                          style: const TextStyle(fontSize: 11),
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontSize: 12,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -1251,6 +1402,108 @@ class _DashboardViewState extends State<DashboardView>
               ),
             );
           }),
+        ),
+      ),
+    );
+  }
+
+  Widget _tableFooter(_DashboardData d) {
+    final allRows = _rows(d);
+    final total = allRows.length;
+    final start = total == 0 ? 0 : (_currentPage - 1) * _entriesPerPage + 1;
+    final end = (_currentPage * _entriesPerPage).clamp(0, total);
+    final totalPages = (total / _entriesPerPage).ceil();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Showing $start to $end of $total entries",
+            style: const TextStyle(color: Colors.black54, fontSize: 12),
+          ),
+          Row(
+            children: [
+              _pageBtn("Prev", _currentPage > 1, () {
+                setState(() => _currentPage--);
+              }),
+              ...List.generate(totalPages, (i) {
+                final page = i + 1;
+                if (totalPages > 5) {
+                  if (page == 1 ||
+                      page == totalPages ||
+                      (page >= _currentPage - 1 && page <= _currentPage + 1)) {
+                    return _pageBtn(
+                      page.toString(),
+                      true,
+                      () => setState(() => _currentPage = page),
+                      active: page == _currentPage,
+                    );
+                  }
+                  if (page == 2 || page == totalPages - 1) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        "...",
+                        style: TextStyle(color: Colors.black38),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }
+                return _pageBtn(
+                  page.toString(),
+                  true,
+                  () => setState(() => _currentPage = page),
+                  active: page == _currentPage,
+                );
+              }),
+              _pageBtn("Next", _currentPage < totalPages, () {
+                setState(() => _currentPage++);
+              }),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pageBtn(
+    String label,
+    bool enabled,
+    VoidCallback onTap, {
+    bool active = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: active
+                ? Colors.blue
+                : (enabled ? Colors.grey.shade100 : Colors.grey.shade50),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: active ? Colors.blue : Colors.grey.shade300,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: active
+                  ? Colors.white
+                  : (enabled ? Colors.black87 : Colors.black26),
+              fontSize: 12,
+              fontWeight: active ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
         ),
       ),
     );

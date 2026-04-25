@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../../widgets/animated_heading.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Privilege definitions
@@ -8,7 +9,7 @@ import 'package:http/http.dart' as http;
 // The API expects "previliges": ["menuId,subId", ...]
 // ──────────────────────────────────────────────────────────────────────────────
 class _Priv {
-  final String id;   // "menuId,subId"  e.g. "1,1"
+  final String id; // "menuId,subId"  e.g. "1,1"
   final String name; // display label
   const _Priv(this.id, this.name);
 }
@@ -39,7 +40,8 @@ class RoleView extends StatefulWidget {
   State<RoleView> createState() => _RoleViewState();
 }
 
-class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin {
+class _RoleViewState extends State<RoleView>
+    with SingleTickerProviderStateMixin {
   static const String _apiKey =
       "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
 
@@ -51,11 +53,11 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
   final TextEditingController _searchController = TextEditingController();
 
   // ── form state ──
-  int? editingId;           // null = create, non-null = update
+  int? editingId; // null = create, non-null = update
   bool isSubmitting = false;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _roleNameController = TextEditingController();
-  final Set<String> _selectedPrivs = {};   // e.g. {"1,1", "3,2"}
+  final Set<String> _selectedPrivs = {}; // e.g. {"1,1", "3,2"}
 
   @override
   void initState() {
@@ -71,25 +73,30 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
   }
 
   // ──────────────────────────── API CALLS ──────────────────────────────────
- 
+
   /// GET /roleview — fetch all roles
   Future<void> fetchRoles() async {
     setState(() => isLoading = true);
     try {
       final res = await http
-          .post(Uri.parse('https://display.sriher.com/roleview'),
-              headers: {"Content-Type": "application/json"},
-              body: jsonEncode({"api_key": _apiKey}))
+          .post(
+            Uri.parse('https://display.sriher.com/roleview'),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({"api_key": _apiKey}),
+          )
           .timeout(const Duration(seconds: 15));
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        final payload =
-            data is Map && data.containsKey('data') ? data['data'] : data;
+        final payload = data is Map && data.containsKey('data')
+            ? data['data']
+            : data;
         setState(() {
-          allRoles = (payload is List
-                  ? payload
-                  : (payload['roles'] ?? payload['data'] ?? [])) as List;
+          allRoles =
+              (payload is List
+                      ? payload
+                      : (payload['roles'] ?? payload['data'] ?? []))
+                  as List;
           isLoading = false;
         });
       } else {
@@ -109,16 +116,21 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
     setState(() => isLoading = true); // Added loading state for fetch
     try {
       final res = await http
-          .post(Uri.parse('https://display.sriher.com/roleUpdateFormview'),
-              headers: {"Content-Type": "application/json"},
-              body: jsonEncode({"api_key": _apiKey, "id": id}))
+          .post(
+            Uri.parse('https://display.sriher.com/roleUpdateFormview'),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({"api_key": _apiKey, "id": id}),
+          )
           .timeout(const Duration(seconds: 15));
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        final payload =
-            data is Map && data.containsKey('data') ? data['data'] : data;
-        final r = (payload is List && payload.isNotEmpty) ? payload[0] : payload;
+        final payload = data is Map && data.containsKey('data')
+            ? data['data']
+            : data;
+        final r = (payload is List && payload.isNotEmpty)
+            ? payload[0]
+            : payload;
 
         // Parse privileges — may come as List<String>, List<Map>, or comma-separated string
         final rawPrivs = r['previliges'] ?? r['privileges'] ?? [];
@@ -127,7 +139,11 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
           for (final p in rawPrivs) {
             if (p is Map) {
               final mId = p['menu_id']?.toString() ?? p['menuId']?.toString();
-              final sId = p['sub_menu_id']?.toString() ?? p['subMenuId']?.toString() ?? p['sub_id']?.toString() ?? p['type']?.toString();
+              final sId =
+                  p['sub_menu_id']?.toString() ??
+                  p['subMenuId']?.toString() ??
+                  p['sub_id']?.toString() ??
+                  p['type']?.toString();
               if (mId != null && sId != null) {
                 privSet.add("$mId,$sId");
               }
@@ -141,10 +157,10 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
           // If the list of parts only contains single integers, they might be pairs.
           // However, most likely the API returns ["1,1", "3,1"] as strings in a list.
           if (parts.length > 1 && !parts[0].contains(',')) {
-             // Possible "1,1,3,1" format
-             for (int i = 0; i < parts.length - 1; i += 2) {
-               privSet.add("${parts[i]},${parts[i+1]}");
-             }
+            // Possible "1,1,3,1" format
+            for (int i = 0; i < parts.length - 1; i += 2) {
+              privSet.add("${parts[i]},${parts[i + 1]}");
+            }
           } else {
             privSet.addAll(parts);
           }
@@ -182,7 +198,7 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
     if (_selectedPrivs.isEmpty) {
       _snack("Select at least one privilege.", isError: true);
       return;
-    } 
+    }
 
     setState(() => isSubmitting = true);
 
@@ -200,9 +216,11 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
 
     try {
       final res = await http
-          .post(Uri.parse(url),
-              headers: {"Content-Type": "application/json"},
-              body: jsonEncode(body))
+          .post(
+            Uri.parse(url),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode(body),
+          )
           .timeout(const Duration(seconds: 15));
 
       if (res.statusCode == 200) {
@@ -230,16 +248,17 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
       builder: (ctx) => AlertDialog(
         title: const Text("Delete Role"),
         content: Text(
-            "Are you sure you want to delete \"${role['role_name']}\"?"),
+          "Are you sure you want to delete \"${role['role_name']}\"?",
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text("Cancel")),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancel"),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
-            child:
-                const Text("Delete", style: TextStyle(color: Colors.white)),
+            child: const Text("Delete", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -249,9 +268,11 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
 
     try {
       final res = await http
-          .post(Uri.parse('https://display.sriher.com/deleteRoleview'),
-              headers: {"Content-Type": "application/json"},
-              body: jsonEncode({"api_key": _apiKey, "id": id}))
+          .post(
+            Uri.parse('https://display.sriher.com/deleteRoleview'),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({"api_key": _apiKey, "id": id}),
+          )
           .timeout(const Duration(seconds: 15));
 
       if (res.statusCode == 200) {
@@ -275,13 +296,15 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
 
   void _snack(String msg, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      margin: const EdgeInsets.all(16),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   // ──────────────────────────── POPUP DIALOG ────────────────────────────────
@@ -294,22 +317,31 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               titlePadding: EdgeInsets.zero,
               title: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
                   color: Color(0xFF000000),
                   borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      editingId == null ? "Create New Role" : "Edit Role Details",
+                      editingId == null
+                          ? "Create New Role"
+                          : "Edit Role Details",
                       style: const TextStyle(
-                          color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
@@ -317,7 +349,7 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
                         _resetForm();
                         Navigator.pop(context);
                       },
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -342,68 +374,69 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
     final filtered = searchQuery.isEmpty
         ? allRoles
         : allRoles
-            .where((r) => (r['role_name']?.toString().toLowerCase() ?? '')
-                .contains(searchQuery.toLowerCase()))
-            .toList();
+              .where(
+                (r) => (r['role_name']?.toString().toLowerCase() ?? '')
+                    .contains(searchQuery.toLowerCase()),
+              )
+              .toList();
     final paged = filtered.take(limit).toList();
 
-    return Container(
-      color: const Color(0xFF000000),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Area
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Roles List",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18)),
-          
-                  ],
+                const AnimatedHeading(
+                  text: "Role Management",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
                 ),
                 ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    elevation: 4,
-                  ),
                   onPressed: _showRoleDialog,
                   icon: const Icon(Icons.add_moderator, size: 20),
-                  label: const Text("CREATE ROLE",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  label: const Text(
+                    "CREATE ROLE",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
 
-            // Table Card
+            // Main List Container
             Expanded(
-              child: Card(
-                color: Colors.white,
-                elevation: 5,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     children: [
                       _buildListHeader(),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       Expanded(
                         child: isLoading
                             ? const Center(child: CircularProgressIndicator())
                             : paged.isEmpty
-                                ? const Center(child: Text("No roles found."))
-                                : _buildTableContainer(paged, filtered.length),
+                            ? const Center(child: Text("No roles found."))
+                            : _buildTableContainer(paged, filtered.length),
                       ),
                       const SizedBox(height: 20),
                       _buildFooter(paged.length, filtered.length),
@@ -428,12 +461,14 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: ConstrainedBox(
-          constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 100),
+          constraints: BoxConstraints(
+            minWidth: MediaQuery.of(context).size.width - 100,
+          ),
           child: DataTable(
             columnSpacing: 24,
             headingRowHeight: 56,
             dataRowMaxHeight: 60,
-            headingRowColor: WidgetStateProperty.all(const Color(0xFF000000)),
+            headingRowColor: WidgetStateProperty.all(Colors.blue.shade50),
             columns: [
               _buildCol('#'),
               _buildCol('Role'),
@@ -455,8 +490,10 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text("Showing $pagedCount of $totalCount entries",
-            style: const TextStyle(color: Colors.grey, fontSize: 13)),
+        Text(
+          "Showing $pagedCount of $totalCount entries",
+          style: const TextStyle(color: Colors.grey, fontSize: 13),
+        ),
         _buildPagination(),
       ],
     );
@@ -473,14 +510,10 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Role Name field
-          const Text.rich(
-            TextSpan(
-              
-              children: [
+          const Text.rich(TextSpan(children: [
                 
               ],
-            ),
-          ),
+            )),
           const SizedBox(height: 8),
           TextFormField(
             controller: _roleNameController,
@@ -491,39 +524,45 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
               hintText: 'Enter Role Name',
               hintStyle: TextStyle(fontSize: 13),
               border: OutlineInputBorder(),
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 12,
+              ),
             ),
           ),
           const SizedBox(height: 15),
 
           // Select All
-          Row(children: [
-            Checkbox(
-              value: allSelected,
-              tristate: true,
-              onChanged: (v) {
-                if (setDialogState != null) {
-                  setDialogState(() {
+          Row(
+            children: [
+              Checkbox(
+                value: allSelected,
+                tristate: true,
+                onChanged: (v) {
+                  if (setDialogState != null) {
+                    setDialogState(() {
+                      if (v == true) {
+                        _selectedPrivs.addAll(_allPrivileges.map((p) => p.id));
+                      } else {
+                        _selectedPrivs.clear();
+                      }
+                    });
+                  }
+                  setState(() {
                     if (v == true) {
                       _selectedPrivs.addAll(_allPrivileges.map((p) => p.id));
                     } else {
                       _selectedPrivs.clear();
                     }
                   });
-                }
-                setState(() {
-                  if (v == true) {
-                    _selectedPrivs.addAll(_allPrivileges.map((p) => p.id));
-                  } else {
-                    _selectedPrivs.clear();
-                  }
-                });
-              },
-            ),
-            const Text("Select All",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-          ]),
+                },
+              ),
+              const Text(
+                "Select All",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ],
+          ),
           const Divider(),
 
           // Privileges table
@@ -531,16 +570,29 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
             border: TableBorder.all(color: Colors.grey[300]!),
             columnWidths: const {
               0: FlexColumnWidth(1),
-              1: FlexColumnWidth(2.5)
+              1: FlexColumnWidth(2.5),
             },
             children: [
               _buildPrivRow("Dashboard", [_allPrivileges[0]], setDialogState),
-              _buildPrivRow("Authentication", [_allPrivileges[1]], setDialogState),
-              _buildPrivRow("Masters", _allPrivileges.sublist(2, 7), setDialogState),
+              _buildPrivRow("Authentication", [
+                _allPrivileges[1],
+              ], setDialogState),
+              _buildPrivRow(
+                "Masters",
+                _allPrivileges.sublist(2, 7),
+                setDialogState,
+              ),
               _buildPrivRow("File Master", [_allPrivileges[7]], setDialogState),
               _buildPrivRow(
-                  "Template Master", _allPrivileges.sublist(8, 11), setDialogState),
-              _buildPrivRow("Schedule", _allPrivileges.sublist(11), setDialogState),
+                "Template Master",
+                _allPrivileges.sublist(8, 11),
+                setDialogState,
+              ),
+              _buildPrivRow(
+                "Schedule",
+                _allPrivileges.sublist(11),
+                setDialogState,
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -565,7 +617,8 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
                     backgroundColor: const Color(0xFF000000),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     elevation: 4,
                   ),
                   onPressed: isSubmitting ? null : handleSubmit,
@@ -574,10 +627,17 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                      : Text(editingId == null ? "Submit" : "Update",
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          editingId == null ? "Submit" : "Update",
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 13)),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -589,20 +649,28 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
 
   // ──────────────────────────── UI HELPERS ─────────────────────────────────
 
-  TableRow _buildPrivRow(String section, List<_Priv> privs, [StateSetter? setDialogState]) {
-    return TableRow(children: [
-      Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Text(section,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-      ),
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Wrap(
-          spacing: 0,
-          runSpacing: 0,
-          children: privs
-              .map((p) => Row(
+  TableRow _buildPrivRow(
+    String section,
+    List<_Priv> privs, [
+    StateSetter? setDialogState,
+  ]) {
+    return TableRow(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Text(
+            section,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Wrap(
+            spacing: 0,
+            runSpacing: 0,
+            children: privs
+                .map(
+                  (p) => Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Checkbox(
@@ -630,134 +698,168 @@ class _RoleViewState extends State<RoleView> with SingleTickerProviderStateMixin
                       Text(p.name, style: const TextStyle(fontSize: 12)),
                       const SizedBox(width: 8),
                     ],
-                  ))
-              .toList(),
+                  ),
+                )
+                .toList(),
+          ),
         ),
-      ),
-    ]);
+      ],
+    );
   }
 
   DataColumn _buildCol(String label) {
     return DataColumn(
       label: Expanded(
-        child: Row(children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: Text(label,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11)),
-          ),
-          const Spacer(),
-          const Icon(Icons.unfold_more, color: Colors.white70, size: 14),
-        ]),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: Colors.blue.shade800,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+            const Spacer(),
+            Icon(Icons.unfold_more, color: Colors.blue.shade300, size: 14),
+          ],
+        ),
       ),
     );
   }
 
   DataRow _buildRow(int idx, dynamic role) {
-    return DataRow(cells: [
-      DataCell(Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: Text("$idx", style: const TextStyle(fontSize: 13)))),
-      DataCell(
-          Text(role['role_name']?.toString() ?? "-",
-              style: const TextStyle(fontSize: 13))),
-      DataCell(IconButton(
-        icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
-        tooltip: "Edit  ",
-        onPressed: () => loadForEdit(role),
-      )),
-      DataCell(IconButton(
-        icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-        tooltip: "Delete",
-        onPressed: () => deleteRole(role),
-      )),
-    ]);
+    return DataRow(
+      cells: [
+        DataCell(
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: Text("$idx", style: const TextStyle(fontSize: 13)),
+          ),
+        ),
+        DataCell(
+          Text(
+            role['role_name']?.toString() ?? "-",
+            style: const TextStyle(fontSize: 13),
+          ),
+        ),
+        DataCell(
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.blue, size: 20),
+            tooltip: "Edit  ",
+            onPressed: () => loadForEdit(role),
+          ),
+        ),
+        DataCell(
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+            tooltip: "Delete",
+            onPressed: () => deleteRole(role),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildListHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(children: [
-          const Text("Show ",
-              style:
-                  TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-          SizedBox(
-            width: 65,
-            height: 35,
-            child: DropdownButtonFormField<String>(
-              initialValue: entriesValue,
-              decoration: const InputDecoration(
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 5),
-                  border: OutlineInputBorder()),
-              items: ["10", "25", "50"]
-                  .map((v) => DropdownMenuItem(
-                      value: v,
-                      child: Text(v,
-                          style:
-                              const TextStyle(fontSize: 11))))
-                  .toList(),
-              onChanged: (v) =>
-                  setState(() => entriesValue = v!),
-            ),
-          ),
-          const Text(" entries",
+        Row(
+          children: [
+            const Text(
+              "Show ",
               style: TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 11)),
-        ]),
-        Row(children: [
-          const Text("Search: ",
-              style: TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 11)),
-          SizedBox(
-            width: 110,
-            height: 35,
-            child: TextField(
-              controller: _searchController,
-              style: const TextStyle(fontSize: 13),
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(4)),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 8),
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.black87,
               ),
-              onChanged: (v) =>
-                  setState(() => searchQuery = v),
+            ),
+            SizedBox(
+              width: 70,
+              height: 35,
+              child: DropdownButtonFormField<String>(
+                value: entriesValue,
+                dropdownColor: Colors.white,
+                style: const TextStyle(color: Colors.black87, fontSize: 13),
+                decoration: const InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 5),
+                  border: OutlineInputBorder(),
+                ),
+                items: ["10", "25", "50"]
+                    .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                    .toList(),
+                onChanged: (v) => setState(() => entriesValue = v!),
+              ),
+            ),
+            const Text(
+              " entries",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(
+          width: 250,
+          height: 40,
+          child: TextField(
+            controller: _searchController,
+            onChanged: (val) {
+              setState(() {
+                searchQuery = val;
+              });
+            },
+            decoration: InputDecoration(
+              hintText: "Search Roles...",
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
           ),
-        ]),
+        ),
       ],
     );
   }
 
   Widget _buildPagination() {
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      _pageBtn("Prev"),
-      _pageBtn("1", active: true),
-      _pageBtn("Next"),
-    ]);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _pageBtn("Prev"),
+        _pageBtn("1", active: true),
+        _pageBtn("Next"),
+      ],
+    );
   }
 
   Widget _pageBtn(String label, {bool active = false}) {
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        backgroundColor: active ? Colors.blue : Colors.white,
-        foregroundColor: active ? Colors.white : Colors.blue,
-        side: const BorderSide(color: Colors.grey),
-        padding:
-            EdgeInsets.symmetric(horizontal: label == "1" ? 12 : 15),
-        minimumSize: const Size(45, 36),
-        shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.zero),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          backgroundColor: active ? Colors.blue : Colors.grey.shade100,
+          foregroundColor: active ? Colors.white : Colors.black87,
+          side: active
+              ? const BorderSide(color: Colors.blue)
+              : BorderSide(color: Colors.grey.shade300),
+          padding: EdgeInsets.symmetric(horizontal: label.length > 1 ? 15 : 12),
+          minimumSize: const Size(40, 36),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        ),
+        onPressed: () {},
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
       ),
-      onPressed: () {},
-      child: Text(label,
-          style: const TextStyle(
-              fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../widgets/animated_heading.dart';
 
 class LocationMasterView extends StatefulWidget {
   const LocationMasterView({super.key});
@@ -11,14 +12,17 @@ class LocationMasterView extends StatefulWidget {
 
 class _LocationMasterViewState extends State<LocationMasterView> {
   // --- API CONFIGURATION ---
-  final String _apiKey = "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
+  final String _apiKey =
+      "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
   final String _baseUrl = "https://display.sriher.com";
 
   // --- STATE MANAGEMENT ---
   List<dynamic> locationList = [];
   bool isLoading = true;
   String entriesValue = "10";
-  int? editingId; // Stores the ID when in Edit Mode
+  int? editingId;
+  final TextEditingController _searchController = TextEditingController();
+  String searchQuery = "";
 
   // --- FORM CONTROLLERS ---
   final TextEditingController _buildingAreaController = TextEditingController();
@@ -28,7 +32,7 @@ class _LocationMasterViewState extends State<LocationMasterView> {
   @override
   void initState() {
     super.initState();
-    fetchLocations(); // Load existing data on startup
+    fetchLocations();
   }
 
   @override
@@ -36,14 +40,11 @@ class _LocationMasterViewState extends State<LocationMasterView> {
     _buildingAreaController.dispose();
     _floorNameController.dispose();
     _subLocationController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // --- THE 5 API INTEGRATION METHODS ---
-  // ──────────────────────────────────────────────────────────────────────────
-
-  // 1. FETCH ALL LOCATIONS (locationview)
+  // 1. FETCH ALL LOCATIONS
   Future<void> fetchLocations() async {
     setState(() => isLoading = true);
     final url = Uri.parse('$_baseUrl/locationview');
@@ -70,7 +71,7 @@ class _LocationMasterViewState extends State<LocationMasterView> {
     }
   }
 
-  // 2. INSERT NEW LOCATION (insertLocationview)
+  // 2. INSERT NEW LOCATION
   Future<void> submitNewLocation() async {
     final url = Uri.parse('$_baseUrl/insertLocationview');
     final Map<String, dynamic> body = {
@@ -91,14 +92,14 @@ class _LocationMasterViewState extends State<LocationMasterView> {
         _showSnackBar("Location Saved Successfully!");
         _clearForm();
         if (mounted && Navigator.canPop(context)) Navigator.pop(context);
-        fetchLocations(); // Refresh the table
+        fetchLocations();
       }
     } catch (e) {
       _showSnackBar("Submit Error: $e");
     }
   }
 
-  // 3. EDIT: FETCH SINGLE DATA (locationEditview)
+  // 3. EDIT: FETCH SINGLE DATA
   Future<void> fetchLocationDetailsForEdit(dynamic id) async {
     final url = Uri.parse('$_baseUrl/locationEditview');
     try {
@@ -116,14 +117,14 @@ class _LocationMasterViewState extends State<LocationMasterView> {
           _floorNameController.text = data['floor'] ?? "";
           _subLocationController.text = data['sublocation'] ?? "";
         });
-        _showLocationDialog(); // Open dialog after loading data
+        _showLocationDialog();
       }
     } catch (e) {
       _showSnackBar("Error loading details for edit");
     }
   }
 
-  // 4. UPDATE EXISTING LOCATION (locationUpdateview)
+  // 4. UPDATE EXISTING LOCATION
   Future<void> updateLocation() async {
     final url = Uri.parse('$_baseUrl/locationUpdateview');
     final Map<String, dynamic> body = {
@@ -145,14 +146,14 @@ class _LocationMasterViewState extends State<LocationMasterView> {
         _showSnackBar("Location Updated Successfully!");
         _clearForm();
         if (mounted && Navigator.canPop(context)) Navigator.pop(context);
-        fetchLocations(); // Refresh the table
+        fetchLocations();
       }
     } catch (e) {
       _showSnackBar("Update Error: $e");
     }
   }
 
-  // 5. UPDATE STATUS (locationStatusUpdateview)
+  // 5. UPDATE STATUS
   Future<void> toggleLocationStatus(dynamic id, dynamic currentStatus) async {
     final url = Uri.parse('$_baseUrl/locationStatusUpdateview');
     final int newStatus = (currentStatus == 1 || currentStatus == "1") ? 0 : 1;
@@ -169,14 +170,12 @@ class _LocationMasterViewState extends State<LocationMasterView> {
       );
 
       if (response.statusCode == 200) {
-        fetchLocations(); // Refresh only the list
+        fetchLocations();
       }
     } catch (e) {
       debugPrint("Status Toggle Error: $e");
     }
   }
-
-  // --- UI Helpers ---
 
   void _clearForm() {
     setState(() {
@@ -191,8 +190,6 @@ class _LocationMasterViewState extends State<LocationMasterView> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  // ──────────────────────────── POPUP DIALOG ────────────────────────────────
-
   void _showLocationDialog() {
     showDialog(
       context: context,
@@ -201,30 +198,40 @@ class _LocationMasterViewState extends State<LocationMasterView> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               titlePadding: EdgeInsets.zero,
               title: Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF000000),
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      editingId == null ? "Location Master" : "Edit Location Details",
+                      editingId == null
+                          ? "Location Master"
+                          : "Edit Location Details",
                       style: const TextStyle(
-                          color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        color: Color(0xFF0D47A1),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: const Icon(Icons.close, color: Color(0xFF0D47A1)),
                       onPressed: () {
                         _clearForm();
                         Navigator.pop(context);
                       },
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -235,17 +242,26 @@ class _LocationMasterViewState extends State<LocationMasterView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const SizedBox(height: 10),
-                      _buildSmallTextField('Building/Area Name', _buildingAreaController),
+                      _buildSmallTextField(
+                        'Building/Area Name',
+                        _buildingAreaController,
+                      ),
                       const SizedBox(height: 15),
                       _buildSmallTextField('Floor Name', _floorNameController),
                       const SizedBox(height: 15),
-                      _buildSmallTextField('Sub Location Name', _subLocationController),
+                      _buildSmallTextField(
+                        'Sub Location Name',
+                        _subLocationController,
+                      ),
                       const SizedBox(height: 10),
                     ],
                   ),
                 ),
               ),
-              actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              actionsPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               actions: [
                 OutlinedButton(
                   onPressed: () {
@@ -256,11 +272,16 @@ class _LocationMasterViewState extends State<LocationMasterView> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF000000),
+                    backgroundColor: Colors.blue.shade700,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                   ),
-                  onPressed: editingId == null ? submitNewLocation : updateLocation,
+                  onPressed: editingId == null
+                      ? submitNewLocation
+                      : updateLocation,
                   child: Text(editingId == null ? "Submit" : "Update"),
                 ),
               ],
@@ -271,57 +292,50 @@ class _LocationMasterViewState extends State<LocationMasterView> {
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // --- UI BUILDING ---
-  // ──────────────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF000000),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Area
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Location List",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18)),
-                  
-                  ],
+                const AnimatedHeading(
+                  text: "Location List",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
                 ),
                 ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    elevation: 4,
-                  ),
                   onPressed: _showLocationDialog,
                   icon: const Icon(Icons.add_location_alt_rounded, size: 20),
-                  label: const Text("ADD LOCATION",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize:12)),
+                  label: const Text(
+                    "ADD LOCATION",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-
-            // List Card
+            const SizedBox(height: 20),
             Expanded(
-              child: Card(
-                color: Colors.white,
-                elevation: 5,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
@@ -347,74 +361,102 @@ class _LocationMasterViewState extends State<LocationMasterView> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           return Container(
-            decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300)),
-          child: Column(
-            children: [
-              if (isLoading) const LinearProgressIndicator(color: Colors.blue),
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Column(
+              children: [
+                if (isLoading)
+                  const LinearProgressIndicator(color: Colors.blue),
+                Expanded(
                   child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: ConstrainedBox(
-                      // This part ensures the table stretches to the full width of the card
-                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                      child: DataTable(
-                        columnSpacing: 20,
-                        border: TableBorder.all(color: Colors.grey.shade200),
-                        headingRowHeight: 45,
-                        headingRowColor: WidgetStateProperty.all(const Color(0xFF000000)),
-                        columns: [
-                          _buildSortableColumn('Location Name'),
-                          _buildSortableColumn('Floor'),
-                          _buildSortableColumn('Sub Location'),
-                          _buildSortableColumn('Edit'),
-                          _buildSortableColumn('Action'),
-                        ],
-                        rows: locationList.map((loc) {
-                          return DataRow(cells: [
-                            DataCell(Padding(padding: const EdgeInsets.only(left: 8.0), child: Text(loc['location_name']?.toString() ?? "-"))),
-                            DataCell(Text(loc['floor']?.toString() ?? "-")),
-                            DataCell(Text(loc['sublocation']?.toString() ?? "-")),
-                            DataCell(
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue, size: 18),
-                                onPressed: () => fetchLocationDetailsForEdit(loc['id']),
-                              ),
-                            ),
-                            DataCell(
-                              Transform.scale(
-                                scale: 0.7,
-                                child: Switch(
-                                  value: loc['status'] == 1 || loc['status'] == "1",
-                                  activeColor: Colors.green,
-                                  onChanged: (val) => toggleLocationStatus(loc['id'], loc['status']),
+                    scrollDirection: Axis.vertical,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth: constraints.maxWidth,
+                        ),
+                        child: DataTable(
+                          columnSpacing: 20,
+                          border: TableBorder.all(color: Colors.grey.shade200),
+                          headingRowHeight: 45,
+                          headingRowColor: WidgetStateProperty.all(
+                            Colors.blue.shade50,
+                          ),
+                          columns: [
+                            _buildSortableColumn('Location Name'),
+                            _buildSortableColumn('Floor'),
+                            _buildSortableColumn('Sub Location'),
+                            _buildSortableColumn('Edit'),
+                            _buildSortableColumn('Action'),
+                          ],
+                          rows: locationList.map((loc) {
+                            return DataRow(
+                              cells: [
+                                DataCell(
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Text(
+                                      loc['location_name']?.toString() ?? "-",
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          ]);
-                        }).toList(),
+                                DataCell(Text(loc['floor']?.toString() ?? "-")),
+                                DataCell(
+                                  Text(loc['sublocation']?.toString() ?? "-"),
+                                ),
+                                DataCell(
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.edit,
+                                      color: Colors.blue,
+                                      size: 18,
+                                    ),
+                                    onPressed: () =>
+                                        fetchLocationDetailsForEdit(loc['id']),
+                                  ),
+                                ),
+                                DataCell(
+                                  Transform.scale(
+                                    scale: 0.7,
+                                    child: Switch(
+                                      value:
+                                          loc['status'] == 1 ||
+                                          loc['status'] == "1",
+                                      activeColor: Colors.blue,
+                                      onChanged: (val) => toggleLocationStatus(
+                                        loc['id'],
+                                        loc['status'],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
-}
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   Widget _buildSmallTextField(String hint, TextEditingController controller) {
     return SizedBox(
       height: 40,
       child: TextFormField(
         controller: controller,
-        style: const TextStyle(fontSize: 13),
+        style: const TextStyle(fontSize: 13, color: Colors.black87),
         decoration: InputDecoration(
           hintText: hint,
+          hintStyle: const TextStyle(color: Colors.black45),
           border: const OutlineInputBorder(),
           contentPadding: const EdgeInsets.symmetric(horizontal: 10),
         ),
@@ -428,29 +470,58 @@ class _LocationMasterViewState extends State<LocationMasterView> {
       children: [
         Row(
           children: [
-            const Text("Show ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-            SizedBox(
-              width: 75,
-              height: 35,
-              child: DropdownButtonFormField<String>(
-                value: entriesValue,
-                icon: const Icon(Icons.arrow_drop_down, size: 20),
-                decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 8), border: OutlineInputBorder()),
-                items: ["10", "25", "50"].map((val) => DropdownMenuItem(value: val, child: Text(val, style: const TextStyle(fontSize: 11)))).toList(),
-                onChanged: (val) => setState(() => entriesValue = val!),
+            const Text(
+              "Show ",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.black87,
               ),
             ),
-            const Text(" entries", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-          ],
-        ),
-        const Row(
-          children: [
-            Text("Search: ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
             SizedBox(
-              width: 110, height: 35,
-              child: TextField(decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 8))),
+              width: 70,
+              height: 35,
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: entriesValue,
+                  style: const TextStyle(color: Colors.black87, fontSize: 13),
+                  items: ["10", "25", "50"]
+                      .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                      .toList(),
+                  onChanged: (v) => setState(() => entriesValue = v!),
+                ),
+              ),
+            ),
+            const Text(
+              " entries",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.black87,
+              ),
             ),
           ],
+        ),
+        SizedBox(
+          width: 250,
+          height: 40,
+          child: TextField(
+            controller: _searchController,
+            onChanged: (val) {
+              setState(() {
+                searchQuery = val;
+              });
+            },
+            style: const TextStyle(color: Colors.black87),
+            decoration: InputDecoration(
+              hintText: "Search Locations...",
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+            ),
+          ),
         ),
       ],
     );
@@ -461,9 +532,19 @@ class _LocationMasterViewState extends State<LocationMasterView> {
       label: Expanded(
         child: Row(
           children: [
-            Padding(padding: const EdgeInsets.only(left: 8.0), child: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11))),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: Colors.blue.shade800,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
+            ),
             const Spacer(),
-            const Icon(Icons.unfold_more, color: Colors.white70, size: 14),
+            Icon(Icons.unfold_more, color: Colors.blue.shade300, size: 14),
           ],
         ),
       ),
@@ -474,7 +555,14 @@ class _LocationMasterViewState extends State<LocationMasterView> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text("Showing 1 to ${locationList.length} of ${locationList.length} entries", style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+        Text(
+          "Showing 1 to ${locationList.length} of ${locationList.length} entries",
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: Colors.black54,
+          ),
+        ),
         _buildPagination(),
       ],
     );
@@ -483,27 +571,33 @@ class _LocationMasterViewState extends State<LocationMasterView> {
   Widget _buildPagination() {
     return Row(
       children: [
-        _buildPageBtn("Prev", isText: true),
-        _buildPageBtn("1"),
-        _buildPageBtn("Next", isText: true),
+        _pageBtn("Prev"),
+        _pageBtn("1", active: true),
+        _pageBtn("Next"),
       ],
     );
   }
- 
 
-
-  Widget _buildPageBtn(String label, {bool isText = false}) {
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        backgroundColor: label == "1" ? Colors.blue : Colors.white,
-        foregroundColor: label == "1" ? Colors.white : Colors.blue,
-        side: const BorderSide(color: Colors.grey),
-        padding: EdgeInsets.symmetric(horizontal: isText ? 15 : 12),
-        minimumSize: const Size(45, 40),
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+  Widget _pageBtn(String label, {bool active = false}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          backgroundColor: active ? Colors.blue : Colors.grey.shade100,
+          foregroundColor: active ? Colors.white : Colors.black87,
+          side: active
+              ? const BorderSide(color: Colors.blue)
+              : BorderSide(color: Colors.grey.shade300),
+          padding: EdgeInsets.symmetric(horizontal: label.length > 1 ? 15 : 12),
+          minimumSize: const Size(40, 36),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        ),
+        onPressed: () {},
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
       ),
-      onPressed: () {},
-      child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 }

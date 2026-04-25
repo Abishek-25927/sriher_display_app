@@ -229,18 +229,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           constraints: const BoxConstraints(maxWidth: 400),
           margin: const EdgeInsets.symmetric(horizontal: 32.0),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.85),
+            color: Colors.black.withOpacity(0.45),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.black.withOpacity(0.1),
-              width: 1.0,
-            ),
+            border: Border.all(color: Colors.white54, width: 1.2),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 30,
-                spreadRadius: 5,
-              ),
+              BoxShadow(color: Colors.black45, blurRadius: 30, spreadRadius: 5),
             ],
           ),
           padding: const EdgeInsets.all(32.0),
@@ -262,7 +255,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     errorBuilder: (c, e, s) => const Icon(
                       Icons.display_settings,
                       size: 60,
-                      color: Color(0xFF0A192F),
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -272,7 +265,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0A192F),
+                    color: Colors.white,
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -281,7 +274,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   Text(
                     _errorMessage!,
                     style: const TextStyle(
-                      color: Colors.red,
+                      color: Colors.redAccent,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -289,12 +282,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   ),
                 ],
                 const SizedBox(height: 6),
-                Text(
+                const Text(
                   'Welcome back to SRIHER Display',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.black.withOpacity(0.6),
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.white60),
                 ),
                 const SizedBox(height: 28),
                 _buildTextField(
@@ -322,15 +312,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 8,
-                        shadowColor: Colors.black.withOpacity(0.4),
-                      ),
                       onPressed: _isLoggingIn ? null : _handleLogin,
                       child: _isLoggingIn
                           ? const SizedBox(
@@ -339,7 +320,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                                  Colors.black,
                                 ),
                               ),
                             )
@@ -373,37 +354,37 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       validator: validator,
       controller: controller,
       obscureText: isPassword && _isObscure,
-      style: const TextStyle(color: Colors.black, fontSize: 14),
+      style: const TextStyle(color: Colors.white, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          color: Colors.black.withOpacity(0.45),
+          color: Colors.white.withOpacity(0.45),
           fontSize: 13,
         ),
-        prefixIcon: Icon(icon, color: Colors.black.withOpacity(0.7), size: 20),
+        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.7), size: 20),
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
                   _isObscure ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.black.withOpacity(0.6),
+                  color: Colors.white.withOpacity(0.6),
                   size: 18,
                 ),
                 onPressed: () => setState(() => _isObscure = !_isObscure),
               )
             : null,
         filled: true,
-        fillColor: Colors.black.withOpacity(0.05),
+        fillColor: Colors.white.withOpacity(0.05),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.black.withOpacity(0.1)),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.black.withOpacity(0.1)),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0A192F), width: 1.5),
+          borderSide: const BorderSide(color: Colors.white, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,

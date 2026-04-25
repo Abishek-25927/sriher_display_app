@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import '../../widgets/animated_heading.dart';
 
 class ScheduleListView extends StatefulWidget {
   final Function(Map<String, dynamic>)? onEdit;
@@ -23,7 +24,6 @@ class _ScheduleListViewState extends State<ScheduleListView> {
   String entriesValue = "10";
   bool showActive = true;
 
-  // Inactive Popup State
   final TextEditingController _dateRangeController = TextEditingController();
 
   @override
@@ -31,8 +31,6 @@ class _ScheduleListViewState extends State<ScheduleListView> {
     super.initState();
     _fetchSchedules();
   }
-
-  // ──────────────────────────── API CALLS ────────────────────────────────────
 
   Future<void> _fetchSchedules() async {
     setState(() => isLoading = true);
@@ -42,13 +40,11 @@ class _ScheduleListViewState extends State<ScheduleListView> {
 
     Map<String, dynamic> body = {"api_key": _apiKey};
     if (!showActive) {
-      // Use selected date for inactive lookup
       if (_dateRangeController.text.isNotEmpty) {
         DateTime selected = DateFormat(
           'yyyy-MM-dd',
         ).parse(_dateRangeController.text);
         body["from_date"] = DateFormat('yyyy-MM-01').format(selected);
-        // Find last day of month
         DateTime nextMonth = DateTime(selected.year, selected.month + 1, 1);
         DateTime lastDay = nextMonth.subtract(const Duration(days: 1));
         body["to_date"] = DateFormat('yyyy-MM-dd').format(lastDay);
@@ -93,7 +89,7 @@ class _ScheduleListViewState extends State<ScheduleListView> {
       );
       if (response.statusCode == 200) {
         _showSnack("Status Updated Successfully");
-        _fetchSchedules(); // Refresh list to show correct state
+        _fetchSchedules();
       }
     } catch (e) {
       _showSnack("Failed to update status", isError: true);
@@ -105,14 +101,13 @@ class _ScheduleListViewState extends State<ScheduleListView> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: isError ? Colors.red.shade800 : Colors.green.shade800,
+        backgroundColor: isError ? Colors.red.shade800 : Colors.blue.shade800,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
-
-  // ──────────────────────────── BUILD ────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -120,93 +115,84 @@ class _ScheduleListViewState extends State<ScheduleListView> {
       children: [
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        showActive
-                            ? "Active Schedule List"
-                            : "InActive Schedule List",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    AnimatedHeading(
+                      text: showActive
+                          ? "Active Schedule List"
+                          : "InActive Schedule List",
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
                         ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 2,
                       ),
-
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade800,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        onPressed: () {
-                          if (showActive) {
-                            _showInactivePopup(context);
-                          } else {
-                            setState(() {
-                              showActive = true;
-                              scheduleData = [];
-                            });
-                            _fetchSchedules();
-                          }
-                        },
-                        icon: Icon(
-                          showActive ? Icons.history : Icons.check_circle,
-                        ),
-                        label: Text(
-                          showActive ? "View Inactive" : "View Active",
-                        ),
+                      onPressed: () {
+                        if (showActive) {
+                          _showInactivePopup(context);
+                        } else {
+                          setState(() {
+                            showActive = true;
+                            scheduleData = [];
+                          });
+                          _fetchSchedules();
+                        }
+                      },
+                      icon: Icon(
+                        showActive ? Icons.history : Icons.check_circle,
+                        size: 20,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
-                  Expanded(
-                    child: Card(
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 4,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            _buildListHeader(),
-                            const SizedBox(height: 16),
-                            Expanded(
-                              child: isLoading
-                                  ? const Center(
-                                      child: CircularProgressIndicator(),
-                                    )
-                                  : _buildTableContainer(),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildFooter(),
-                          ],
-                        ),
+                      label: Text(
+                        showActive ? "View Inactive" : "View Active",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildListHeader(),
+                        const Divider(height: 1),
+                        Expanded(
+                          child: isLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : _buildTableContainer(),
+                        ),
+                        const Divider(height: 1),
+                        _buildFooter(),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -215,34 +201,59 @@ class _ScheduleListViewState extends State<ScheduleListView> {
   }
 
   Widget _buildTableContainer() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: MediaQuery.of(context).size.width * 0.8,
-          ),
-          child: DataTable(
-            border: TableBorder.all(color: Colors.grey.shade300),
-            headingRowHeight: 50,
-            dataRowMaxHeight: 55,
-            headingRowColor: WidgetStateProperty.all(
-              const Color(0xFF000000),
-            ), // BLACK HEADER
-            columns: [
-              _buildCol('SCHEDULE NAME'),
-              _buildCol('TEMPLATE NAME'),
-              _buildCol('DURATION'),
-              _buildCol('FROM DATE'),
-              _buildCol('TO DATE'),
-              _buildCol('ACTION'),
-              _buildCol('CHANGES'),
-            ],
-            rows: scheduleData.map((item) => _buildDataRow(item)).toList(),
-          ),
+    if (scheduleData.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.calendar_today_outlined,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "No schedules found",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
         ),
-      ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(0),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: DataTable(
+                headingRowColor: WidgetStateProperty.all(Colors.blue.shade50),
+                headingRowHeight: 52,
+                dataRowMaxHeight: 64,
+                horizontalMargin: 20,
+                columnSpacing: 20,
+                columns: [
+                  _buildCol('SCHEDULE NAME'),
+                  _buildCol('TEMPLATE NAME'),
+                  _buildCol('DURATION'),
+                  _buildCol('FROM DATE'),
+                  _buildCol('TO DATE'),
+                  _buildCol('ACTION'),
+                  _buildCol('CHANGES'),
+                ],
+                rows: scheduleData.map((item) => _buildDataRow(item)).toList(),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -252,46 +263,85 @@ class _ScheduleListViewState extends State<ScheduleListView> {
 
     return DataRow(
       cells: [
-        DataCell(Text(item['schedule_name'] ?? '-')),
-        DataCell(Text(item['temp_name'] ?? '-')),
-        DataCell(Text("${item['duration'] ?? '0'}s")),
-        DataCell(Text(item['from_date'] ?? '-')),
-        DataCell(Text(item['to_date'] ?? '-')),
-        // WIFI STYLE TOGGLE
         DataCell(
-          Center(
-            child: Transform.scale(
-              scale: 0.8,
-              child: Switch(
-                value: isActive,
-                activeColor: Colors.green,
-                onChanged: (val) => _updateStatus(id, val ? 1 : 0),
+          Text(
+            item['schedule_name'] ?? '-',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        DataCell(
+          Text(
+            item['temp_name'] ?? '-',
+            style: const TextStyle(color: Colors.black87),
+          ),
+        ),
+        DataCell(
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              "${item['duration'] ?? '0'}s",
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.black54,
               ),
             ),
           ),
         ),
-        // SETTINGS + DOWN ARROW DROPDOWN
-        DataCell(Center(child: _buildChangesButton(item))),
+        DataCell(
+          Text(
+            item['from_date'] ?? '-',
+            style: const TextStyle(color: Colors.black87),
+          ),
+        ),
+        DataCell(
+          Text(
+            item['to_date'] ?? '-',
+            style: const TextStyle(color: Colors.black87),
+          ),
+        ),
+        DataCell(
+          Transform.scale(
+            scale: 0.8,
+            child: Switch(
+              value: isActive,
+              activeColor: Colors.blue.shade600,
+              onChanged: (val) => _updateStatus(id, val ? 1 : 0),
+            ),
+          ),
+        ),
+        DataCell(_buildChangesButton(item)),
       ],
     );
   }
 
   Widget _buildChangesButton(dynamic item) {
     return PopupMenuButton<String>(
-      offset: const Offset(0, 45),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      offset: const Offset(0, 40),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      tooltip: "Manage Schedule",
+      color: Colors.white,
+      elevation: 4,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF0A192F),
-          borderRadius: BorderRadius.circular(4),
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.shade100),
         ),
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.settings, color: Colors.white, size: 16),
+            Icon(Icons.settings, color: Colors.blue, size: 18),
             SizedBox(width: 8),
-            Icon(Icons.arrow_drop_down, color: Colors.white, size: 16),
+            Icon(Icons.arrow_drop_down, color: Colors.blue, size: 18),
           ],
         ),
       ),
@@ -303,23 +353,37 @@ class _ScheduleListViewState extends State<ScheduleListView> {
         }
       },
       itemBuilder: (context) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'edit',
           child: Row(
             children: [
-              Icon(Icons.edit, size: 18, color: Colors.blue),
-              SizedBox(width: 10),
-              Text("Edit", style: TextStyle(fontSize: 14)),
+              Icon(Icons.edit_outlined, size: 20, color: Colors.blue.shade600),
+              const SizedBox(width: 12),
+              const Text(
+                "Edit Schedule",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              ),
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'extend',
           child: Row(
             children: [
-              Icon(Icons.unfold_more, size: 18, color: Colors.orange),
-              SizedBox(width: 10),
-              Text("Extend", style: TextStyle(fontSize: 14)),
+              Icon(Icons.more_time, size: 20, color: Colors.orange.shade600),
+              const SizedBox(width: 12),
+              const Text(
+                "Extend Period",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              ),
             ],
           ),
         ),
@@ -329,98 +393,130 @@ class _ScheduleListViewState extends State<ScheduleListView> {
 
   DataColumn _buildCol(String label) {
     return DataColumn(
-      label: Expanded(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(Icons.unfold_more, color: Colors.white70, size: 14),
-          ],
+      label: Text(
+        label,
+        style: TextStyle(
+          color: Colors.blue.shade900,
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
         ),
       ),
     );
   }
 
   Widget _buildListHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            const Text(
-              "Show ",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
-            SizedBox(
-              width: 85,
-              child: DropdownMenu<String>(
-                initialSelection: entriesValue,
-                inputDecorationTheme: const InputDecorationTheme(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                  border: OutlineInputBorder(),
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              const Text(
+                "Show ",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.black54,
                 ),
-                onSelected: (v) {
-                  if (v != null) setState(() => entriesValue = v);
-                },
-                dropdownMenuEntries: [
-                  '10',
-                  '25',
-                  '50',
-                ].map((v) => DropdownMenuEntry(value: v, label: v)).toList(),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 80,
+                height: 38,
+                child: DropdownButtonFormField<String>(
+                  value: entriesValue,
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
+                  onChanged: (v) {
+                    if (v != null) setState(() => entriesValue = v);
+                  },
+                  items: ['10', '25', '50']
+                      .map(
+                        (v) => DropdownMenuItem(
+                          value: v,
+                          child: Text(v, style: const TextStyle(fontSize: 14)),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                " entries",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            width: 250,
+            height: 38,
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search schedules...',
+                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  size: 20,
+                  color: Colors.grey,
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               ),
             ),
-
-            const Text(
-              " entries",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
-          ],
-        ),
-        SizedBox(
-          width: 220,
-          height: 38,
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: 'Search Schedule',
-              hintStyle: const TextStyle(fontSize: 14),
-              border: const OutlineInputBorder(),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-              suffixIcon: const Icon(Icons.search, size: 20),
-            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildFooter() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          "Showing ${scheduleData.length} entries",
-          style: const TextStyle(
-            color: Colors.black54,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Showing ${scheduleData.length} entries",
+            style: const TextStyle(
+              color: Colors.black54,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
           ),
-        ),
-        Row(
-          children: [
-            _buildPageBtn("Previous", enabled: false),
-            _buildPageBtn("1", active: true),
-            _buildPageBtn("Next", enabled: true),
-          ],
-        ),
-      ],
+          Row(
+            children: [
+              _buildPageBtn("Previous", enabled: false),
+              _buildPageBtn("1", active: true),
+              _buildPageBtn("Next", enabled: true),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -431,15 +527,16 @@ class _ScheduleListViewState extends State<ScheduleListView> {
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2),
-      height: 35,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          backgroundColor: active ? Colors.blue : Colors.white,
-          foregroundColor: active ? Colors.white : Colors.blue,
-
-          side: BorderSide(color: Colors.grey.shade400),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          backgroundColor: active ? Colors.blue.shade600 : Colors.white,
+          foregroundColor: active ? Colors.white : Colors.blue.shade600,
+          side: BorderSide(
+            color: active ? Colors.blue.shade600 : Colors.grey.shade300,
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          minimumSize: const Size(0, 36),
         ),
         onPressed: enabled ? () {} : null,
         child: Text(
@@ -458,74 +555,145 @@ class _ScheduleListViewState extends State<ScheduleListView> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setPopupState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          title: const Center(
-            child: Text(
-              "Select Year and Month",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: Colors.white,
+          title: Container(
+            padding: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.calendar_month, color: Colors.blue),
+                SizedBox(width: 12),
+                Text(
+                  "Select Archive Period",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
             ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Divider(),
               const SizedBox(height: 20),
               Row(
                 children: [
-                  // Year Dropdown
                   Expanded(
-                    child: DropdownMenu<int>(
-                      initialSelection: selectedYear,
-                      label: const Text("Year"),
-                      width: 120,
-                      onSelected: (y) => setPopupState(() => selectedYear = y!),
-                      dropdownMenuEntries:
-                          List.generate(
-                                10,
-                                (index) => DateTime.now().year - 5 + index,
-                              )
-                              .map(
-                                (y) => DropdownMenuEntry(
-                                  value: y,
-                                  label: y.toString(),
-                                ),
-                              )
-                              .toList(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Year",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<int>(
+                          value: selectedYear,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onChanged: (y) =>
+                              setPopupState(() => selectedYear = y!),
+                          items:
+                              List.generate(
+                                    5,
+                                    (index) => DateTime.now().year - index,
+                                  )
+                                  .map(
+                                    (y) => DropdownMenuItem(
+                                      value: y,
+                                      child: Text(y.toString()),
+                                    ),
+                                  )
+                                  .toList(),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  // Month Dropdown
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: DropdownMenu<int>(
-                      initialSelection: selectedMonth,
-                      label: const Text("Month"),
-                      width: 120,
-                      onSelected: (m) =>
-                          setPopupState(() => selectedMonth = m!),
-                      dropdownMenuEntries:
-                          List.generate(12, (index) => index + 1)
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Month",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<int>(
+                          value: selectedMonth,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onChanged: (m) =>
+                              setPopupState(() => selectedMonth = m!),
+                          items: List.generate(12, (index) => index + 1)
                               .map(
-                                (m) => DropdownMenuEntry(
+                                (m) => DropdownMenuItem(
                                   value: m,
-                                  label: DateFormat(
-                                    'MMM',
-                                  ).format(DateTime(2024, m)),
+                                  child: Text(
+                                    DateFormat(
+                                      'MMMM',
+                                    ).format(DateTime(2024, m)),
+                                  ),
                                 ),
                               )
                               .toList(),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 32),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      "CANCEL",
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
+                      backgroundColor: Colors.blue.shade600,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     onPressed: () {
                       setState(() {
@@ -537,17 +705,10 @@ class _ScheduleListViewState extends State<ScheduleListView> {
                       _fetchSchedules();
                       Navigator.pop(context);
                     },
-                    child: const Text("VIEW"),
-                  ),
-                  const SizedBox(width: 15),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade300,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                    child: const Text(
+                      "VIEW RECORDS",
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("CLOSE"),
                   ),
                 ],
               ),

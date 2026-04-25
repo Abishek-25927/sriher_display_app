@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../widgets/animated_heading.dart';
 
 /**
  * CreateTemplateView Master Module
@@ -17,7 +18,8 @@ class CreateTemplateView extends StatefulWidget {
 
 class _CreateTemplateViewState extends State<CreateTemplateView> {
   // ─── API CONFIGURATION ───────────────────────────────────────────────────
-  final String _apiKey = "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
+  final String _apiKey =
+      "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
   final String _baseUrl = "https://display.sriher.com";
 
   // ─── STATE PROPERTIES ────────────────────────────────────────────────────
@@ -78,10 +80,13 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         List<dynamic> data = decoded['data'] ?? [];
-        
+
         // Sorting: Latest IDs first
-        data.sort((a, b) => (int.tryParse(b['id'].toString()) ?? 0)
-            .compareTo(int.tryParse(a['id'].toString()) ?? 0));
+        data.sort(
+          (a, b) => (int.tryParse(b['id'].toString()) ?? 0).compareTo(
+            int.tryParse(a['id'].toString()) ?? 0,
+          ),
+        );
 
         setState(() {
           templateList = data;
@@ -108,7 +113,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "api_key": _apiKey,
-          "template_name": _templateNameController.text.trim()
+          "template_name": _templateNameController.text.trim(),
         }),
       );
 
@@ -116,7 +121,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
         _showSnackBar("Record saved and stored in database.");
         _templateNameController.clear();
         if (mounted && Navigator.canPop(context)) Navigator.pop(context);
-        await fetchTemplatesFromServer(); 
+        await fetchTemplatesFromServer();
       }
     } catch (e) {
       _showSnackBar("Insertion Protocol Failed.");
@@ -140,7 +145,8 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
         setState(() {
           editingId = int.parse(id.toString());
           // Key mapping from edit view
-          _templateNameController.text = data['temp_name'] ?? data['template_name'] ?? "";
+          _templateNameController.text =
+              data['temp_name'] ?? data['template_name'] ?? "";
         });
         _showTemplateDialog(); // Open dialog after loading data
       }
@@ -160,7 +166,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
         body: jsonEncode({
           "api_key": _apiKey,
           "id": editingId,
-          "template_name": _templateNameController.text.trim()
+          "template_name": _templateNameController.text.trim(),
         }),
       );
 
@@ -181,12 +187,15 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
   // API 5: STATUS UPDATE (optimistic local update — no full refetch to avoid blink)
   Future<void> toggleStatus(dynamic id, dynamic current) async {
     final int next = (current == 1) ? 0 : 1;
-    final int idx = templateList.indexWhere((item) => item['id'].toString() == id.toString());
+    final int idx = templateList.indexWhere(
+      (item) => item['id'].toString() == id.toString(),
+    );
     if (idx == -1) return;
 
     // Optimistically update the local list immediately (no blink)
     setState(() {
-      templateList[idx] = Map<String, dynamic>.from(templateList[idx])..['status'] = next;
+      templateList[idx] = Map<String, dynamic>.from(templateList[idx])
+        ..['status'] = next;
     });
 
     try {
@@ -198,14 +207,16 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
       if (response.statusCode != 200) {
         // Revert on failure
         setState(() {
-          templateList[idx] = Map<String, dynamic>.from(templateList[idx])..['status'] = current;
+          templateList[idx] = Map<String, dynamic>.from(templateList[idx])
+            ..['status'] = current;
         });
         _showSnackBar("Status update failed. Reverted.");
       }
     } catch (e) {
       // Revert on error
       setState(() {
-        templateList[idx] = Map<String, dynamic>.from(templateList[idx])..['status'] = current;
+        templateList[idx] = Map<String, dynamic>.from(templateList[idx])
+          ..['status'] = current;
       });
       debugPrint("Status toggle fail: $e");
     }
@@ -237,7 +248,9 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
   List<dynamic> get _filteredList {
     if (_searchQuery.isEmpty) return templateList;
     return templateList.where((item) {
-      return (item['temp_name'] ?? '').toString().toLowerCase().contains(_searchQuery);
+      return (item['temp_name'] ?? '').toString().toLowerCase().contains(
+        _searchQuery,
+      );
     }).toList();
   }
 
@@ -258,21 +271,31 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               titlePadding: EdgeInsets.zero,
               title: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
-                  color: Color(0xFF000000),
+                  color: Colors.blue,
                   borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      editingId == null ? "Create New Template" : "Edit Template",
-                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      editingId == null
+                          ? "Create New Template"
+                          : "Edit Template",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
@@ -282,8 +305,8 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
                           _templateNameController.clear();
                         });
                         Navigator.pop(context);
-                      }, 
-                    )
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -293,30 +316,83 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _templateNameController,
-                      decoration: const InputDecoration(
-                          hintText: 'Template name',
-                          border: OutlineInputBorder()),
+                      style: const TextStyle(fontSize: 14),
+                      decoration: InputDecoration(
+                        labelText: 'Template Name',
+                        hintText: 'Enter template name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
                     ),
-                    const SizedBox(height: 25),
+                    const SizedBox(height: 32),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              editingId = null;
+                              _templateNameController.clear();
+                            });
+                            Navigator.pop(context);
+                          },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF000000),
+                            backgroundColor: Colors.grey.shade400,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            "CANCEL",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.shade700,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 28,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           onPressed: isSubmitting
                               ? null
-                              : (editingId == null ? insertTemplateAction : updateTemplateAction),
+                              : (editingId == null
+                                    ? insertTemplateAction
+                                    : updateTemplateAction),
                           child: isSubmitting
-                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : Text(editingId == null ? 'Submit' : 'Update Record'),
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  editingId == null ? 'SUBMIT' : 'UPDATE',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ],
                     ),
@@ -334,68 +410,68 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF000000),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Area
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Template List",
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                    
-                  ],
+                const AnimatedHeading(
+                  text: "Templates List",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
                 ),
                 ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    elevation: 4,
-                  ),
                   onPressed: _showTemplateDialog,
                   icon: const Icon(Icons.dashboard_customize_rounded, size: 20),
-                  label: const Text("CREATE TEMPLATE", style: TextStyle(fontWeight: FontWeight.bold,fontSize:12)),
+                  label: const Text(
+                    "CREATE TEMPLATE",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
 
-            // Templates List Card
             Expanded(
-              child: Card(
-                color: Colors.white,
-                elevation: 5,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: [
-                      _buildListHeader(),
-                      const SizedBox(height: 15),
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade200),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: isLoading
-                              ? const Center(child: CircularProgressIndicator())
-                              : _buildDataTable(),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    _buildListHeader(),
+                    const SizedBox(height: 15),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade100),
+                          borderRadius: BorderRadius.circular(8),
                         ),
+                        child: isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _buildDataTable(),
                       ),
-                      const SizedBox(height: 15),
-                      _buildPaginationControls(),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 15),
+                    _buildPaginationControls(),
+                  ],
                 ),
               ),
             ),
@@ -406,61 +482,128 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
   }
 
   Widget _buildDataTable() {
-    return LayoutBuilder(builder: (context, constraints) {
-      return SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: constraints.maxWidth),
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(const Color(0xFF000000)),
-              columns: [
-                _buildCol('TEMPLATE NAME'),
-                _buildCol('EDIT'),
-                _buildCol('ACTION'),
-              ],
-              rows: _pagedList.map((item) {
-                return DataRow(cells: [
-                  DataCell(Text(item['temp_name'] ?? "-", style: const TextStyle(fontWeight: FontWeight.w500))),
-                  DataCell(IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () => loadTemplateDetails(item['id']))),
-                  DataCell(Row(
-                    children: [
-                      Switch(
-                        value: item['status'] == 1,
-                        activeColor: Colors.green,
-                        onChanged: (v) => toggleStatus(item['id'], item['status']),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: DataTable(
+                headingRowHeight: 45,
+                headingRowColor: WidgetStateProperty.all(Colors.blue.shade50),
+                border: TableBorder.all(color: Colors.grey.shade100),
+                columns: [
+                  _buildCol('TEMPLATE NAME'),
+                  _buildCol('EDIT'),
+                  _buildCol('ACTION'),
+                ],
+                rows: _pagedList.map((item) {
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Text(
+                          item['temp_name'] ?? "-",
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
                       ),
-                       
+                      DataCell(
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () => loadTemplateDetails(item['id']),
+                        ),
+                      ),
+                      DataCell(
+                        Row(
+                          children: [
+                            Switch(
+                              value: item['status'] == 1,
+                              activeColor: Colors.green,
+                              onChanged: (v) =>
+                                  toggleStatus(item['id'], item['status']),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
-                  )),
-                ]);
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 
   DataColumn _buildCol(String label) {
-    return DataColumn(label: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)));
+    return DataColumn(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: Colors.blue.shade800,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
   }
 
   Widget _buildListHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(children: [
-          const Text("Show ", style: TextStyle(fontSize: 12)),
-          DropdownButton<String>(
-            value: entriesValue,
-            items: ["10", "25", "50"].map((v) => DropdownMenuItem<String>(value: v, child: Text(v))).toList(),
-            onChanged: (v) => setState(() { entriesValue = v!; currentPage = 1; }),
+        Row(
+          children: [
+            const Text(
+              "Show ",
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.black87,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            DropdownButton<String>(
+              value: entriesValue,
+              dropdownColor: Colors.white,
+              style: const TextStyle(color: Colors.black87, fontSize: 13),
+              items: ["10", "25", "50"]
+                  .map(
+                    (v) => DropdownMenuItem<String>(value: v, child: Text(v)),
+                  )
+                  .toList(),
+              onChanged: (v) => setState(() {
+                entriesValue = v!;
+                currentPage = 1;
+              }),
+            ),
+            const Text(
+              " entries",
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.black87,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(
+          width: 250,
+          height: 40,
+          child: TextField(
+            controller: _searchController,
+            style: const TextStyle(color: Colors.black87),
+            decoration: InputDecoration(
+              hintText: "Search templates...",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              prefixIcon: const Icon(Icons.search),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+            ),
           ),
-          const Text(" entries", style: TextStyle(fontSize: 12)),
-        ]),
-        SizedBox(width: 200, height: 40, child: TextField(controller: _searchController, decoration: const InputDecoration(hintText: "Search...", border: OutlineInputBorder(), prefixIcon: Icon(Icons.search)))),
+        ),
       ],
     );
   }
@@ -473,15 +616,73 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text("Showing ${_pagedList.length} of $total records", style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-        Row(children: [
-          OutlinedButton(onPressed: currentPage > 1 ? () => setState(() => currentPage--) : null, child: const Text("Previous")),
-          const SizedBox(width: 10),
-          Text("$currentPage / $max"),
-          const SizedBox(width: 10),
-          OutlinedButton(onPressed: currentPage < max ? () => setState(() => currentPage++) : null, child: const Text("Next")),
-        ])
+        Text(
+          "Showing ${_pagedList.length} of $total records",
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: Colors.black54,
+          ),
+        ),
+        Row(
+          children: [
+            _buildNavBtn(
+              "Previous",
+              enabled: currentPage > 1,
+              onTap: () => setState(() => currentPage--),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Text(
+                "$currentPage / $max",
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            _buildNavBtn(
+              "Next",
+              enabled: currentPage < max,
+              onTap: () => setState(() => currentPage++),
+            ),
+          ],
+        ),
       ],
+    );
+  }
+
+  Widget _buildNavBtn(
+    String label, {
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return ElevatedButton(
+      onPressed: enabled ? onTap : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: enabled ? Colors.blue.shade50 : Colors.grey.shade50,
+        foregroundColor: enabled ? Colors.blue.shade800 : Colors.black26,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: enabled ? Colors.blue.shade100 : Colors.grey.shade200,
+          ),
+        ),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

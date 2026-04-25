@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
-
+import '../../widgets/animated_heading.dart';
 
 /**
  * FileUploadView - Master Module
@@ -25,25 +25,27 @@ class _FileUploadViewState extends State<FileUploadView> {
   // ──────────────────────────────────────────────────────────────────────────
   // API CONFIGURATION & CREDENTIALS
   // ──────────────────────────────────────────────────────────────────────────
-  final String _apiKey = "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
+  final String _apiKey =
+      "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
   final String _baseUrl = "https://display.sriher.com";
 
   // ──────────────────────────────────────────────────────────────────────────
   List<dynamic> fileList = [];
   List<dynamic> _deptList = []; // loaded from /categoryview
-  bool isLoading = true; 
+  bool isLoading = true;
   bool isSubmitting = false;
-  
+
   // Table Pagination & Search
-  String entriesValue = "10"; 
-  int currentPage = 1;        
+  String entriesValue = "10";
+  int currentPage = 1;
   int? editingId;
-  
+
   // Form Selections
-  String _selectedType = "Permanent"; 
+  String _selectedType = "Permanent";
   String? _selectedDeptId;
   String? _selectedFileName;
   PlatformFile? _selectedFile;
+  String searchQuery = "";
 
   // ──────────────────────────────────────────────────────────────────────────
   // TEXT CONTROLLERS
@@ -86,9 +88,10 @@ class _FileUploadViewState extends State<FileUploadView> {
       );
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        if (mounted) setState(() {
-          _deptList = decoded['data'] ?? decoded['category_list'] ?? [];
-        });
+        if (mounted)
+          setState(() {
+            _deptList = decoded['data'] ?? decoded['category_list'] ?? [];
+          });
       }
     } catch (e) {
       debugPrint("Dept fetch error: $e");
@@ -136,7 +139,8 @@ class _FileUploadViewState extends State<FileUploadView> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "api_key": _apiKey,
-          "category_id": int.tryParse(_selectedDeptId!) ?? int.parse(_selectedDeptId!),
+          "category_id":
+              int.tryParse(_selectedDeptId!) ?? int.parse(_selectedDeptId!),
           "name": _nameController.text.trim(),
           "desc": _descController.text.trim(),
           "group5": _selectedType,
@@ -161,7 +165,6 @@ class _FileUploadViewState extends State<FileUploadView> {
       if (mounted) setState(() => isSubmitting = false);
     }
   }
-
 
   // ──────────────────────────────────────────────────────────────────────────
   // API 3: EDIT FETCH (POST /fileEditview)
@@ -227,15 +230,13 @@ class _FileUploadViewState extends State<FileUploadView> {
   // ──────────────────────────────────────────────────────────────────────────
   Future<void> toggleFileStatus(dynamic id, dynamic currentStatus) async {
     try {
-      final int newStatus = (currentStatus == 1 || currentStatus == "1") ? 0 : 1;
+      final int newStatus = (currentStatus == 1 || currentStatus == "1")
+          ? 0
+          : 1;
       final response = await http.post(
         Uri.parse('$_baseUrl/fileStatusUpdateview'),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "api_key": _apiKey,
-          "id": id,
-          "status": newStatus,
-        }),
+        body: jsonEncode({"api_key": _apiKey, "id": id, "status": newStatus}),
       );
       if (response.statusCode == 200) fetchFilesFromServer();
     } catch (e) {
@@ -267,14 +268,14 @@ class _FileUploadViewState extends State<FileUploadView> {
   // ──────────────────────────────────────────────────────────────────────────
 
   void _resetForm() {
-    setState(() { 
-      editingId = null; 
-      _selectedDeptId = null; 
+    setState(() {
+      editingId = null;
+      _selectedDeptId = null;
       _selectedType = "Permanent";
       _selectedFileName = null;
       _selectedFile = null;
     });
-    _nameController.clear(); 
+    _nameController.clear();
     _descController.clear();
   }
 
@@ -292,14 +293,20 @@ class _FileUploadViewState extends State<FileUploadView> {
   }
 
   void _showSnackBar(String m) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m), behavior: SnackBarBehavior.floating));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(m), behavior: SnackBarBehavior.floating),
+    );
   }
 
   List<dynamic> get _filteredList {
     String query = _searchController.text.toLowerCase();
     List<dynamic> sorted = List.from(fileList);
     // Descending Sort (Latest First)
-    sorted.sort((a, b) => (int.tryParse(b['id'].toString()) ?? 0).compareTo(int.tryParse(a['id'].toString()) ?? 0));
+    sorted.sort(
+      (a, b) => (int.tryParse(b['id'].toString()) ?? 0).compareTo(
+        int.tryParse(a['id'].toString()) ?? 0,
+      ),
+    );
 
     if (query.isEmpty) return sorted;
     return sorted.where((item) {
@@ -326,21 +333,29 @@ class _FileUploadViewState extends State<FileUploadView> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               titlePadding: EdgeInsets.zero,
               title: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
-                  color: Color(0xFF000000),
+                  color: Colors.blue,
                   borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       editingId == null ? "File Upload" : "Edit File Metadata",
-                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
@@ -348,7 +363,7 @@ class _FileUploadViewState extends State<FileUploadView> {
                         _resetForm();
                         Navigator.pop(context);
                       },
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -379,31 +394,51 @@ class _FileUploadViewState extends State<FileUploadView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     value: _selectedDeptId,
-                    hint: const Text("Select Department Name"),
-                    decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12)),
+                    hint: const Text(
+                      "Select Department Name",
+                      style: TextStyle(color: Colors.black45),
+                    ),
+                    dropdownColor: Colors.white,
+                    style: const TextStyle(color: Colors.black87),
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
+                    ),
                     items: _deptList.map<DropdownMenuItem<String>>((dept) {
                       return DropdownMenuItem<String>(
                         value: dept['id']?.toString(),
-                        child: Text(dept['category_name']?.toString() ?? '-'),
+                        child: Text(
+                          dept['category_name']?.toString() ?? '-',
+                          style: const TextStyle(color: Colors.black87),
+                        ),
                       );
                     }).toList(),
-                    onChanged: (val) => setDialogState(() => _selectedDeptId = val),
+                    onChanged: (val) =>
+                        setDialogState(() => _selectedDeptId = val),
                   ),
-                  
-                   
-                  const SizedBox(height: 8),
+
+                  const SizedBox(height: 20),
                   Row(
                     children: [
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          backgroundColor: Colors.blue.shade100,
+                          foregroundColor: Colors.blue.shade900,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         onPressed: () async {
                           await _pickFile();
@@ -416,7 +451,12 @@ class _FileUploadViewState extends State<FileUploadView> {
                       Expanded(
                         child: Text(
                           _selectedFileName ?? "No file selected",
-                          style: TextStyle(color: _selectedFileName != null ? Colors.black87 : Colors.grey, fontSize: 13),
+                          style: TextStyle(
+                            color: _selectedFileName != null
+                                ? Colors.black87
+                                : Colors.grey,
+                            fontSize: 13,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -430,12 +470,9 @@ class _FileUploadViewState extends State<FileUploadView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                 
                   const SizedBox(height: 8),
                   _buildTextField("Enter reference name", _nameController),
                   const SizedBox(height: 20),
-                  
-                  const SizedBox(height: 8),
                   _buildTextField("Short description", _descController),
                 ],
               ),
@@ -448,25 +485,61 @@ class _FileUploadViewState extends State<FileUploadView> {
           children: [
             Row(
               children: [
-                const Text("Type: ", style: TextStyle(fontWeight: FontWeight.bold)),
-                Radio<String>(value: "Permanent", groupValue: _selectedType, onChanged: (v) => setDialogState(() => _selectedType = v!)),
-                const Text("Permanent"),
+                const Text(
+                  "Type: ",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Radio<String>(
+                  value: "Permanent",
+                  groupValue: _selectedType,
+                  activeColor: Colors.blue,
+                  onChanged: (v) => setDialogState(() => _selectedType = v!),
+                ),
+                const Text(
+                  "Permanent",
+                  style: TextStyle(color: Colors.black87),
+                ),
                 const SizedBox(width: 10),
-                Radio<String>(value: "Short Term", groupValue: _selectedType, onChanged: (v) => setDialogState(() => _selectedType = v!)),
-                const Text("Short Term"),
+                Radio<String>(
+                  value: "Short Term",
+                  groupValue: _selectedType,
+                  activeColor: Colors.blue,
+                  onChanged: (v) => setDialogState(() => _selectedType = v!),
+                ),
+                const Text(
+                  "Short Term",
+                  style: TextStyle(color: Colors.black87),
+                ),
               ],
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF000000),
+                backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              onPressed: isSubmitting ? null : (editingId == null ? insertFileAction : updateFileAction),
+              onPressed: isSubmitting
+                  ? null
+                  : (editingId == null ? insertFileAction : updateFileAction),
               child: isSubmitting
-                  ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Text(editingId == null ? "Submit" : "Update"),
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(editingId == null ? "SUBMIT" : "UPDATE"),
             ),
           ],
         ),
@@ -478,50 +551,52 @@ class _FileUploadViewState extends State<FileUploadView> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF000000),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Area
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Uploaded File List",
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 4),
-                    
-                  ],
+                const AnimatedHeading(
+                  text: "File Repository",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
                 ),
                 ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    elevation: 4,
-                  ),
                   onPressed: _showUploadDialog,
                   icon: const Icon(Icons.cloud_upload_rounded, size: 20),
-                  label: const Text("UPLOAD NEW FILE", style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                  label: const Text(
+                    "UPLOAD NEW FILE",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
 
             // Repository List Card
             Expanded(
-              child: Card(
-                color: Colors.white,
-                elevation: 5,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: _buildTableCard(),
                 ),
               ),
@@ -532,8 +607,6 @@ class _FileUploadViewState extends State<FileUploadView> {
     );
   }
 
-
-
   Widget _buildTableCard() {
     final paged = _pagedList;
     return Column(
@@ -543,12 +616,12 @@ class _FileUploadViewState extends State<FileUploadView> {
         Expanded(
           child: Container(
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: Colors.grey.shade100),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: isLoading 
-              ? const Center(child: CircularProgressIndicator()) 
-              : _buildDataTable(paged),
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _buildDataTable(paged),
           ),
         ),
         const SizedBox(height: 16),
@@ -558,93 +631,190 @@ class _FileUploadViewState extends State<FileUploadView> {
   }
 
   Widget _buildDataTable(List<dynamic> data) {
-    return LayoutBuilder(builder: (context, constraints) {
-      return SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: constraints.maxWidth),
-            child: DataTable(
-            headingRowHeight: 50,
-            headingRowColor: WidgetStateProperty.all(const Color(0xFF000000)),
-            columnSpacing: 20,
-            columns: [
-              _buildCol('ID'),
-              _buildCol('IMG/VID'),
-              _buildCol('FILE NAME'),
-              _buildCol('DESCRIPTION'),
-              _buildCol('TYPE'),
-              _buildCol('VALID FROM'),
-              _buildCol('VALID UPTO'),
-              _buildCol('STATUS'),
-              _buildCol('EDIT'),
-              _buildCol('DELETE'),
-            ],
-            rows: data.map((item) {
-              return DataRow(cells: [
-                DataCell(Text(item['id']?.toString() ?? "-")),
-                DataCell(
-                  Container(
-                    width: 40,
-                    height: 50,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      color: Colors.grey.shade100,
-                    ),
-                    child: (item['file_name'] != null && item['file_name'].toString().isNotEmpty)
-                      ? Image.network(
-                          "$_baseUrl/uploads/${item['file_name']}",
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 20),
-                        )
-                      : const Icon(Icons.image, size: 20),
-                  ),
-                ),
-                DataCell(Text(item['user_filename'] ?? "-")),
-                DataCell(Text(item['description'] ?? "-")),
-                DataCell(Text(item['type'] ?? "-")),
-                DataCell(Text(item['valid_from_date'] ?? "-")),
-                DataCell(Text(item['valid_upto_date'] ?? "-")),
-                DataCell(
-                  Switch(
-                    value: item['file_status'] == 1 || item['file_status'] == "1",
-                    activeColor: Colors.green,
-                    onChanged: (v) => toggleFileStatus(item['id'], item['file_status']),
-                  ),
-                ),
-                DataCell(IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () => editFileDetails(item['id']))),
-                DataCell(IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => deleteFileAction(item['id']))),
-              ]);
-            }).toList(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: DataTable(
+                headingRowHeight: 45,
+                headingRowColor: WidgetStateProperty.all(Colors.blue.shade50),
+                border: TableBorder.all(color: Colors.grey.shade100),
+                columns: [
+                  _buildCol('ID'),
+                  _buildCol('IMG/VID'),
+                  _buildCol('FILE NAME'),
+                  _buildCol('DESCRIPTION'),
+                  _buildCol('TYPE'),
+                  _buildCol('VALID FROM'),
+                  _buildCol('VALID UPTO'),
+                  _buildCol('STATUS'),
+                  _buildCol('EDIT'),
+                  _buildCol('DELETE'),
+                ],
+                rows: data.map((item) => _getRow(item)).toList(),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
-  });
-}
+  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // WIDGET HELPERS
   // ──────────────────────────────────────────────────────────────────────────
 
-  Widget _buildTextField(String label, TextEditingController ctrl, {int maxLines = 1}) {
+  DataRow _getRow(dynamic item) {
+    return DataRow(
+      cells: [
+        DataCell(
+          Text(
+            item['id']?.toString() ?? "-",
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ),
+        DataCell(
+          Container(
+            width: 40,
+            height: 50,
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white10),
+              color: Colors.black26,
+            ),
+            child:
+                (item['file_name'] != null &&
+                    item['file_name'].toString().isNotEmpty)
+                ? Image.network(
+                    "$_baseUrl/uploads/${item['file_name']}",
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.broken_image,
+                      size: 20,
+                      color: Colors.white38,
+                    ),
+                  )
+                : const Icon(Icons.image, size: 20, color: Colors.white38),
+          ),
+        ),
+        DataCell(
+          Text(
+            item['user_filename'] ?? "-",
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        DataCell(
+          Text(
+            item['description'] ?? "-",
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ),
+        DataCell(
+          Text(
+            item['type'] ?? "-",
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ),
+        DataCell(
+          Text(
+            item['valid_from_date'] ?? "-",
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ),
+        DataCell(
+          Text(
+            item['valid_upto_date'] ?? "-",
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ),
+        DataCell(
+          Transform.scale(
+            scale: 0.7,
+            child: Switch(
+              value: item['file_status'] == 1 || item['file_status'] == "1",
+              activeColor: Colors.greenAccent,
+              onChanged: (v) =>
+                  toggleFileStatus(item['id'], item['file_status']),
+            ),
+          ),
+        ),
+        DataCell(
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.blueAccent, size: 18),
+            onPressed: () => editFileDetails(item['id']),
+          ),
+        ),
+        DataCell(
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.redAccent, size: 18),
+            onPressed: () => deleteFileAction(item['id']),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    TextEditingController ctrl, {
+    int maxLines = 1,
+  }) {
     return TextField(
-      controller: ctrl, 
-      maxLines: maxLines, 
+      controller: ctrl,
+      maxLines: maxLines,
+      style: const TextStyle(color: Colors.black87),
       decoration: InputDecoration(
-        labelText: label, 
-        labelStyle: const TextStyle(fontSize: 13),
-        border: const OutlineInputBorder(), 
-        alignLabelWithHint: true
+        labelText: label,
+        labelStyle: const TextStyle(fontSize: 13, color: Colors.black54),
+        border: const OutlineInputBorder(),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        alignLabelWithHint: true,
+      ),
+    );
+  }
+
+  Widget _buildNavBtn(
+    String label, {
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return ElevatedButton(
+      onPressed: enabled ? onTap : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: enabled ? Colors.blue.shade50 : Colors.grey.shade50,
+        foregroundColor: enabled ? Colors.blue.shade800 : Colors.black26,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: enabled ? Colors.blue.shade100 : Colors.grey.shade200,
+          ),
+        ),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
       ),
     );
   }
 
   DataColumn _buildCol(String label) {
     return DataColumn(
-      label: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11))
+      label: Text(
+        label,
+        style: TextStyle(
+          color: Colors.blue.shade800,
+          fontWeight: FontWeight.bold,
+          fontSize: 11,
+        ),
+      ),
     );
   }
 
@@ -652,26 +822,65 @@ class _FileUploadViewState extends State<FileUploadView> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(children: [
-          const Text("Show ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-          DropdownButton<String>(
-            value: entriesValue, 
-            items: ["10", "25", "50"].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(), 
-            onChanged: (v) => setState(() { entriesValue = v!; currentPage = 1; })
-          ),
-          const Text(" entries", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-        ]),
+        Row(
+          children: [
+            const Text(
+              "Show ",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(
+              width: 70,
+              height: 35,
+              child: DropdownButtonFormField<String>(
+                value: entriesValue,
+                dropdownColor: Colors.white,
+                style: const TextStyle(color: Colors.black87, fontSize: 13),
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 5),
+                ),
+                items: ["10", "25", "50"]
+                    .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                    .toList(),
+                onChanged: (v) => setState(() {
+                  entriesValue = v!;
+                  currentPage = 1;
+                }),
+              ),
+            ),
+            const Text(
+              " entries",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
         SizedBox(
-          width: 320, 
-          height: 40, 
+          width: 250,
+          height: 40,
           child: TextField(
-            controller: _searchController, 
-            decoration: const InputDecoration(
-              hintText: "Search Files...", 
-              border: OutlineInputBorder(), 
-              prefixIcon: Icon(Icons.search, size: 18)
-            )
-          )
+            controller: _searchController,
+            onChanged: (v) => setState(() {
+              searchQuery = v;
+              currentPage = 1;
+            }),
+            style: const TextStyle(color: Colors.black87, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: "Search files...",
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+            ),
+          ),
         ),
       ],
     );
@@ -685,23 +894,46 @@ class _FileUploadViewState extends State<FileUploadView> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text("Showing ${paged.length} of $total records", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+        Text(
+          "Showing ${paged.length} of $total records",
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+            color: Colors.black54,
+          ),
+        ),
         Row(
           children: [
-            OutlinedButton(
-              onPressed: currentPage > 1 ? () => setState(() => currentPage--) : null, 
-              child: const Text("Previous")
+            _buildNavBtn(
+              "Previous",
+              enabled: currentPage > 1,
+              onTap: () => setState(() => currentPage--),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text("Page $currentPage of $maxPages", style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Text(
+                "Page $currentPage of $maxPages",
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
             ),
-            OutlinedButton(
-              onPressed: currentPage < maxPages ? () => setState(() => currentPage++) : null, 
-              child: const Text("Next")
+            const SizedBox(width: 8),
+            _buildNavBtn(
+              "Next",
+              enabled: currentPage < maxPages,
+              onTap: () => setState(() => currentPage++),
             ),
           ],
-        )
+        ),
       ],
     );
   }

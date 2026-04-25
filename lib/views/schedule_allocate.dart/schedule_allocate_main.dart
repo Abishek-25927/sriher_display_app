@@ -2,12 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import '../../widgets/animated_heading.dart';
 
 class ScheduleAllocateView extends StatefulWidget {
   final Map<String, dynamic>? editData;
   final bool isExtend;
+  final VoidCallback? onBack;
 
-  const ScheduleAllocateView({super.key, this.editData, this.isExtend = false});
+  const ScheduleAllocateView({
+    super.key,
+    this.editData,
+    this.isExtend = false,
+    this.onBack,
+  });
 
   @override
   State<ScheduleAllocateView> createState() => _ScheduleAllocateViewState();
@@ -38,8 +45,6 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
   final TextEditingController _newScheduleController = TextEditingController();
 
   late AnimationController _durationPanelController;
-  late Animation<double> _durationFade;
-  late Animation<Offset> _durationSlide;
   bool _wasSelectionComplete = false;
 
   @override
@@ -49,7 +54,6 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
     _fetchTemplates();
 
     if (widget.editData != null) {
-      // Handle various possible key names for schedule/template IDs
       selectedScheduleId =
           int.tryParse(widget.editData!['schedule_id']?.toString() ?? '') ??
           int.tryParse(widget.editData!['id']?.toString() ?? '');
@@ -68,7 +72,6 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
         _fetchTemplateFiles(selectedTemplateId!);
       }
 
-      // If we have a from_time, pre-select that slot in the grid for each day
       if (_fromTimeController.text.isNotEmpty &&
           _fromDateController.text.isNotEmpty &&
           _toDateController.text.isNotEmpty) {
@@ -80,17 +83,6 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _durationFade = CurvedAnimation(
-      parent: _durationPanelController,
-      curve: Curves.easeOut,
-    );
-    _durationSlide =
-        Tween<Offset>(begin: const Offset(0.1, 0), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _durationPanelController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
   }
 
   @override
@@ -140,7 +132,6 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
       DateTime end = DateFormat('yyyy-MM-dd').parse(_toDateController.text);
       String time = _fromTimeController.text;
 
-      // Find which slot this time falls into
       String? matchedSlot;
       for (var pair in slotPairs) {
         if (pair.startsWith(time)) {
@@ -161,8 +152,6 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
       debugPrint("Error pre-populating slots: $e");
     }
   }
-
-  // ──────────────────────────── API CALLS ────────────────────────────────────
 
   Future<void> _fetchSchedules() async {
     setState(() => isLoadingSchedules = true);
@@ -237,73 +226,143 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
         }),
       );
       if (response.statusCode == 200) {
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Assigned Successfully")),
           );
+        }
       }
     } catch (e) {
       debugPrint(e.toString());
     }
   }
 
-  // ──────────────────────────── POPUPS ───────────────────────────────────────
-
   void _showSchedulePopup() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: EdgeInsets.zero,
-        content: SizedBox(
-          width: 400,
+        content: Container(
+          width: 450,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  "SCHEDULE DEPARTMENT",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
-              const Divider(height: 1, color: Colors.grey),
-              Padding(
+              Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 30,
+                  horizontal: 24,
+                  vertical: 20,
                 ),
-                child: TextFormField(
-                  controller: _newScheduleController,
-                  decoration: const InputDecoration(
-                    hintText: "Schedule Name",
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade600,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
                   ),
                 ),
-              ),
-              const Divider(height: 1, color: Colors.grey),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: const Row(
                   children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
+                    Icon(Icons.calendar_today, color: Colors.white, size: 22),
+                    SizedBox(width: 12),
+                    Text(
+                      "NEW SCHEDULE",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
                       ),
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("SAVE"),
                     ),
-                    const SizedBox(width: 15),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Schedule Name",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _newScheduleController,
+                      decoration: InputDecoration(
+                        hintText: "Enter department or purpose",
+                        hintStyle: TextStyle(color: Colors.grey.shade400),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(
+                            color: Colors.blue,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        foregroundColor: Colors.grey.shade700,
                       ),
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("CLOSE"),
+                      child: const Text(
+                        "CANCEL",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        "CREATE SCHEDULE",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
@@ -315,8 +374,6 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
     );
   }
 
-  // ──────────────────────────── BUILD ────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     if (isSelectionComplete && !_wasSelectionComplete) {
@@ -326,97 +383,131 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
       _wasSelectionComplete = false;
     }
 
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      alignment: Alignment.topLeft,
-      child: Row(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left Column (Fixed position)
+          // Left Column
           Expanded(
             flex: 5,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (widget.editData != null) ...[
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: ElevatedButton.icon(
+                        onPressed: widget.onBack,
+                        icon: const Icon(Icons.arrow_back),
+                        label: const Text("BACK"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade200,
+                          foregroundColor: Colors.black87,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   _buildSectionTitle(
                     widget.isExtend ? "Extend Schedule" : "Schedule",
                   ),
-                  const SizedBox(height: 15),
-                  Card(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(24.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                      border: Border.all(color: Colors.grey.shade200),
                     ),
-                    elevation: 6,
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildDropdownField(
-                                  hint: "Select Schedule Name",
-                                  value: selectedScheduleId,
-                                  items: scheduleList,
-                                  onChanged: (val) =>
-                                      setState(() => selectedScheduleId = val),
-                                ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildDropdownField(
+                                hint: "Select Schedule Name",
+                                value: selectedScheduleId,
+                                items: scheduleList,
+                                label: "Schedule Name",
+                                onChanged: (val) =>
+                                    setState(() => selectedScheduleId = val),
                               ),
-                              const SizedBox(width: 12),
-                              _buildCircularAddButton(),
-                              const SizedBox(width: 25),
-                              Expanded(
-                                child: _buildDropdownField(
-                                  hint: "Select Template Name",
-                                  value: selectedTemplateId,
-                                  items: templateList,
-                                  onChanged: (val) {
-                                    setState(() {
-                                      selectedTemplateId = val;
-                                      templateFiles = [];
-                                    });
-                                    if (val != null) _fetchTemplateFiles(val);
-                                  },
-                                ),
+                            ),
+                            const SizedBox(width: 15),
+                            _buildCircularAddButton(),
+                            const SizedBox(width: 25),
+                            Expanded(
+                              child: _buildDropdownField(
+                                hint: "Select Template Name",
+                                value: selectedTemplateId,
+                                items: templateList,
+                                label: "Template Name",
+                                onChanged: (val) {
+                                  setState(() {
+                                    selectedTemplateId = val;
+                                    templateFiles = [];
+                                  });
+                                  if (val != null) _fetchTemplateFiles(val);
+                                },
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 25),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: _buildDateField(
-                                  "From Date",
-                                  _fromDateController,
-                                ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 25),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: _buildDateField(
+                                "From Date",
+                                _fromDateController,
                               ),
-                              const SizedBox(width: 15),
-                              Expanded(
-                                child: _buildTimeDropdown(
-                                  "Select Time",
-                                  _fromTimeController,
-                                  enabled: _fromDateController.text.isNotEmpty,
-                                ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: _buildTimeDropdown(
+                                "Select Time",
+                                _fromTimeController,
+                                enabled: _fromDateController.text.isNotEmpty,
                               ),
-                              const SizedBox(width: 15),
-                              Expanded(
-                                child: _buildDateField(
-                                  "To Date",
-                                  _toDateController,
-                                ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: _buildDateField(
+                                "To Date",
+                                _toDateController,
                               ),
-                              const SizedBox(width: 15),
-                              Row(
+                            ),
+                            const SizedBox(width: 20),
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 2),
+                              child: Row(
                                 children: [
                                   Checkbox(
                                     value: selectAllSlot,
-                                    activeColor: Colors.black,
+                                    activeColor: Colors.blue,
+                                    side: BorderSide(
+                                      color: Colors.grey.shade400,
+                                    ),
                                     onChanged: (val) => setState(() {
                                       selectAllSlot = val!;
                                       if (selectAllSlot) {
@@ -453,42 +544,42 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                                     "Select All Slot",
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 12,
+                                      fontSize: 13,
+                                      color: Colors.black87,
                                     ),
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 5),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
                   if (isAllFilled) ...[
                     _buildSlotSelectionCard(),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 30),
                     Align(
-                      alignment: Alignment.bottomRight,
+                      alignment: Alignment.centerRight,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
+                          backgroundColor: Colors.blue.shade600,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 30,
+                            horizontal: 40,
                             vertical: 18,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          elevation: 8,
+                          elevation: 3,
                         ),
                         onPressed: _handleScheduleSubmit,
                         child: const Text(
                           "SUBMIT",
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.2,
                           ),
@@ -500,50 +591,60 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
               ),
             ),
           ),
+          // Vertical Divider
+          VerticalDivider(width: 1, color: Colors.grey.shade200),
           // Right Column
           Expanded(
             flex: 5,
             child: isSelectionComplete
-                ? SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildSectionTitle("TEMPLATE DURATION"),
-                        const SizedBox(height: 15),
-                        Card(
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 6,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
+                ? Container(
+                    color: Colors.white,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildSectionTitle("Template Duration"),
+                          const SizedBox(height: 20),
+                          Container(
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
                             child: Column(
                               children: [
                                 _buildListHeader(),
+                                const Divider(height: 1),
                                 const SizedBox(height: 16),
                                 LayoutBuilder(
                                   builder: (context, constraints) {
                                     if (isLoadingFiles) {
                                       return const SizedBox(
-                                        height: 200,
+                                        height: 300,
                                         child: Center(
-                                          child: CircularProgressIndicator(
-                                            color: Colors.blueAccent,
-                                          ),
+                                          child: CircularProgressIndicator(),
                                         ),
                                       );
                                     }
 
                                     if (templateFiles.isEmpty) {
                                       return const SizedBox(
-                                        height: 100,
+                                        height: 200,
                                         child: Center(
                                           child: Text(
                                             "No files found for this template",
                                             style: TextStyle(
-                                              color: Colors.black54,
+                                              color: Colors.grey,
+                                              fontSize: 16,
                                               fontStyle: FontStyle.italic,
                                             ),
                                           ),
@@ -559,14 +660,14 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                                         ),
                                         child: DataTable(
                                           columnSpacing: 25,
-                                          horizontalMargin: 10,
-                                          dataRowMinHeight: 65,
-                                          dataRowMaxHeight: 75,
+                                          horizontalMargin: 20,
+                                          dataRowMinHeight: 70,
+                                          dataRowMaxHeight: 85,
+                                          headingRowHeight: 45,
                                           headingRowColor:
                                               WidgetStateProperty.all(
-                                                Colors.black,
+                                                Colors.blue.shade50,
                                               ),
-                                          headingRowHeight: 40,
                                           columns: [
                                             _buildSortableColumn('Play order'),
                                             _buildSortableColumn('File'),
@@ -579,50 +680,68 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                                             return DataRow(
                                               cells: [
                                                 DataCell(
-                                                  Text(
-                                                    index.toString(),
-                                                    style: const TextStyle(
-                                                      fontSize: 11,
+                                                  Center(
+                                                    child: Text(
+                                                      index.toString(),
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.black87,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
                                                 DataCell(
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 6.0,
+                                                  Center(
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            vertical: 8.0,
+                                                          ),
+                                                      child: Container(
+                                                        clipBehavior:
+                                                            Clip.antiAlias,
+                                                        decoration: BoxDecoration(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                4,
+                                                              ),
+                                                          border: Border.all(
+                                                            color: Colors
+                                                                .grey
+                                                                .shade300,
+                                                          ),
                                                         ),
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        border: Border.all(
-                                                          color: Colors
-                                                              .grey
-                                                              .shade300,
-                                                        ),
+                                                        child:
+                                                            file['file_name'] !=
+                                                                null
+                                                            ? Image.network(
+                                                                "$_baseUrl/uploads/${file['file_name']}",
+                                                                height: 65,
+                                                                width: 50,
+                                                                fit: BoxFit
+                                                                    .cover,
+                                                                errorBuilder:
+                                                                    (
+                                                                      context,
+                                                                      error,
+                                                                      stackTrace,
+                                                                    ) => const Icon(
+                                                                      Icons
+                                                                          .broken_image,
+                                                                      size: 30,
+                                                                      color: Colors
+                                                                          .grey,
+                                                                    ),
+                                                              )
+                                                            : const Icon(
+                                                                Icons.image,
+                                                                size: 20,
+                                                                color:
+                                                                    Colors.grey,
+                                                              ),
                                                       ),
-                                                      child:
-                                                          file['file_name'] !=
-                                                              null
-                                                          ? Image.network(
-                                                              "$_baseUrl/uploads/${file['file_name']}",
-                                                              height: 55,
-                                                              width: 45,
-                                                              fit: BoxFit.cover,
-                                                              errorBuilder:
-                                                                  (
-                                                                    context,
-                                                                    error,
-                                                                    stackTrace,
-                                                                  ) => const Icon(
-                                                                    Icons
-                                                                        .broken_image,
-                                                                    size: 30,
-                                                                  ),
-                                                            )
-                                                          : const Icon(
-                                                              Icons.image,
-                                                              size: 20,
-                                                            ),
                                                     ),
                                                   ),
                                                 ),
@@ -632,15 +751,38 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                                                         file['file_name'] ??
                                                         '-',
                                                     style: const TextStyle(
-                                                      fontSize: 11,
+                                                      fontSize: 12,
+                                                      color: Colors.black87,
                                                     ),
                                                   ),
                                                 ),
                                                 DataCell(
-                                                  Text(
-                                                    "${file['duration'] ?? '30'}s",
-                                                    style: const TextStyle(
-                                                      fontSize: 11,
+                                                  Center(
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 10,
+                                                            vertical: 4,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color:
+                                                            Colors.blue.shade50,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              12,
+                                                            ),
+                                                      ),
+                                                      child: Text(
+                                                        "${file['duration'] ?? '30'}s",
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors
+                                                              .blue
+                                                              .shade900,
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
@@ -652,16 +794,36 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                                     );
                                   },
                                 ),
-                                const SizedBox(height: 16),
+                                const Divider(height: 1),
                                 _buildPagination(),
                               ],
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.dashboard_customize_outlined,
+                          size: 100,
+                          color: Colors.grey.withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          "Select a schedule and template to view details",
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ],
                     ),
-                  )
-                : const SizedBox.shrink(),
+                  ),
           ),
         ],
       ),
@@ -671,38 +833,64 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
   // ──────────────────────────── UI HELPERS ───────────────────────────────────
 
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
-    );
+    return AnimatedHeading(text: title);
   }
 
   Widget _buildDropdownField({
     required String hint,
     int? value,
     required List<dynamic> items,
+    required String label,
     required Function(int?) onChanged,
   }) {
-    return DropdownMenu<int>(
-      key: ValueKey(value),
-      initialSelection: value,
-      hintText: hint,
-      width: 250, // Adjust as needed
-      menuHeight: 300,
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
-      onSelected: onChanged,
-      dropdownMenuEntries: items.map((e) {
-        final id = int.tryParse(e['id'].toString());
-        final name = e['schedule_name'] ?? e['temp_name'] ?? '';
-        return DropdownMenuEntry<int>(value: id ?? 0, label: name);
-      }).toList(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Colors.blueAccent,
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<int>(
+          value: value,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(color: Colors.black38, fontSize: 13),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
+          ),
+          dropdownColor: Colors.white,
+          isExpanded: true,
+          onChanged: onChanged,
+          items: items.map((e) {
+            final id = int.tryParse(e['id'].toString());
+            final name = e['schedule_name'] ?? e['temp_name'] ?? '';
+            return DropdownMenuItem<int>(
+              value: id,
+              child: Text(
+                name,
+                style: const TextStyle(fontSize: 13, color: Colors.black87),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
@@ -722,32 +910,46 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
             color: Colors.blueAccent,
           ),
         ),
-        const SizedBox(height: 5),
-        DropdownMenu<String>(
-          initialSelection: controller.text.isEmpty ? null : controller.text,
-          hintText: hint,
-          width: 250, // Match other dropdowns
-          menuHeight: 300,
-          enabled: enabled,
-          inputDecorationTheme: InputDecorationTheme(
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: controller.text.isEmpty ? null : controller.text,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: enabled ? Colors.black38 : Colors.grey.shade400,
+              fontSize: 13,
+            ),
             filled: true,
-            fillColor: enabled ? Colors.white : Colors.grey.shade200,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            fillColor: enabled ? Colors.white : Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
-              vertical: 10,
+              vertical: 12,
             ),
           ),
-          onSelected: (v) {
-            if (v != null) {
-              setState(() => controller.text = v);
-            }
-          },
-          dropdownMenuEntries: enabled
-              ? _generateTimeSlots().map((String time) {
-                  return DropdownMenuEntry<String>(value: time, label: time);
-                }).toList()
-              : [],
+          dropdownColor: Colors.white,
+          isExpanded: true,
+          onChanged: enabled
+              ? (v) {
+                  if (v != null) setState(() => controller.text = v);
+                }
+              : null,
+          items: _generateTimeSlots().map((String time) {
+            return DropdownMenuItem<String>(
+              value: time,
+              child: Text(
+                time,
+                style: const TextStyle(fontSize: 13, color: Colors.black87),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -755,12 +957,13 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
 
   Widget _buildCircularAddButton() {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.black,
+      margin: const EdgeInsets.only(top: 12),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade100,
         shape: BoxShape.circle,
       ),
       child: IconButton(
-        icon: const Icon(Icons.add, color: Colors.white, size: 14),
+        icon: const Icon(Icons.add, color: Colors.blue, size: 20),
         onPressed: _showSchedulePopup,
       ),
     );
@@ -778,19 +981,33 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
             color: Colors.blueAccent,
           ),
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           readOnly: true,
-          style: const TextStyle(fontSize: 13),
+          style: const TextStyle(fontSize: 13, color: Colors.black87),
           decoration: InputDecoration(
             hintText: 'yyyy-mm-dd',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            hintStyle: const TextStyle(color: Colors.black38),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
-              vertical: 10,
+              vertical: 12,
             ),
-            suffixIcon: const Icon(Icons.calendar_month, size: 18),
+            suffixIcon: const Icon(
+              Icons.calendar_month,
+              size: 20,
+              color: Colors.blue,
+            ),
           ),
           onTap: () async {
             DateTime? pickedDate = await showDatePicker(
@@ -813,111 +1030,119 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
   }
 
   Widget _buildListHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // 1. Entries dropdown now on the LEFT
-        Row(
-          children: [
-            SizedBox(
-              width: 70,
-              height: 35,
-              child: DropdownButtonFormField<String>(
-                value:
-                    entriesValue, // Use 'value' instead of 'initialValue' if it changes via setState
-                items: ["10", "25", "50"]
-                    .map(
-                      (e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e, style: const TextStyle(fontSize: 11)),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (val) => setState(() => entriesValue = val!),
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 5),
-                  border: OutlineInputBorder(),
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 70,
+                height: 38,
+                child: DropdownButtonFormField<String>(
+                  value: entriesValue,
+                  items: ["10", "25", "50"]
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(e, style: const TextStyle(fontSize: 13)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (val) => setState(() => entriesValue = val!),
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const Text(
-              " entries",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-            ),
-          ],
-        ),
-
-        const SizedBox(width: 20), // Spacing between the two sections
-        // 2. Search field now on the RIGHT
-        Expanded(
-          child: SizedBox(
-            height: 35, // Matching height with the dropdown for symmetry
+              const SizedBox(width: 10),
+              const Text(
+                "entries",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: Colors.black54,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            width: 250,
+            height: 38,
             child: TextField(
               decoration: InputDecoration(
-                hintText: "Search...",
-                hintStyle: TextStyle(fontSize: 12),
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                prefixIcon: const Icon(Icons.search, size: 20),
+                hintText: "Search files...",
+                hintStyle: const TextStyle(fontSize: 13),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               ),
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSetexttionLabel(String label) {
-    return Text(
-      label,
-      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-    );
-  }
-
-  DataColumn _buildSortableColumn(String label) {
-    return DataColumn(
-      label: Row(
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 11,
-            ),
-          ),
-          const Icon(Icons.unfold_more, color: Colors.white70, size: 14),
         ],
       ),
     );
   }
 
-  Widget _buildPagination() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        _buildPageBtn("Previous"),
-        _buildPageBtn("1"),
-        _buildPageBtn("2"),
-        _buildPageBtn("3"),
-        _buildPageBtn("4"),
-        _buildPageBtn("Next"),
-      ],
+  DataColumn _buildSortableColumn(String label) {
+    return DataColumn(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: Colors.blue.shade900,
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+        ),
+      ),
     );
   }
 
-  Widget _buildPageBtn(String label) {
-    bool isActive = label == "1";
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        backgroundColor: isActive ? Colors.blue : Colors.white,
-        foregroundColor: isActive ? Colors.white : Colors.blue,
-        minimumSize: const Size(40, 35),
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+  Widget _buildPagination() {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          _buildPageBtn("Previous"),
+          _buildPageBtn("1", isActive: true),
+          _buildPageBtn("2"),
+          _buildPageBtn("3"),
+          _buildPageBtn("Next"),
+        ],
       ),
-      onPressed: () {},
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildPageBtn(String label, {bool isActive = false}) {
+    return Container(
+      margin: const EdgeInsets.only(left: 4),
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          backgroundColor: isActive ? Colors.blue : Colors.white,
+          foregroundColor: isActive ? Colors.white : Colors.blue,
+          side: BorderSide(
+            color: isActive ? Colors.blue : Colors.grey.shade300,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        ),
+        onPressed: () {},
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
@@ -938,122 +1163,110 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
       days.add(start.add(Duration(days: i)));
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Card(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSectionTitle("Slot Selection"),
+        const SizedBox(height: 15),
+        Container(
+          height: 400,
+          decoration: BoxDecoration(
             color: Colors.white,
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 6,
-            child: Scrollbar(
-              thumbVisibility: true,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(0),
-                child: Column(
-                  children: days.map((day) => _buildDaySection(day)).toList(),
-                ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: ListView.separated(
+              itemCount: days.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) => _buildDaySection(days[index]),
             ),
           ),
-          const SizedBox(height: 10),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildDaySection(DateTime day) {
-    String dateStr = DateFormat('dd-MM-yyyy').format(day);
+    String dateStr = DateFormat('EEEE, MMM dd, yyyy').format(day);
     String key = DateFormat('yyyy-MM-dd').format(day);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-          ),
-          child: Text(
-            dateStr,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              color: Colors.black87,
-            ),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          color: Colors.blue.shade50.withOpacity(0.3),
+          child: Row(
+            children: [
+              const Icon(Icons.event, size: 16, color: Colors.blue),
+              const SizedBox(width: 8),
+              Text(
+                dateStr,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.blue.shade900,
+                ),
+              ),
+            ],
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 6,
-              mainAxisSpacing: 0,
-              crossAxisSpacing: 0,
-              childAspectRatio: 2.8,
-            ),
-            itemCount: slotPairs.length,
-            itemBuilder: (context, index) {
-              final slot = slotPairs[index];
+          padding: const EdgeInsets.all(16),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: slotPairs.map((slot) {
               List<String> daySlots = selectedSlotsByDay[key] ?? [];
-              bool isSelected = daySlots.contains(slot) || selectAllSlot;
+              bool isSelected = daySlots.contains(slot);
 
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Transform.scale(
-                    scale: 0.8,
-                    child: Checkbox(
-                      value: isSelected,
-                      activeColor: Colors.black,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      onChanged: (val) {
-                        setState(() {
-                          if (val!) {
-                            selectedSlotsByDay.putIfAbsent(key, () => []);
-                            if (!selectedSlotsByDay[key]!.contains(slot)) {
-                              selectedSlotsByDay[key]!.add(slot);
-                            }
-                          } else {
-                            if (selectAllSlot) {
-                              // If global selectAll is on, we local-populate others if needed
-                              // or just handle it as individual uncheck
-                              selectedSlotsByDay[key]?.remove(slot);
-                            } else {
-                              selectedSlotsByDay[key]?.remove(slot);
-                            }
-                          }
-                        });
-                      },
+              return InkWell(
+                onTap: () {
+                  setState(() {
+                    selectedSlotsByDay.putIfAbsent(key, () => []);
+                    if (isSelected) {
+                      selectedSlotsByDay[key]!.remove(slot);
+                    } else {
+                      selectedSlotsByDay[key]!.add(slot);
+                    }
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.blue : Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isSelected ? Colors.blue : Colors.grey.shade300,
                     ),
                   ),
-                  Expanded(
-                    child: Text(
-                      slot,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  child: Text(
+                    slot,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: isSelected ? Colors.white : Colors.black87,
                     ),
                   ),
-                ],
+                ),
               );
-            },
+            }).toList(),
           ),
         ),
-        const Divider(height: 1),
       ],
     );
   }

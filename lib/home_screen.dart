@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_page.dart';
-import 'widgets/animated_background.dart';
 
-// Existing Imports
 import 'package:sriher_display_application/views/dashboard_view.dart';
 import 'package:sriher_display_application/views/authentication/add_user_view.dart';
 import 'package:sriher_display_application/views/file_master.dart/file_upload.dart';
@@ -34,7 +32,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String? _userName;
   String? _userRole;
 
-  // Navigation Arguments for Schedule Allocate
   Map<String, dynamic>? _scheduleEditData;
   bool _isScheduleExtend = false;
 
@@ -48,8 +45,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
-    // Sidebar entry animation
     _sidebarController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -66,7 +61,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         );
 
-    // View content transition
     _viewController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
@@ -90,16 +84,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     });
   }
 
-  List<String> _generateTimeSlots() {
-    List<String> slots = [];
-    for (int i = 0; i < 24; i++) {
-      String hour = i.toString().padLeft(2, '0');
-      slots.add("$hour:00");
-      slots.add("$hour:30");
-    }
-    return slots;
-  }
-
   @override
   void dispose() {
     _sidebarController.dispose();
@@ -109,7 +93,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   void _selectIndex(int index) {
     if (_selectedIndex == index) {
-      // If we are selecting the same index, we might still want to clear edit data if it was set
       if (index != 6) {
         _scheduleEditData = null;
         _isScheduleExtend = false;
@@ -119,7 +102,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() {
       _previousIndex = _selectedIndex;
       _selectedIndex = index;
-      // Clear edit data when navigating away from Schedule Allocate or to other views
       if (index != 6) {
         _scheduleEditData = null;
         _isScheduleExtend = false;
@@ -136,27 +118,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _scheduleEditData = editData;
       _isScheduleExtend = isExtend;
       _previousIndex = _selectedIndex;
-      _selectedIndex = 6; // Schedule Allocate index
+      _selectedIndex = 6;
     });
     _viewController.forward(from: 0.0);
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBackground(
+    return Container(
+      color: const Color(0xFFF0F7FF),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Column(
           children: [
-            // --- GLOBAL HEADER ---
             Container(
-              decoration: const BoxDecoration(
-                color: Colors.black, // Dark Theme Header
+              decoration: BoxDecoration(
+                color: Colors.blue.shade600,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black54,
+                    color: Colors.black.withOpacity(0.1),
                     blurRadius: 10,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -170,7 +152,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   _buildDynamicHeader(),
                   const Spacer(),
-                  // User name chip with avatar
                   if (_userName != null)
                     TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0.0, end: 1.0),
@@ -181,20 +162,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Container(
                         margin: const EdgeInsets.only(right: 10),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: 16,
+                          vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A1A1A), // Darker chip
+                          color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: const Color(0xFF333333),
-                          ), // Subtle border
+                            color: Colors.white.withOpacity(0.3),
+                          ),
                         ),
                         child: Text(
                           _userName!,
                           style: const TextStyle(
-                            color: Colors.white, // White text
+                            color: Colors.white,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.3,
@@ -202,10 +183,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-                  // Animated power button (Logout)
                   _AnimatedIconButton(
                     icon: Icons.logout_rounded,
-                    color: Colors.white70, // White icon
+                    color: Colors.blue.shade600,
                     onPressed: () async {
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.clear();
@@ -223,31 +203,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
             const SizedBox(height: 4),
-
-            // --- MAIN CONTENT ---
             Expanded(
               child: Row(
                 children: [
-                  // --- Animated Sidebar ---
                   SlideTransition(
                     position: _sidebarSlide,
                     child: FadeTransition(
                       opacity: _sidebarFade,
                       child: Container(
                         width: 230,
-                        margin: const EdgeInsets.only(left: 12, bottom: 12),
+                        margin: const EdgeInsets.only(
+                          left: 12,
+                          bottom: 12,
+                          top: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(
-                            0.4,
-                          ), // Glassmorphism dark
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.1),
-                          ),
+                          border: Border.all(color: Colors.grey.shade200),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 12,
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
                               offset: const Offset(2, 2),
                             ),
                           ],
@@ -270,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                             const Icon(
                                               Icons.display_settings,
                                               size: 24,
-                                              color: Color(0xFF64FFDA),
+                                              color: Colors.blue,
                                             ),
                                   ),
                                   const SizedBox(width: 10),
@@ -279,13 +256,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
-                                      color: Colors.white,
+                                      color: Colors.blue,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Divider(color: Colors.white12),
+                            Divider(
+                              color: Colors.grey.shade100,
+                              indent: 16,
+                              endIndent: 16,
+                            ),
                             Expanded(
                               child: ListView(
                                 padding: EdgeInsets.zero,
@@ -295,8 +276,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     'Dashboard',
                                     0,
                                   ),
-
-                                  // Authentication
                                   _buildExpansionTile(
                                     icon: Icons.security,
                                     title: 'Authentication',
@@ -309,8 +288,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ),
                                     ],
                                   ),
-
-                                  // Masters
                                   _buildExpansionTile(
                                     icon: Icons.storage,
                                     title: 'Masters',
@@ -348,8 +325,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ),
                                     ],
                                   ),
-
-                                  // File Master
                                   _buildExpansionTile(
                                     icon: Icons.folder,
                                     title: 'File Master',
@@ -362,8 +337,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ),
                                     ],
                                   ),
-
-                                  // Template Master
                                   _buildExpansionTile(
                                     icon: Icons.art_track,
                                     title: 'Template Master',
@@ -391,8 +364,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ),
                                     ],
                                   ),
-
-                                  // Schedule
                                   _buildExpansionTile(
                                     icon: Icons.schedule,
                                     title: 'Schedule',
@@ -440,21 +411,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-
-                  const SizedBox(width: 12), // Gap between sidebar and content
-
-                  // --- Animated View Panel ---
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12, right: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(
-                          0.1,
-                        ), // Keep main panel mostly transparent
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.05),
-                        ),
+                      decoration: const BoxDecoration(
+                        color: Colors.transparent,
                       ),
                       child: FadeTransition(
                         opacity: _viewFade,
@@ -474,7 +436,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // --- Dynamic Header Helper ---
   Widget _buildDynamicHeader() {
     bool isDashboard = _selectedIndex == 0;
     return AnimatedSwitcher(
@@ -485,17 +446,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           children: [
             TextSpan(
               text: "SRIHER ",
-              style: TextStyle(
-                color: Colors.grey.shade500,
-                fontSize: 13,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
             TextSpan(
               text: isDashboard ? "/ DISPLAY" : "/ SRIHER DISPLAY",
               style: const TextStyle(
-                color: Colors.white, // White primary
-                fontSize: 13,
+                color: Colors.white,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -505,7 +466,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // --- Sidebar UI Helpers ---
   Widget _buildSidebarItem(
     IconData icon,
     String title,
@@ -516,11 +476,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: isSelected
-            ? const Color(0xFF64FFDA).withValues(
-                alpha: 0.1,
-              ) // Teal accent for dark theme
-            : Colors.transparent,
+        color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -532,8 +488,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             icon,
             key: ValueKey(isSelected ? '${index}_sel' : '${index}_unsel'),
             color: isSelected
-                ? const Color(0xFF64FFDA) // Teal selected
-                : (isSub ? Colors.white38 : Colors.grey.shade400),
+                ? Colors.blue.shade700
+                : (isSub ? Colors.grey.shade400 : Colors.grey.shade600),
             size: isSub ? 18 : 20,
           ),
         ),
@@ -541,8 +497,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           title,
           style: TextStyle(
             fontSize: isSub ? 13 : 14,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? Colors.white : Colors.white70,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.blue.shade900 : Colors.black87,
           ),
         ),
         contentPadding: isSub
@@ -564,20 +520,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Theme(
       data: Theme.of(context).copyWith(
         dividerColor: Colors.transparent,
-        unselectedWidgetColor: Colors.white54,
+        unselectedWidgetColor: Colors.grey.shade400,
       ),
       child: ExpansionTile(
-        leading: Icon(icon, color: Colors.blueAccent, size: 20),
+        leading: Icon(icon, color: Colors.blue.shade600, size: 20),
         title: Text(
           title,
           style: const TextStyle(
             fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.white70,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
           ),
         ),
-        iconColor: Colors.white,
-        collapsedIconColor: Colors.white54,
+        iconColor: Colors.black87,
+        collapsedIconColor: Colors.black54,
         initiallyExpanded: initiallyExpanded,
         childrenPadding: EdgeInsets.zero,
         expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
@@ -604,6 +560,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return ScheduleAllocateView(
           editData: _scheduleEditData,
           isExtend: _isScheduleExtend,
+          onBack: () => setState(() => _selectedIndex = 8),
         );
       case 7:
         return const AssignDeviceView();
@@ -634,7 +591,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
-/// Animated icon button with scale on press
 class _AnimatedIconButton extends StatefulWidget {
   final IconData icon;
   final Color color;
@@ -681,8 +637,8 @@ class _AnimatedIconButtonState extends State<_AnimatedIconButton>
       builder: (context, child) =>
           Transform.scale(scale: _scale.value, child: child),
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+        decoration: const BoxDecoration(
+          color: Colors.white,
           shape: BoxShape.circle,
         ),
         child: IconButton(
@@ -693,7 +649,7 @@ class _AnimatedIconButtonState extends State<_AnimatedIconButton>
           },
           icon: Icon(widget.icon),
           color: widget.color,
-          iconSize: 24, // Slightly smaller to fit in the circle
+          iconSize: 24,
         ),
       ),
     );
