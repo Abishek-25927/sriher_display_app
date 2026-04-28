@@ -177,120 +177,122 @@ class _AssignDeviceViewState extends State<AssignDeviceView>
         left: 24.0,
         right: 24.0,
         bottom: 24.0,
-        top: 40.0,
+        top: 20.0,
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const AnimatedHeading(text: "Assign Schedule for Device"),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: _buildDropdown(
-                          label: "Device Name",
-                          hint: "Select Device",
-                          value: selectedDeviceId,
-                          items: deviceList,
-                          onChanged: (val) {
-                            setState(() {
-                              selectedDeviceId = val;
-                              selectedScheduleId = null;
-                              scheduleList = [];
-                              assignedList = [];
-                            });
-                            if (val != null) {
-                              _fetchSchedules(val);
-                              _fetchAssignedSchedules(val);
-                              _controller.forward(from: 0.0);
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: _buildDropdown(
-                          label: "Schedule Name",
-                          hint: "Select Schedule",
-                          value: selectedScheduleId,
-                          items: scheduleList,
-                          onChanged: (val) {
-                            setState(() => selectedScheduleId = val);
-                            if (val != null) {
-                              _controller.forward(from: 0.0);
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade600,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 40,
-                            vertical: 18,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 3,
-                          disabledBackgroundColor: Colors.grey.shade200,
-                        ),
-                        onPressed:
-                            (selectedDeviceId != null &&
-                                selectedScheduleId != null)
-                            ? _handleAssignmentSubmit
-                            : null,
-                        child: const Text(
-                          "SUBMIT",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (selectedDeviceId != null)
-                    FadeTransition(
-                      opacity: _opacityAnimation,
-                      child: SlideTransition(
-                        position: _slideAnimation,
-                        child: Column(
-                          key: ValueKey('calendar_col_$selectedDeviceId'),
-                          children: [
-                            const SizedBox(height: 24),
-                            const Divider(height: 1),
-                            const SizedBox(height: 24),
-                            _buildCagedCalendar(),
-                          ],
-                        ),
-                      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const AnimatedHeading(text: "Assign Schedule for Device"),
+          const SizedBox(height: 20),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                ],
+                  ],
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: _buildDropdown(
+                            label: "Device Name",
+                            hint: "Select Device",
+                            value: selectedDeviceId,
+                            items: deviceList,
+                            onChanged: (val) {
+                              setState(() {
+                                selectedDeviceId = val;
+                                selectedScheduleId = null;
+                                scheduleList = [];
+                                assignedList = [];
+                              });
+                              if (val != null) {
+                                _fetchSchedules(val);
+                                _fetchAssignedSchedules(val);
+                                _controller.forward(from: 0.0);
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: _buildDropdown(
+                            label: "Schedule Name",
+                            hint: "Select Schedule",
+                            value: selectedScheduleId,
+                            items: scheduleList,
+                            onChanged: (val) {
+                              setState(() => selectedScheduleId = val);
+                              if (val != null) {
+                                _controller.forward(from: 0.0);
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.shade600,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 40,
+                              vertical: 18,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 3,
+                            disabledBackgroundColor: Colors.grey.shade200,
+                          ),
+                          onPressed:
+                              (selectedDeviceId != null &&
+                                  selectedScheduleId != null)
+                              ? _handleAssignmentSubmit
+                              : null,
+                          child: const Text(
+                            "SUBMIT",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (selectedDeviceId != null)
+                      FadeTransition(
+                        opacity: _opacityAnimation,
+                        child: SlideTransition(
+                          position: _slideAnimation,
+                          child: Column(
+                            key: ValueKey('calendar_col_$selectedDeviceId'),
+                            children: [
+                              const SizedBox(height: 24),
+                              const Divider(height: 1),
+                              const SizedBox(height: 24),
+                              _buildCagedCalendar(),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -312,7 +314,6 @@ class _AssignDeviceViewState extends State<AssignDeviceView>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left: Calendar
           Expanded(
             flex: 5,
             child: Container(
@@ -320,13 +321,7 @@ class _AssignDeviceViewState extends State<AssignDeviceView>
               child: _buildSmallCalendar(),
             ),
           ),
-          // Vertical Divider
-          Container(
-            width: 1,
-            height: 450, // Minimum height for the line
-            color: Colors.grey.shade100,
-          ),
-          // Right: Side Box
+          Container(width: 1, height: 450, color: Colors.grey.shade100),
           Expanded(
             flex: 4,
             child: Container(
@@ -403,7 +398,6 @@ class _AssignDeviceViewState extends State<AssignDeviceView>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Styled Month Header
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
@@ -427,7 +421,6 @@ class _AssignDeviceViewState extends State<AssignDeviceView>
           ),
         ),
         const SizedBox(height: 24),
-        // Week days header
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -448,7 +441,6 @@ class _AssignDeviceViewState extends State<AssignDeviceView>
               .toList(),
         ),
         const SizedBox(height: 12),
-        // Calendar Grid with Lines
         Container(
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade100),
@@ -456,7 +448,7 @@ class _AssignDeviceViewState extends State<AssignDeviceView>
           child: GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
               mainAxisSpacing: 0,
               crossAxisSpacing: 0,
@@ -464,7 +456,7 @@ class _AssignDeviceViewState extends State<AssignDeviceView>
             ),
             itemCount: daysInMonth + firstWeekday,
             itemBuilder: (context, index) {
-              if (index < firstWeekday)
+              if (index < firstWeekday) {
                 return Container(
                   decoration: BoxDecoration(
                     border: Border.all(
@@ -473,6 +465,7 @@ class _AssignDeviceViewState extends State<AssignDeviceView>
                     ),
                   ),
                 );
+              }
 
               int day = index - firstWeekday + 1;
               bool isSelected = day == selectedDay;

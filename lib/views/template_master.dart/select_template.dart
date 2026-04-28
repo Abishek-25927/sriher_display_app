@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import '../../widgets/animated_heading.dart';
 
 class SelectTemplateView extends StatefulWidget {
@@ -39,6 +41,9 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
   );
   final TextEditingController _popupNameController = TextEditingController();
 
+  // Map to store controllers for each available file to prevent recreation
+  final Map<int, TextEditingController> _availableFileControllers = {};
+
   @override
   void initState() {
     super.initState();
@@ -50,11 +55,38 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
   void dispose() {
     _durationController.dispose();
     _popupNameController.dispose();
+    for (var controller in _availableFileControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   bool get isSelectionComplete =>
       selectedTemplateId != null && selectedCategoryId != null;
+
+  // Format seconds (int or float) to MM:SS
+  String _formatSeconds(dynamic secs) {
+    // Handle float strings like "107.228345"
+    double d = double.tryParse(secs.toString()) ?? 0;
+    int totalSeconds = d.truncate();
+    int m = totalSeconds ~/ 60;
+    int r = totalSeconds % 60;
+    return "${m.toString().padLeft(2, '0')}:${r.toString().padLeft(2, '0')}";
+  }
+
+  // Parse MM:SS back to total seconds
+  int _parseFormattedDuration(String formatted) {
+    final parts = formatted.split(':');
+    if (parts.length == 2) {
+      int m = int.tryParse(parts[0]) ?? 0;
+      int s = int.tryParse(parts[1]) ?? 0;
+      return m * 60 + s;
+    }
+    return int.tryParse(formatted) ?? 10;
+  }
+
+  // Store raw durations (in seconds) for API calls
+  final Map<int, int> _rawFileDurations = {};
 
   // ──────────────────────────────────────────────────────────────────────────
   // API CALLS
@@ -116,7 +148,16 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (mounted) setState(() => availableFiles = data['data'] ?? []);
+        if (mounted) {
+          setState(() {
+            availableFiles = data['data'] ?? [];
+            // Clear old controllers
+            for (var c in _availableFileControllers.values) {
+              c.dispose();
+            }
+            _availableFileControllers.clear();
+          });
+        }
       }
     } catch (e) {
       debugPrint("Error: $e");
@@ -149,7 +190,10 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
     }
   }
 
-  Future<void> _assignFile(int fileId, String duration) async {
+  Future<void> _assignFile(int fileId, String formattedDuration) async {
+    // Use stored raw duration or parse formatted back to seconds
+    final int durationSecs =
+        _rawFileDurations[fileId] ?? _parseFormattedDuration(formattedDuration);
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/selectTemplate_assignFileview'),
@@ -157,7 +201,7 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
           "api_key": _apiKey,
           "template_id": selectedTemplateId,
           "file_id": fileId,
-          "duration": int.tryParse(duration) ?? 10,
+          "duration": durationSecs,
         }),
         headers: {'Content-Type': 'application/json'},
       );
@@ -222,7 +266,7 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // LEFT PANEL: Configuration Card Alone
+            // LEFT PANEL: Configuration Card
             Expanded(
               flex: 5,
               child: SingleChildScrollView(
@@ -266,7 +310,7 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                               }
                             },
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 10),
                           _buildFormRow(
                             context,
                             "--Select Department Name--",
@@ -343,7 +387,7 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
               ),
             ),
             const SizedBox(width: 32),
-            // RIGHT PANEL: Content Area (Available Files + Selection List)
+            // RIGHT PANEL: Content Area
             Expanded(
               flex: 5,
               child: isSelectionComplete
@@ -417,14 +461,7 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                                     ),
                                   ),
                                   const SizedBox(height: 24),
-                                  _buildListHeader(),
-                                  const SizedBox(height: 16),
-                                  isLoadingAssignedFiles
-                                      ? const Padding(
-                                          padding: EdgeInsets.all(48.0),
-                                          child: CircularProgressIndicator(),
-                                        )
-                                      : _buildAssignedDataTable(),
+                                  _buildAssignedDataTable(),
                                 ],
                               ),
                             ),
@@ -463,21 +500,26 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
   Widget _buildAvailableFilesTable() {
     final filteredFiles = availableFiles.where((f) {
       final type = f['file_type']?.toString().toLowerCase() ?? '';
+      final name = f['file_name']?.toString().toLowerCase() ?? '';
       if (fileType == null) return false;
-      return fileType == 'images'
-          ? (type.contains('image') ||
-                type == 'png' ||
-                type == 'jpg' ||
-                type == 'jpeg')
-          : (type.contains('video') || type == 'mp4');
+      if (fileType == 'images') {
+        return type.contains('image') ||
+            type == 'png' ||
+            type == 'jpg' ||
+            type == 'jpeg' ||
+            name.endsWith('.png') ||
+            name.endsWith('.jpg') ||
+            name.endsWith('.jpeg') ||
+            name.endsWith('.webp');
+      } else {
+        return type.contains('video') ||
+            type == 'mp4' ||
+            name.endsWith('.mp4') ||
+            name.endsWith('.avi') ||
+            name.endsWith('.mov') ||
+            name.endsWith('.mkv');
+      }
     }).toList();
-
-    final int total = filteredFiles.length;
-    final int start = (availableCurrentPage - 1) * availableEntriesValue;
-    final int end = (start + availableEntriesValue < total)
-        ? start + availableEntriesValue
-        : total;
-    final paginated = (start < total) ? filteredFiles.sublist(start, end) : [];
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -491,24 +533,20 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
           ),
           child: Row(
             children: [
-              Expanded(flex: 4, child: Text("File ↕", style: _headerStyle())),
+              Expanded(flex: 3, child: Text("File", style: _headerStyle())),
+              const SizedBox(width: 12),
               Expanded(
-                flex: 6,
-                child: Text("File Name ↕", style: _headerStyle()),
+                flex: 4,
+                child: Text("File Name", style: _headerStyle()),
               ),
+              const SizedBox(width: 12),
+              Expanded(flex: 3, child: Text("Duration", style: _headerStyle())),
+              const SizedBox(width: 12),
               Expanded(
                 flex: 3,
                 child: Text(
-                  "Duration ↕",
+                  "Action",
                   textAlign: TextAlign.center,
-                  style: _headerStyle(),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  "Action ↕",
-                  textAlign: TextAlign.right,
                   style: _headerStyle(),
                 ),
               ),
@@ -529,7 +567,7 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
             children: [
               if (isLoadingAvailableFiles)
                 const LinearProgressIndicator()
-              else if (paginated.isEmpty)
+              else if (filteredFiles.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(48.0),
                   child: Center(
@@ -547,126 +585,123 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                 ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: paginated.length,
+                  itemCount: filteredFiles.length,
                   separatorBuilder: (c, i) => const Divider(height: 1),
                   itemBuilder: (c, i) {
-                    final file = paginated[i];
+                    final file = filteredFiles[i];
+                    final fileId = int.tryParse(file['id'].toString()) ?? 0;
+
+                    if (!_availableFileControllers.containsKey(fileId)) {
+                      final rawDuration =
+                          file['file_duration'] ?? file['duration'] ?? '30';
+                      final rawSecs =
+                          int.tryParse(rawDuration.toString()) ?? 30;
+                      _rawFileDurations[fileId] = rawSecs;
+                      _availableFileControllers[fileId] = TextEditingController(
+                        text: _formatSeconds(rawSecs),
+                      );
+                    }
+                    final controller = _availableFileControllers[fileId]!;
+
                     return Container(
                       padding: const EdgeInsets.symmetric(
-                        vertical: 20,
-                        horizontal: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          bottom: BorderSide(color: Colors.grey.shade100),
-                        ),
+                        vertical: 12,
+                        horizontal: 15,
                       ),
                       child: Row(
                         children: [
                           Expanded(
-                            flex: 4,
+                            flex: 3,
                             child: Container(
-                              width: 100,
-                              height: 100,
+                              width: 75,
+                              height: 75,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(color: Colors.grey.shade200),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 8,
-                                  ),
-                                ],
                               ),
                               clipBehavior: Clip.antiAlias,
-                              child: Image.network(
-                                "$_baseUrl/uploads/${file['file_name']}",
-                                fit: BoxFit.cover,
-                                gaplessPlayback: true,
-                                filterQuality: FilterQuality.high,
-                                errorBuilder: (c, e, s) => const Icon(
-                                  Icons.broken_image,
-                                  size: 30,
-                                  color: Colors.grey,
-                                ),
+                              child: _buildFilePreview(file),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 4,
+                            child: Text(
+                              file['user_filename'] ?? file['file_name'] ?? '',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 24),
+                          const SizedBox(width: 12),
                           Expanded(
-                            flex: 6,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  file['user_filename'] ??
-                                      file['file_name'] ??
-                                      '',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
+                            flex: 3,
+                            child: SizedBox(
+                              width: 65,
+                              height: 34,
+                              child: TextFormField(
+                                controller: controller,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 8,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                    borderSide: const BorderSide(
+                                      color: Colors.blue,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "Format: ${file['file_type']?.toString().toUpperCase() ?? '-'}",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade500,
-                                  ),
-                                ),
-                              ],
+                                readOnly: true,
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 12),
                           Expanded(
                             flex: 3,
                             child: Center(
-                              child: Container(
-                                width: 90,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                                child: TextField(
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  decoration: const InputDecoration(
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
-                                    hintText: "30s",
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  controller: TextEditingController(text: "30"),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 2,
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: IconButton.filled(
-                                onPressed: () => _assignFile(
-                                  int.parse(file['id'].toString()),
-                                  "30",
-                                ),
-                                style: IconButton.styleFrom(
+                              child: ElevatedButton(
+                                onPressed: () =>
+                                    _assignFile(fileId, controller.text),
+                                style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue.shade600,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 10,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                                icon: const Icon(Icons.add, size: 20),
+                                child: const Text(
+                                  "Add",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -680,296 +715,220 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
         ),
       ],
     );
+  }
+
+  Widget _buildFilePreview(dynamic file) {
+    String fileName = file['file_name'] ?? '';
+    String userFileName = file['user_filename'] ?? '';
+    String fType = file['file_type']?.toString().toLowerCase() ?? '';
+    String fFormat = file['file_format']?.toString().toLowerCase() ?? '';
+    String lowerName = fileName.toLowerCase();
+    String lowerUser = userFileName.toLowerCase();
+
+    bool isVideo =
+        lowerName.endsWith('.mp4') ||
+        lowerName.endsWith('.avi') ||
+        lowerName.endsWith('.mov') ||
+        lowerName.endsWith('.mkv') ||
+        lowerUser.endsWith('.mp4') ||
+        lowerUser.endsWith('.avi') ||
+        fType.contains('video') ||
+        fType == 'mp4' ||
+        fType == 'avi' ||
+        fType == 'mov' ||
+        fType == 'mkv' ||
+        fFormat.contains('video');
+
+    // Build URL: only encode the filename part, not the whole URL
+    final encodedName = Uri.encodeFull(fileName);
+    final fileUrl = '$_baseUrl/uploads/$encodedName';
+
+    if (isVideo) {
+      return VideoThumbnail(url: fileUrl);
+    } else {
+      return Image.network(
+        fileUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (c, e, s) =>
+            const Icon(Icons.broken_image, size: 30, color: Colors.grey),
+      );
+    }
   }
 
   Widget _buildAssignedDataTable() {
-    final filtered = assignedFiles.where((f) {
-      return (f['user_filename'] ?? f['file_name'] ?? '')
-          .toString()
-          .toLowerCase()
-          .contains(searchQuery.toLowerCase());
-    }).toList();
-
-    final paginated = filtered; // No pagination for unlimited scroll
-
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-          decoration: BoxDecoration(
-            color: Colors.blue.shade50,
-            border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 6,
-                child: Text("File Name ↕", style: _headerStyle()),
-              ),
-              Expanded(flex: 4, child: Text("File ↕", style: _headerStyle())),
-              Expanded(
-                flex: 3,
-                child: Text("File Type ↕", style: _headerStyle()),
-              ),
-              Expanded(
-                flex: 2,
+        _buildListHeader(),
+        const SizedBox(height: 8),
+        assignedFiles.isEmpty
+            ? const Padding(
+                padding: EdgeInsets.all(48.0),
                 child: Text(
-                  "Action ↕",
-                  textAlign: TextAlign.right,
-                  style: _headerStyle(),
+                  "No files selected",
+                  style: TextStyle(color: Colors.grey),
                 ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: Colors.grey.shade200),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: paginated.isEmpty
-              ? const Padding(
-                  padding: EdgeInsets.all(48.0),
-                  child: Center(
-                    child: Text(
-                      "No files selected",
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
+              )
+            : ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: assignedFiles.length,
+                separatorBuilder: (c, i) => const Divider(height: 1),
+                itemBuilder: (c, i) {
+                  final file = assignedFiles[i];
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
                     ),
-                  ),
-                )
-              : ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: paginated.length,
-                  separatorBuilder: (c, i) => const Divider(height: 1),
-                  itemBuilder: (c, i) {
-                    final file = paginated[i];
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.grey.shade100),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            file['user_filename'] ?? file['file_name'] ?? '-',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 6,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: _buildFilePreview(file),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 3,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             child: Text(
-                              file['user_filename'] ?? file['file_name'] ?? '-',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black87,
+                              file['file_type']?.toString() ?? '-',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade700,
                               ),
                             ),
                           ),
-                          Expanded(
-                            flex: 4,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: Colors.grey.shade300,
-                                    ),
-                                  ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: Image.network(
-                                    "$_baseUrl/uploads/${file['file_name']}",
-                                    fit: BoxFit.cover,
-                                    gaplessPlayback: true,
-                                    filterQuality: FilterQuality.high,
-                                    errorBuilder: (c, e, s) => const Icon(
-                                      Icons.broken_image,
-                                      size: 24,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 15),
-                              ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                              size: 20,
                             ),
+                            onPressed: () =>
+                                _removeFile(int.parse(file['id'].toString())),
                           ),
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              file['file_type'] ?? '-',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                  size: 20,
-                                ),
-                                onPressed: () => _removeFile(
-                                  int.parse(file['id'].toString()),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-        ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
       ],
     );
   }
 
-  TextStyle _headerStyle() => TextStyle(
-    color: Colors.blue.shade900,
+  Widget _buildListHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Expanded(flex: 3, child: Text("File Name", style: _headerStyle())),
+          const SizedBox(width: 12),
+          Expanded(flex: 2, child: Text("File", style: _headerStyle())),
+          const SizedBox(width: 12),
+          Expanded(flex: 3, child: Text("File Type", style: _headerStyle())),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: Text(
+              "Action",
+              textAlign: TextAlign.center,
+              style: _headerStyle(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  TextStyle _headerStyle() => const TextStyle(
     fontWeight: FontWeight.bold,
     fontSize: 12,
+    color: Colors.blueGrey,
   );
 
   Widget _buildFormRow(
     BuildContext context,
     String hint,
     int? value,
-    String title,
+    String label,
     List<dynamic> items,
-    Function(int?) onChanged,
+    ValueChanged<int?> onChanged,
   ) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: DropdownButtonFormField<int>(
-            dropdownColor: Colors.white,
-            style: const TextStyle(color: Colors.black87),
-            menuMaxHeight: 300,
-            alignment: AlignmentDirectional.topStart,
-            value:
-                items.any(
-                  (i) => (int.tryParse(i['id'].toString()) ?? -1) == value,
-                )
-                ? value
-                : null,
-            hint: Text(
-              hint,
-              style: const TextStyle(fontSize: 13, color: Colors.black45),
-            ),
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-            ),
-            items: items
-                .map(
-                  (e) => DropdownMenuItem<int>(
-                    value: int.tryParse(e['id'].toString()),
-                    child: Text(
-                      e['temp_name'] ?? e['category_name'] ?? '',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: onChanged,
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+            letterSpacing: 1.1,
+            color: Colors.blueAccent,
           ),
         ),
-        const SizedBox(width: 10),
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.add_circle, color: Colors.blue),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildListHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            const Text(
-              "Show ",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-                color: Colors.black54,
-              ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: value,
+              hint: Text(hint, style: const TextStyle(fontSize: 13)),
+              isExpanded: true,
+              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.blue),
+              onChanged: onChanged,
+              items: items.map<DropdownMenuItem<int>>((t) {
+                return DropdownMenuItem<int>(
+                  value: int.tryParse(t['id'].toString()),
+                  child: Text(
+                    t['temp_name'] ?? t['category_name'] ?? t['name'] ?? '',
+                  ),
+                );
+              }).toList(),
             ),
-            Container(
-              height: 35,
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: entriesValue,
-                  dropdownColor: Colors.white,
-                  style: const TextStyle(color: Colors.black87, fontSize: 11),
-                  items: [10, 25, 50]
-                      .map((v) => DropdownMenuItem(value: v, child: Text("$v")))
-                      .toList(),
-                  onChanged: (v) => setState(() {
-                    entriesValue = v!;
-                    currentPage = 1;
-                  }),
-                ),
-              ),
-            ),
-            const Text(
-              " entries",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-                color: Colors.black54,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(
-          width: 150,
-          height: 35,
-          child: TextField(
-            style: const TextStyle(color: Colors.black87, fontSize: 11),
-            decoration: InputDecoration(
-              hintText: "Search...",
-              hintStyle: const TextStyle(color: Colors.black38),
-              border: const OutlineInputBorder(),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              prefixIcon: const Icon(
-                Icons.search,
-                size: 16,
-                color: Colors.blue,
-              ),
-              contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-            ),
-            onChanged: (v) => setState(() {
-              searchQuery = v;
-              currentPage = 1;
-            }),
           ),
         ),
       ],
@@ -977,199 +936,417 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
   }
 
   void _showPlayOrderDialog(BuildContext context) {
-    final ScrollController scrollController = ScrollController();
+    final scrollController = ScrollController();
+    List<dynamic> dialogFiles = List.from(assignedFiles);
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Dialog(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.8,
-                height: MediaQuery.of(context).size.height * 0.9,
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    const Text(
-                      "Change Play Order",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return Dialog(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: SizedBox(
+              width: 600,
+              height: MediaQuery.of(context).size.height * 0.82,
+              child: Column(
+                children: [
+                  // ── Header ──
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade600,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(14),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Expanded(
-                      child: assignedFiles.isEmpty
-                          ? const Center(
-                              child: Text(
-                                "No files assigned",
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            )
-                          : ReorderableListView.builder(
-                              physics: const BouncingScrollPhysics(),
-                              scrollController: scrollController,
-                              itemCount: assignedFiles.length,
-                              onReorder: (oldIndex, newIndex) {
-                                if (newIndex > oldIndex) newIndex -= 1;
-                                setState(() {
-                                  final item = assignedFiles.removeAt(oldIndex);
-                                  assignedFiles.insert(newIndex, item);
-                                });
-                                setDialogState(() {});
-                              },
-                              itemBuilder: (context, index) {
-                                final file = assignedFiles[index];
-                                return Card(
-                                  key: ValueKey(file['id'] ?? index),
-                                  margin: const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                  ),
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
-                                    ),
-                                    leading: Container(
-                                      width: 60,
-                                      height: 80,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Colors.grey.shade300,
-                                        ),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: Image.network(
-                                          "$_baseUrl/uploads/${file['file_name']}",
-                                          fit: BoxFit.cover,
-                                          gaplessPlayback: true,
-                                          filterQuality: FilterQuality.medium,
-                                          errorBuilder: (c, e, s) => const Icon(
-                                            Icons.broken_image,
-                                            size: 20,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    title: Text(
-                                      file['user_filename'] ??
-                                          file['file_name'] ??
-                                          '',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      file['file_type'] ?? '',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    trailing: const Icon(
-                                      Icons.drag_handle,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                    const SizedBox(height: 30),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    child: Row(
                       children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.grey.shade600,
+                        const Icon(Icons.sort, color: Colors.white, size: 20),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            "Change Play Order",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          "${dialogFiles.length} files",
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ── Column Headers ──
+                  Container(
+                    color: Colors.blue.shade50,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 40), // drag handle space
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 1,
+                          child: Text("#", style: _headerStyle()),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text("File", style: _headerStyle()),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 4,
+                          child: Text("File Name", style: _headerStyle()),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 2,
+                          child: Text("File Type", style: _headerStyle()),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+
+                  // ── Reorderable List ──
+                  Expanded(
+                    child: ReorderableListView.builder(
+                      scrollController: scrollController,
+                      itemCount: dialogFiles.length,
+                      onReorder: (oldIndex, newIndex) {
+                        setDialogState(() {
+                          if (newIndex > oldIndex) newIndex -= 1;
+                          final item = dialogFiles.removeAt(oldIndex);
+                          dialogFiles.insert(newIndex, item);
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        final file = dialogFiles[index];
+                        return Container(
+                          key: ValueKey(file['id']),
+                          decoration: BoxDecoration(
+                            color: index.isEven
+                                ? Colors.white
+                                : Colors.grey.shade50,
+                            border: Border(
+                              bottom: BorderSide(color: Colors.grey.shade100),
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              // Drag handle (built-in via ReorderableListView)
+                              const Icon(
+                                Icons.drag_handle,
+                                color: Colors.blueGrey,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 8),
+                              // Index number
+                              Expanded(
+                                flex: 1,
+                                child: Container(
+                                  width: 28,
+                                  height: 28,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade100,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    "${index + 1}",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue.shade800,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // File thumbnail
+                              Expanded(
+                                flex: 2,
+                                child: Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: Colors.grey.shade200,
+                                    ),
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: _buildFilePreview(file),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // File Name
+                              Expanded(
+                                flex: 4,
+                                child: Text(
+                                  file['user_filename'] ??
+                                      file['file_name'] ??
+                                      '-',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // File Type badge
+                              Expanded(
+                                flex: 2,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    (file['file_type'] ?? '-')
+                                        .toString()
+                                        .toUpperCase(),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  // ── Bottom Bar ──
+                  const Divider(height: 1),
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        // Top button — scrolls back to top
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            scrollController.animateTo(
+                              0,
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                          icon: const Icon(Icons.keyboard_arrow_up, size: 18),
+                          label: const Text(
+                            "Top",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue.shade50,
+                            foregroundColor: Colors.blue.shade800,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(color: Colors.blue.shade200),
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        // Close button
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black87,
+                            elevation: 0,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 12,
                             ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(color: Colors.grey.shade300),
+                            ),
                           ),
-                          child: const Text("CANCEL"),
+                          child: const Text(
+                            "Close",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                         const SizedBox(width: 12),
+                        // Update button
                         ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                          ),
                           onPressed: () {
+                            setState(() {
+                              assignedFiles = List.from(dialogFiles);
+                            });
                             _updatePlayOrder();
-                            Navigator.pop(context);
+                            Navigator.pop(ctx);
                           },
-                          child: const Text(
-                            "UPDATE",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
+                            backgroundColor: Colors.blue.shade600,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
                               vertical: 12,
                             ),
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            "CLOSE",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          onPressed: () {
-                            scrollController.animateTo(
-                              0,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeInOut,
-                            );
-                          },
                           child: const Text(
-                            "TOP",
+                            "Update",
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    ).whenComplete(() => scrollController.dispose());
+  }
+}
+
+class VideoThumbnail extends StatefulWidget {
+  final String url;
+  const VideoThumbnail({super.key, required this.url});
+
+  @override
+  State<VideoThumbnail> createState() => _VideoThumbnailState();
+}
+
+class _VideoThumbnailState extends State<VideoThumbnail> {
+  late final Player _player;
+  late final VideoController _controller;
+  bool _isPlaying = false;
+  bool _videoOpened = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _player = Player();
+    _controller = VideoController(_player);
+    // Open video, wait a moment for first frame, then pause
+    _player
+        .open(Media(widget.url), play: true)
+        .then((_) async {
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (mounted) {
+            await _player.pause();
+            setState(() {
+              _isPlaying = false;
+              _videoOpened = true;
+            });
+          }
+        })
+        .catchError((_) {
+          if (mounted) setState(() => _videoOpened = true);
+        });
+    // Mark opened as soon as we get the first frame/duration event
+    _player.stream.duration.listen((dur) {
+      if (dur > Duration.zero && mounted && !_videoOpened) {
+        setState(() => _videoOpened = true);
+      }
+    });
+    _player.stream.playing.listen((playing) {
+      if (mounted) setState(() => _isPlaying = playing);
+    });
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        if (_isPlaying) {
+          _player.pause();
+        } else {
+          _player.play();
+        }
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        alignment: Alignment.center,
+        children: [
+          // Black background always behind video
+          Container(color: Colors.black),
+          Video(
+            controller: _controller,
+            controls: NoVideoControls,
+            fit: BoxFit.cover,
+            fill: Colors.black, // Prevents blue flash
+          ),
+          // Show dark overlay with video icon while loading
+          if (!_videoOpened)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: Icon(Icons.videocam, color: Colors.white54, size: 28),
+              ),
+            ),
+          // Play overlay when paused and loaded
+          if (_videoOpened && !_isPlaying)
+            Container(
+              color: Colors.black38,
+              child: const Center(
+                child: Icon(
+                  Icons.play_circle_fill,
+                  color: Colors.white,
+                  size: 32,
                 ),
               ),
-            );
-          },
-        );
-      },
+            ),
+        ],
+      ),
     );
   }
 }

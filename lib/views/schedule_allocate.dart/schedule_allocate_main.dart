@@ -271,7 +271,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                       "NEW SCHEDULE",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: 18.0,
                         color: Colors.white,
                         letterSpacing: 0.5,
                       ),
@@ -288,7 +288,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                       "Schedule Name",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                        fontSize: 14.0,
                         color: Colors.black87,
                       ),
                     ),
@@ -297,7 +297,10 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                       controller: _newScheduleController,
                       decoration: InputDecoration(
                         hintText: "Enter department or purpose",
-                        hintStyle: TextStyle(color: Colors.grey.shade400),
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 13.0,
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
@@ -341,7 +344,10 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                       onPressed: () => Navigator.pop(context),
                       child: const Text(
                         "CANCEL",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14.0,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -361,7 +367,10 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                       onPressed: () => Navigator.pop(context),
                       child: const Text(
                         "CREATE SCHEDULE",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14.0,
+                        ),
                       ),
                     ),
                   ],
@@ -385,455 +394,434 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left Column
-          Expanded(
-            flex: 5,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (widget.editData != null) ...[
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: ElevatedButton.icon(
-                        onPressed: widget.onBack,
-                        icon: const Icon(Icons.arrow_back),
-                        label: const Text("BACK"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey.shade200,
-                          foregroundColor: Colors.black87,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  _buildSectionTitle(
-                    widget.isExtend ? "Extend Schedule" : "Schedule",
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(24.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < 1100;
+          return Padding(
+            padding: EdgeInsets.all(isNarrow ? 12.0 : 24.0),
+            child: isNarrow
+                ? SingleChildScrollView(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildDropdownField(
-                                hint: "Select Schedule Name",
-                                value: selectedScheduleId,
-                                items: scheduleList,
-                                label: "Schedule Name",
-                                onChanged: (val) =>
-                                    setState(() => selectedScheduleId = val),
-                              ),
-                            ),
-                            const SizedBox(width: 15),
-                            _buildCircularAddButton(),
-                            const SizedBox(width: 25),
-                            Expanded(
-                              child: _buildDropdownField(
-                                hint: "Select Template Name",
-                                value: selectedTemplateId,
-                                items: templateList,
-                                label: "Template Name",
-                                onChanged: (val) {
-                                  setState(() {
-                                    selectedTemplateId = val;
-                                    templateFiles = [];
-                                  });
-                                  if (val != null) _fetchTemplateFiles(val);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 25),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              child: _buildDateField(
-                                "From Date",
-                                _fromDateController,
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Expanded(
-                              child: _buildTimeDropdown(
-                                "Select Time",
-                                _fromTimeController,
-                                enabled: _fromDateController.text.isNotEmpty,
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Expanded(
-                              child: _buildDateField(
-                                "To Date",
-                                _toDateController,
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 2),
-                              child: Row(
-                                children: [
-                                  Checkbox(
-                                    value: selectAllSlot,
-                                    activeColor: Colors.blue,
-                                    side: BorderSide(
-                                      color: Colors.grey.shade400,
-                                    ),
-                                    onChanged: (val) => setState(() {
-                                      selectAllSlot = val!;
-                                      if (selectAllSlot) {
-                                        try {
-                                          DateTime start = DateFormat(
-                                            'yyyy-MM-dd',
-                                          ).parse(_fromDateController.text);
-                                          DateTime end = DateFormat(
-                                            'yyyy-MM-dd',
-                                          ).parse(_toDateController.text);
-                                          if (end.isBefore(start)) end = start;
-                                          for (
-                                            int i = 0;
-                                            i <= end.difference(start).inDays;
-                                            i++
-                                          ) {
-                                            String key =
-                                                DateFormat('yyyy-MM-dd').format(
-                                                  start.add(Duration(days: i)),
-                                                );
-                                            selectedSlotsByDay[key] = List.from(
-                                              slotPairs,
-                                            );
-                                          }
-                                        } catch (e) {
-                                          debugPrint(e.toString());
-                                        }
-                                      } else {
-                                        selectedSlotsByDay.clear();
-                                      }
-                                    }),
-                                  ),
-                                  const Text(
-                                    "Select All Slot",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                        _buildLeftColumn(),
+                        const SizedBox(height: 20),
+                        const Divider(),
+                        const SizedBox(height: 20),
+                        if (isSelectionComplete) _buildRightColumn(),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  if (isAllFilled) ...[
-                    _buildSlotSelectionCard(),
-                    const SizedBox(height: 30),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade600,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 40,
-                            vertical: 18,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 3,
-                        ),
-                        onPressed: _handleScheduleSubmit,
-                        child: const Text(
-                          "SUBMIT",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 5, child: _buildLeftColumn()),
+                      const VerticalDivider(width: 1),
+                      Expanded(
+                        flex: 7,
+                        child: isSelectionComplete
+                            ? _buildRightColumn()
+                            : const SizedBox.shrink(),
                       ),
-                    ),
-                  ],
-                ],
+                    ],
+                  ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLeftColumn() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.editData != null) ...[
+          Align(
+            alignment: Alignment.topLeft,
+            child: ElevatedButton.icon(
+              onPressed: widget.onBack,
+              icon: const Icon(Icons.arrow_back),
+              label: const Text(
+                "BACK",
+                style: TextStyle(
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey.shade200,
+                foregroundColor: Colors.black87,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ),
-          // Vertical Divider
-          VerticalDivider(width: 1, color: Colors.grey.shade200),
-          // Right Column
-          Expanded(
-            flex: 5,
-            child: isSelectionComplete
-                ? Container(
-                    color: Colors.white,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildSectionTitle("Template Duration"),
-                          const SizedBox(height: 20),
-                          Container(
-                            clipBehavior: Clip.antiAlias,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            child: Column(
-                              children: [
-                                _buildListHeader(),
-                                const Divider(height: 1),
-                                const SizedBox(height: 16),
-                                LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    if (isLoadingFiles) {
-                                      return const SizedBox(
-                                        height: 300,
-                                        child: Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                      );
-                                    }
-
-                                    if (templateFiles.isEmpty) {
-                                      return const SizedBox(
-                                        height: 200,
-                                        child: Center(
-                                          child: Text(
-                                            "No files found for this template",
-                                            style: TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 16,
-                                              fontStyle: FontStyle.italic,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }
-
-                                    return SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          minWidth: constraints.maxWidth,
-                                        ),
-                                        child: DataTable(
-                                          columnSpacing: 25,
-                                          horizontalMargin: 20,
-                                          dataRowMinHeight: 70,
-                                          dataRowMaxHeight: 85,
-                                          headingRowHeight: 45,
-                                          headingRowColor:
-                                              WidgetStateProperty.all(
-                                                Colors.blue.shade50,
-                                              ),
-                                          columns: [
-                                            _buildSortableColumn('Play order'),
-                                            _buildSortableColumn('File'),
-                                            _buildSortableColumn('File Name'),
-                                            _buildSortableColumn('Duration'),
-                                          ],
-                                          rows: templateFiles.map((file) {
-                                            final index =
-                                                templateFiles.indexOf(file) + 1;
-                                            return DataRow(
-                                              cells: [
-                                                DataCell(
-                                                  Center(
-                                                    child: Text(
-                                                      index.toString(),
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Colors.black87,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                DataCell(
-                                                  Center(
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            vertical: 8.0,
-                                                          ),
-                                                      child: Container(
-                                                        clipBehavior:
-                                                            Clip.antiAlias,
-                                                        decoration: BoxDecoration(
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                4,
-                                                              ),
-                                                          border: Border.all(
-                                                            color: Colors
-                                                                .grey
-                                                                .shade300,
-                                                          ),
-                                                        ),
-                                                        child:
-                                                            file['file_name'] !=
-                                                                null
-                                                            ? Image.network(
-                                                                "$_baseUrl/uploads/${file['file_name']}",
-                                                                height: 65,
-                                                                width: 50,
-                                                                fit: BoxFit
-                                                                    .cover,
-                                                                errorBuilder:
-                                                                    (
-                                                                      context,
-                                                                      error,
-                                                                      stackTrace,
-                                                                    ) => const Icon(
-                                                                      Icons
-                                                                          .broken_image,
-                                                                      size: 30,
-                                                                      color: Colors
-                                                                          .grey,
-                                                                    ),
-                                                              )
-                                                            : const Icon(
-                                                                Icons.image,
-                                                                size: 20,
-                                                                color:
-                                                                    Colors.grey,
-                                                              ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                DataCell(
-                                                  Text(
-                                                    file['user_filename'] ??
-                                                        file['file_name'] ??
-                                                        '-',
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.black87,
-                                                    ),
-                                                  ),
-                                                ),
-                                                DataCell(
-                                                  Center(
-                                                    child: Container(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 10,
-                                                            vertical: 4,
-                                                          ),
-                                                      decoration: BoxDecoration(
-                                                        color:
-                                                            Colors.blue.shade50,
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              12,
-                                                            ),
-                                                      ),
-                                                      child: Text(
-                                                        "${file['duration'] ?? '30'}s",
-                                                        style: TextStyle(
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Colors
-                                                              .blue
-                                                              .shade900,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            );
-                                          }).toList(),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                const Divider(height: 1),
-                                _buildPagination(),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+          const SizedBox(height: 16),
+        ],
+        _buildSectionTitle(widget.isExtend ? "Extend Schedule" : "Schedule"),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(24.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDropdownField(
+                      hint: "Select Schedule Name",
+                      value: selectedScheduleId,
+                      items: scheduleList,
+                      label: "Schedule Name",
+                      onChanged: (val) =>
+                          setState(() => selectedScheduleId = val),
                     ),
-                  )
-                : Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  ),
+                  const SizedBox(width: 15),
+                  _buildCircularAddButton(),
+                  const SizedBox(width: 25),
+                  Expanded(
+                    child: _buildDropdownField(
+                      hint: "Select Template Name",
+                      value: selectedTemplateId,
+                      items: templateList,
+                      label: "Template Name",
+                      onChanged: (val) {
+                        setState(() {
+                          selectedTemplateId = val;
+                          templateFiles = [];
+                        });
+                        if (val != null) _fetchTemplateFiles(val);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 25),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: _buildDateField("From Date", _fromDateController),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: _buildTimeDropdown(
+                      "From Time",
+                      _fromTimeController,
+                      enabled: _fromDateController.text.isNotEmpty,
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: _buildDateField("To Date", _toDateController),
+                  ),
+                  const SizedBox(width: 20),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 2),
+                    child: Row(
                       children: [
-                        Icon(
-                          Icons.dashboard_customize_outlined,
-                          size: 100,
-                          color: Colors.grey.withOpacity(0.5),
+                        Checkbox(
+                          value: selectAllSlot,
+                          activeColor: Colors.blue,
+                          side: BorderSide(color: Colors.grey.shade400),
+                          onChanged: (val) => setState(() {
+                            selectAllSlot = val!;
+                            if (selectAllSlot) {
+                              try {
+                                DateTime start = DateFormat(
+                                  'yyyy-MM-dd',
+                                ).parse(_fromDateController.text);
+                                DateTime end = DateFormat(
+                                  'yyyy-MM-dd',
+                                ).parse(_toDateController.text);
+                                if (end.isBefore(start)) end = start;
+                                for (
+                                  int i = 0;
+                                  i <= end.difference(start).inDays;
+                                  i++
+                                ) {
+                                  String key = DateFormat(
+                                    'yyyy-MM-dd',
+                                  ).format(start.add(Duration(days: i)));
+                                  selectedSlotsByDay[key] = List.from(
+                                    slotPairs,
+                                  );
+                                }
+                              } catch (e) {
+                                debugPrint(e.toString());
+                              }
+                            } else {
+                              selectedSlotsByDay.clear();
+                            }
+                          }),
                         ),
-                        const SizedBox(height: 20),
                         const Text(
-                          "Select a schedule and template to view details",
+                          "Select All Slot",
                           style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey,
-                            fontStyle: FontStyle.italic,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.0,
+                            color: Colors.black87,
                           ),
                         ),
                       ],
                     ),
                   ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (isAllFilled) ...[
+          _buildSlotSelectionCard(),
+          const SizedBox(height: 30),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 18,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 3,
+              ),
+              onPressed: _handleScheduleSubmit,
+              child: const Text(
+                "SUBMIT",
+                style: TextStyle(
+                  fontSize: 12.0,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildRightColumn() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildSectionTitle("Template Duration"),
+          const SizedBox(height: 20),
+          Expanded(
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _buildListHeader(),
+                  const Divider(height: 1),
+                  const SizedBox(height: 16),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (isLoadingFiles) {
+                        return const SizedBox(
+                          height: 300,
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+
+                      if (templateFiles.isEmpty) {
+                        return const SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: Text(
+                              "No files found for this template",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16.0,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minWidth: constraints.maxWidth,
+                          ),
+                          child: DataTable(
+                            columnSpacing: 25,
+                            horizontalMargin: 20,
+                            dataRowMinHeight: 70,
+                            dataRowMaxHeight: 85,
+                            headingRowHeight: 45,
+                            headingRowColor: WidgetStateProperty.all(
+                              Colors.blue.shade50,
+                            ),
+                            columns: [
+                              _buildSortableColumn('Play order'),
+                              _buildSortableColumn('File'),
+                              _buildSortableColumn('File Name'),
+                              _buildSortableColumn('Duration'),
+                            ],
+                            rows: templateFiles.map((file) {
+                              final index = templateFiles.indexOf(file) + 1;
+                              return DataRow(
+                                cells: [
+                                  DataCell(
+                                    Center(
+                                      child: Text(
+                                        index.toString(),
+                                        style: const TextStyle(
+                                          fontSize: 12.0,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0,
+                                        ),
+                                        child: Container(
+                                          clipBehavior: Clip.antiAlias,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.grey.shade300,
+                                            ),
+                                          ),
+                                          child: file['file_name'] != null
+                                              ? Image.network(
+                                                  "$_baseUrl/uploads/${file['file_name']}",
+                                                  height: 65,
+                                                  width: 50,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder:
+                                                      (
+                                                        context,
+                                                        error,
+                                                        stackTrace,
+                                                      ) => const Icon(
+                                                        Icons.broken_image,
+                                                        size: 30,
+                                                        color: Colors.grey,
+                                                      ),
+                                                )
+                                              : const Icon(
+                                                  Icons.image,
+                                                  size: 20,
+                                                  color: Colors.grey,
+                                                ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      file['user_filename'] ??
+                                          file['file_name'] ??
+                                          '-',
+                                      style: const TextStyle(
+                                        fontSize: 12.0,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Center(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.shade50,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "${file['duration'] ?? '30'}s",
+                                          style: TextStyle(
+                                            fontSize: 12.0,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue.shade900,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                  _buildPagination(),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ──────────────────────────── UI HELPERS ───────────────────────────────────
-
+  // UI Helpers
   Widget _buildSectionTitle(String title) {
-    return AnimatedHeading(text: title);
+    return AnimatedHeading(
+      text: title,
+      style: const TextStyle(
+        fontSize: 18.0,
+        fontWeight: FontWeight.bold,
+        color: Colors.blue,
+      ),
+    );
   }
 
   Widget _buildDropdownField({
@@ -850,7 +838,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
           label,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 14,
+            fontSize: 14.0,
             color: Colors.blueAccent,
           ),
         ),
@@ -859,7 +847,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
           value: value,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.black38, fontSize: 13),
+            hintStyle: const TextStyle(color: Colors.black38, fontSize: 13.0),
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
@@ -885,7 +873,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
               value: id,
               child: Text(
                 name,
-                style: const TextStyle(fontSize: 13, color: Colors.black87),
+                style: const TextStyle(fontSize: 13.0, color: Colors.black87),
               ),
             );
           }).toList(),
@@ -906,7 +894,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
           "From Time",
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 14,
+            fontSize: 14.0,
             color: Colors.blueAccent,
           ),
         ),
@@ -917,10 +905,10 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
             hintText: hint,
             hintStyle: TextStyle(
               color: enabled ? Colors.black38 : Colors.grey.shade400,
-              fontSize: 13,
+              fontSize: 13.0,
             ),
             filled: true,
-            fillColor: enabled ? Colors.white : Colors.white,
+            fillColor: Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: Colors.grey.shade300),
@@ -946,7 +934,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
               value: time,
               child: Text(
                 time,
-                style: const TextStyle(fontSize: 13, color: Colors.black87),
+                style: const TextStyle(fontSize: 13.0, color: Colors.black87),
               ),
             );
           }).toList(),
@@ -963,7 +951,10 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
         shape: BoxShape.circle,
       ),
       child: IconButton(
-        icon: const Icon(Icons.add, color: Colors.blue, size: 20),
+        iconSize: 18,
+        padding: const EdgeInsets.all(4),
+        constraints: const BoxConstraints(),
+        icon: const Icon(Icons.add, color: Colors.blue, size: 16),
         onPressed: _showSchedulePopup,
       ),
     );
@@ -977,7 +968,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
           label,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 14,
+            fontSize: 14.0,
             color: Colors.blueAccent,
           ),
         ),
@@ -985,10 +976,10 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
         TextFormField(
           controller: controller,
           readOnly: true,
-          style: const TextStyle(fontSize: 13, color: Colors.black87),
+          style: const TextStyle(fontSize: 13.0, color: Colors.black87),
           decoration: InputDecoration(
-            hintText: 'yyyy-mm-dd',
-            hintStyle: const TextStyle(color: Colors.black38),
+            hintText: 'mm/dd/yy',
+            hintStyle: const TextStyle(color: Colors.black38, fontSize: 13.0),
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
@@ -1046,7 +1037,10 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                       .map(
                         (e) => DropdownMenuItem(
                           value: e,
-                          child: Text(e, style: const TextStyle(fontSize: 13)),
+                          child: Text(
+                            e,
+                            style: const TextStyle(fontSize: 13.0),
+                          ),
                         ),
                       )
                       .toList(),
@@ -1067,20 +1061,20 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                 "entries",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 13,
+                  fontSize: 13.0,
                   color: Colors.black54,
                 ),
               ),
             ],
           ),
           SizedBox(
-            width: 250,
+            width: 150,
             height: 38,
             child: TextField(
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search, size: 20),
-                hintText: "Search files...",
-                hintStyle: const TextStyle(fontSize: 13),
+                hintText: "Search...",
+                hintStyle: const TextStyle(fontSize: 13.0),
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
@@ -1103,7 +1097,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
         style: TextStyle(
           color: Colors.blue.shade900,
           fontWeight: FontWeight.bold,
-          fontSize: 13,
+          fontSize: 13.0,
         ),
       ),
     );
@@ -1117,8 +1111,6 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
         children: [
           _buildPageBtn("Previous"),
           _buildPageBtn("1", isActive: true),
-          _buildPageBtn("2"),
-          _buildPageBtn("3"),
           _buildPageBtn("Next"),
         ],
       ),
@@ -1141,7 +1133,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
         onPressed: () {},
         child: Text(
           label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -1213,7 +1205,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                 dateStr,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  fontSize: 14.0,
                   color: Colors.blue.shade900,
                 ),
               ),
@@ -1255,7 +1247,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                   child: Text(
                     slot,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 11.0,
                       fontWeight: isSelected
                           ? FontWeight.bold
                           : FontWeight.normal,

@@ -197,8 +197,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.black.withOpacity(0.6),
-                  Colors.black.withOpacity(0.2),
+                  const Color(0xFFF1F7FF).withOpacity(0.4),
+                  Colors.white.withOpacity(0.1),
                 ],
               ),
             ),
@@ -221,123 +221,121 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   Widget _buildLoginCard() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          margin: const EdgeInsets.symmetric(horizontal: 32.0),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.45),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white54, width: 1.2),
-            boxShadow: [
-              BoxShadow(color: Colors.black45, blurRadius: 30, spreadRadius: 5),
-            ],
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 400),
+      margin: const EdgeInsets.symmetric(horizontal: 32.0),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE3F2FD), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.1),
+            blurRadius: 30,
+            spreadRadius: 5,
           ),
-          padding: const EdgeInsets.all(32.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.7, end: 1.0),
-                  duration: const Duration(milliseconds: 700),
-                  curve: Curves.elasticOut,
-                  builder: (context, scale, child) {
-                    return Transform.scale(scale: scale, child: child);
-                  },
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    height: 80,
-                    errorBuilder: (c, e, s) => const Icon(
-                      Icons.display_settings,
-                      size: 60,
-                      color: Colors.white,
-                    ),
-                  ),
+        ],
+      ),
+      padding: const EdgeInsets.all(32.0),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.7, end: 1.0),
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.elasticOut,
+              builder: (context, scale, child) {
+                return Transform.scale(scale: scale, child: child);
+              },
+              child: Image.asset(
+                'assets/images/logo.png',
+                height: 80,
+                errorBuilder: (c, e, s) => const Icon(
+                  Icons.display_settings,
+                  size: 60,
+                  color: Color(0xFF0D47A1),
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Sign In',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _errorMessage!,
-                    style: const TextStyle(
-                      color: Colors.redAccent,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-                const SizedBox(height: 6),
-                const Text(
-                  'Welcome back to SRIHER Display',
-                  style: TextStyle(fontSize: 12, color: Colors.white60),
-                ),
-                const SizedBox(height: 28),
-                _buildTextField(
-                  controller: _userIdController,
-                  hint: 'Email / User ID',
-                  icon: Icons.person_outline,
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Enter your Email or User ID'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _passwordController,
-                  hint: 'Password',
-                  icon: Icons.lock_outline,
-                  isPassword: true,
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Enter your password'
-                      : null,
-                ),
-                const SizedBox(height: 28),
-                ScaleTransition(
-                  scale: _buttonController,
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _isLoggingIn ? null : _handleLogin,
-                      child: _isLoggingIn
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.black,
-                                ),
-                              ),
-                            )
-                          : const Text(
-                              'LOGIN',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                letterSpacing: 2,
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(height: 16),
+            const Text(
+              'Sign In',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0D47A1),
+                letterSpacing: 1.2,
+              ),
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _errorMessage!,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            const SizedBox(height: 6),
+            const Text(
+              'Welcome back to SRIHER Display',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            const SizedBox(height: 28),
+            _buildTextField(
+              controller: _userIdController,
+              hint: 'Email / User ID',
+              icon: Icons.person_outline,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? 'Enter your Email or User ID'
+                  : null,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _passwordController,
+              hint: 'Password',
+              icon: Icons.lock_outline,
+              isPassword: true,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? 'Enter your password'
+                  : null,
+            ),
+            const SizedBox(height: 28),
+            ScaleTransition(
+              scale: _buttonController,
+              child: SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isLoggingIn ? null : _handleLogin,
+                  child: _isLoggingIn
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Text(
+                          'LOGIN',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -354,37 +352,37 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       validator: validator,
       controller: controller,
       obscureText: isPassword && _isObscure,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
+      style: const TextStyle(color: Colors.black87, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          color: Colors.white.withOpacity(0.45),
+          color: Colors.black.withOpacity(0.35),
           fontSize: 13,
         ),
-        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.7), size: 20),
+        prefixIcon: Icon(icon, color: Colors.blue.shade700, size: 20),
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
                   _isObscure ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.blue.shade300,
                   size: 18,
                 ),
                 onPressed: () => setState(() => _isObscure = !_isObscure),
               )
             : null,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
+        fillColor: const Color(0xFFF1F7FF),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderSide: BorderSide(color: Colors.blue.shade100),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderSide: BorderSide(color: Colors.blue.shade100),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.white, width: 1.5),
+          borderSide: BorderSide(color: Colors.blue.shade700, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,

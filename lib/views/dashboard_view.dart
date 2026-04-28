@@ -238,7 +238,7 @@ class _DashboardViewState extends State<DashboardView>
 
       _player.open(playlist, play: true);
       _hasEverPlayed = true;
-      _videoReady = true; // Set ready immediately
+      // Waiting for duration/buffering events to set _videoReady = true
       _player.setPlaylistMode(PlaylistMode.loop);
       _player.setVolume(0.0);
 
@@ -300,11 +300,15 @@ class _DashboardViewState extends State<DashboardView>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: Colors.orange),
-              SizedBox(height: 14),
-              Text(
+              const CircularProgressIndicator(color: Colors.orange),
+              const SizedBox(height: 14),
+              const Text(
                 'Loading Dashboard…',
-                style: TextStyle(color: Colors.black54),
+                style: TextStyle(
+                  color: Color(0xFF9E9E9E),
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.normal,
+                ),
               ),
             ],
           ),
@@ -320,12 +324,22 @@ class _DashboardViewState extends State<DashboardView>
             children: [
               const Icon(Icons.wifi_off, color: Colors.redAccent, size: 48),
               const SizedBox(height: 10),
-              Text(_error!, style: const TextStyle(color: Colors.black54)),
+              Text(
+                _error!,
+                style: const TextStyle(
+                  color: Color(0xFF757575),
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _fetchDashboard,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: const Text(
+                  'Retry',
+                  style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -366,44 +380,57 @@ class _DashboardViewState extends State<DashboardView>
   // ──────────────────── Top cards ───────────────────────────────────────────
 
   Widget _topCards(_DashboardData d) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 950;
+        final List<Widget> cards = [
           _menuCard(
             'DEVICE DETAILS',
             Icons.tv,
             '${d.activeDevice} / ${d.totalDevice}',
-            const Color.fromARGB(255, 228, 210, 18), // Light Yellow
-            const Color.fromARGB(255, 245, 212, 48), // Bright Yellow
+            const Color.fromARGB(255, 228, 210, 18),
+            const Color.fromARGB(255, 245, 212, 48),
             _cardAnimations[0],
           ),
           _menuCard(
             'TEMPLATE DETAILS',
             Icons.dashboard_customize,
             '${d.totScheTemp} / ${d.totTemp}',
-            const Color.fromARGB(255, 9, 74, 121), // Light Blue
-            const Color.fromARGB(22, 1, 16, 29), // Bright Blue
+            const Color.fromARGB(255, 71, 148, 204),
+            const Color.fromARGB(20, 72, 143, 206),
             _cardAnimations[1],
           ),
           _menuCard(
             'LOCATION',
             Icons.location_on,
             '${d.activeLoc} / ${d.totLocation}',
-            const Color(0xFFE8F5E9), // Light Green
-            const Color(0xFF43A047), // Bright Green
+            const Color.fromARGB(255, 42, 170, 53),
+            const Color(0xFF43A047),
             _cardAnimations[2],
           ),
           _menuCard(
             'FILES',
             Icons.insert_drive_file,
             '${d.imgFile}',
-            const Color(0xFFF3E5F5), // Light Violet
-            const Color(0xFF8E24AA), // Bright Violet
+            const Color(0xFFBA68C8),
+            const Color(0xFFCE93D8),
             _cardAnimations[3],
           ),
-        ],
-      ),
+        ];
+
+        return Padding(
+          padding: const EdgeInsets.all(12),
+          child: isNarrow
+              ? Column(
+                  children: [
+                    Row(children: [cards[0], cards[1]]),
+                    const SizedBox(height: 10),
+                    Row(children: [cards[2], cards[3]]),
+                  ],
+                )
+              : Row(children: cards),
+        );
+      },
     );
   }
 
@@ -448,9 +475,9 @@ class _DashboardViewState extends State<DashboardView>
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 10,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11.0,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.5,
                         ),
@@ -461,8 +488,8 @@ class _DashboardViewState extends State<DashboardView>
                       Text(
                         count,
                         style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 20,
+                          color: Colors.white,
+                          fontSize: 22.0,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -490,28 +517,32 @@ class _DashboardViewState extends State<DashboardView>
   // ──────────────────── Mid section ─────────────────────────────────────────
 
   Widget _midSection(_DashboardData d) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left — image slideshow (no header text)
-          Expanded(
-            child: ScaleTransition(
-              scale: _cardAnimations[4],
-              child: _card(child: _slideshow(d.imageUrls), height: 420),
-            ),
-          ),
-          const SizedBox(width: 20),
-          // Right — video (no header text)
-          Expanded(
-            child: ScaleTransition(
-              scale: _cardAnimations[5],
-              child: _card(child: _videoPanel(d.videoUrls), height: 420),
-            ),
-          ),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 950;
+        final left = ScaleTransition(
+          scale: _cardAnimations[4],
+          child: _card(child: _slideshow(d.imageUrls), height: 420),
+        );
+        final right = ScaleTransition(
+          scale: _cardAnimations[5],
+          child: _card(child: _videoPanel(d.videoUrls), height: 420),
+        );
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: isNarrow
+              ? Column(children: [left, const SizedBox(height: 20), right])
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: left),
+                    const SizedBox(width: 20),
+                    Expanded(child: right),
+                  ],
+                ),
+        );
+      },
     );
   }
 
@@ -662,6 +693,10 @@ class _DashboardViewState extends State<DashboardView>
   // ── Video panel ───────────────────────────────────────────────────────────
 
   Widget _videoPanel(List<String> urls) {
+    if (urls.isEmpty) {
+      return _videoPanelPlaceholder(null, 'No videos integrated');
+    }
+
     // Error state — show message with retry button
     if (_videoError != null) {
       return _videoPanelPlaceholder(
@@ -669,6 +704,15 @@ class _DashboardViewState extends State<DashboardView>
         'Video Error: $_videoError',
         showRetry: true,
         onRetry: () => _initVideo(urls),
+      );
+    }
+
+    if (!_videoReady) {
+      return Container(
+        color: Colors.black87,
+        child: const Center(
+          child: CircularProgressIndicator(color: Colors.orange),
+        ),
       );
     }
 
@@ -931,185 +975,185 @@ class _DashboardViewState extends State<DashboardView>
   // ──────────────────── Bottom section ──────────────────────────────────────
 
   Widget _bottomSection(_DashboardData d) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left: category selector
-          Expanded(
-            flex: 1,
-            child: Column(
-              children: [
-                ScaleTransition(
-                  scale: _cardAnimations[6],
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 10),
-                          const AnimatedHeading(
-                            text: 'Progress Track',
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Divider(color: Colors.grey.shade100),
-                          _categoryRow(
-                            Icons.tv,
-                            Colors.orange,
-                            'Devices',
-                            d.deviceList.length,
-                          ),
-                          _categoryRow(
-                            Icons.dashboard_customize,
-                            Colors.blue,
-                            'Templates',
-                            d.tempList.length,
-                          ),
-                          _categoryRow(
-                            Icons.location_on,
-                            Colors.green,
-                            'Locations',
-                            d.locationList.length,
-                          ),
-                          _categoryRow(
-                            Icons.view_quilt,
-                            Colors.purple,
-                            'Over Views',
-                            d.overview.length,
-                          ),
-                          _categoryRow(
-                            Icons.video_library,
-                            Colors.redAccent,
-                            'Videos',
-                            d.vidFile,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 12, left: 4),
-                    child: Text(
-                      '© 2026 SRIHER Display',
-                      style: TextStyle(color: Colors.white54, fontSize: 11),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 20),
-
-          // Right: dynamic table
-          Expanded(
-            flex: 4,
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      "Show ",
-                      style: TextStyle(color: Colors.black87, fontSize: 13),
-                    ),
-                    Container(
-                      // 1. Reduced horizontal padding and added fixed height
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      height: 32, // Controlled height to make it "very little"
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(
-                          6,
-                        ), // Slightly tighter radius
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        // 2. Cleaner way to remove underline
-                        child: DropdownButton<int>(
-                          value: _entriesPerPage,
-                          dropdownColor: Colors.white,
-                          // 3. Set dense to true to reduce internal vertical padding
-                          isDense: true,
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize:
-                                12, // Slightly smaller font to fit the smaller box
-                          ),
-                          items: [5, 10, 20, 50].map((int value) {
-                            return DropdownMenuItem<int>(
-                              value: value,
-                              child: Text(value.toString()),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() {
-                                _entriesPerPage = val;
-                                _currentPage = 1;
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      " entries",
-                      style: TextStyle(color: Colors.black87, fontSize: 13),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 950;
+        final leftCol = Column(
+          children: [
+            ScaleTransition(
+              scale: _cardAnimations[6],
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                ScaleTransition(
-                  scale: _cardAnimations[7],
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      const AnimatedHeading(
+                        text: 'Progress Track',
+                        style: TextStyle(
+                          color: Color(0xFF2196F3),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.0,
                         ),
-                      ],
+                      ),
+                      const SizedBox(height: 10),
+                      Divider(color: Colors.grey.shade100),
+                      _categoryRow(
+                        Icons.tv,
+                        Colors.orange,
+                        'Devices',
+                        d.deviceList.length,
+                      ),
+                      _categoryRow(
+                        Icons.dashboard_customize,
+                        Colors.blue,
+                        'Templates',
+                        d.tempList.length,
+                      ),
+                      _categoryRow(
+                        Icons.location_on,
+                        Colors.green,
+                        'Locations',
+                        d.locationList.length,
+                      ),
+                      _categoryRow(
+                        Icons.view_quilt,
+                        Colors.purple,
+                        'Over Views',
+                        d.overview.length,
+                      ),
+                       
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: EdgeInsets.only(top: 12, left: 4),
+                child: Text(
+                  '© 2026 SRIHER Display',
+                  style: TextStyle(
+                    color: Color(0x8AFFFFFF),
+                    fontSize: 11.0,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+
+        final rightCol = Column(
+          children: [
+            Row(
+              children: [
+                const Text(
+                  "Show ",
+                  style: TextStyle(
+                    color: Color(0xDD000000),
+                    fontSize: 13.0,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ), 
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<int>(
+                      value: _entriesPerPage,
+                      dropdownColor: Colors.white,
+                      isDense: true,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 12,
+                      ),
+                      items: [5, 10, 20, 50].map((int value) {
+                        return DropdownMenuItem<int>(
+                          value: value,
+                          child: Text(value.toString()),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() {
+                            _entriesPerPage = val;
+                            _currentPage = 1;
+                          });
+                        }
+                      },
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      children: [
-                        _tableHeader(),
-                        _tableBody(d),
-                        _tableFooter(d),
-                      ],
-                    ),
+                  ),
+                ),
+                const Text(
+                  " entries",
+                  style: TextStyle(
+                    color: Color(0xDD000000),
+                    fontSize: 13.0,
+                    fontWeight: FontWeight.normal,
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
+            ScaleTransition(
+              scale: _cardAnimations[7],
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [_tableHeader(), _tableBody(d), _tableFooter(d)],
+                ),
+              ),
+            ),
+          ],
+        );
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: isNarrow
+              ? Column(
+                  children: [leftCol, const SizedBox(height: 20), rightCol],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 1, child: leftCol),
+                    const SizedBox(width: 20),
+                    Expanded(flex: 4, child: rightCol),
+                  ],
+                ),
+        );
+      },
     );
   }
 
@@ -1201,8 +1245,8 @@ class _DashboardViewState extends State<DashboardView>
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.black87,
+                    fontSize: 12.0,
+                    color: const Color(0xDD000000),
                     fontWeight: sel ? FontWeight.bold : FontWeight.w500,
                   ),
                 ),
@@ -1210,8 +1254,8 @@ class _DashboardViewState extends State<DashboardView>
                 Text(
                   '$count',
                   style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.black54,
+                    fontSize: 11.0,
+                    color: Color(0x8A000000),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -1336,9 +1380,9 @@ class _DashboardViewState extends State<DashboardView>
                 child: Text(
                   h,
                   style: TextStyle(
-                    color: Colors.blue.shade800,
+                    color: const Color(0xFF1565C0),
                     fontWeight: FontWeight.bold,
-                    fontSize: 11,
+                    fontSize: 11.0,
                   ),
                 ),
               ),
@@ -1391,8 +1435,9 @@ class _DashboardViewState extends State<DashboardView>
                         child: Text(
                           cell,
                           style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 12,
+                            color: Color(0xDD000000),
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.normal,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1425,7 +1470,11 @@ class _DashboardViewState extends State<DashboardView>
         children: [
           Text(
             "Showing $start to $end of $total entries",
-            style: const TextStyle(color: Colors.black54, fontSize: 12),
+            style: const TextStyle(
+              color: Color(0x8A000000),
+              fontSize: 12.0,
+              fontWeight: FontWeight.normal,
+            ),
           ),
           Row(
             children: [
@@ -1499,8 +1548,10 @@ class _DashboardViewState extends State<DashboardView>
             style: TextStyle(
               color: active
                   ? Colors.white
-                  : (enabled ? Colors.black87 : Colors.black26),
-              fontSize: 12,
+                  : (enabled
+                        ? const Color(0xDD000000)
+                        : const Color(0x42000000)),
+              fontSize: 12.0,
               fontWeight: active ? FontWeight.bold : FontWeight.normal,
             ),
           ),

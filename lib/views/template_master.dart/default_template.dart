@@ -206,23 +206,73 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
   }
 
   void _editItem(dynamic item) {
+    debugPrint("=== EDIT ITEM DEBUG ===");
+    debugPrint("Item keys: ${item.keys.toList()}");
+    debugPrint("Item data: $item");
+
+    // Resolve the device name from the item using all possible keys
+    final String itemDeviceName =
+        (item['device_name'] ??
+                item['Device_name'] ??
+                item['device_code'] ??
+                '')
+            .toString()
+            .trim();
+    final String? itemDeviceId = item['device_id']?.toString();
+
+    debugPrint("Resolved device name from item: '$itemDeviceName'");
+    debugPrint("Device ID from item: '$itemDeviceId'");
+
+    // Find matching device from dropdown list
+    String? deviceId;
+    for (var d in _deviceDropdownList) {
+      final dName = (d['device_name'] ?? '').toString().trim();
+      final dId = d['id']?.toString();
+      final dDevId = d['device_id']?.toString();
+
+      if ((itemDeviceId != null &&
+              itemDeviceId.isNotEmpty &&
+              (dId == itemDeviceId || dDevId == itemDeviceId)) ||
+          (itemDeviceName.isNotEmpty &&
+              dName.toLowerCase() == itemDeviceName.toLowerCase())) {
+        deviceId = dId;
+        debugPrint("MATCHED device: dName='$dName', dId='$dId'");
+        break;
+      }
+    }
+
+    // Resolve the template name from the item
+    final String itemTempName =
+        (item['temp_name'] ?? item['template_name'] ?? '').toString().trim();
+    final String? itemTemplateId = item['template_id']?.toString();
+
+    debugPrint("Resolved template name from item: '$itemTempName'");
+
+    // Find matching template from dropdown list
+    String? templateId;
+    for (var t in _templateDropdownList) {
+      final tName = (t['temp_name'] ?? '').toString().trim();
+      final tId = t['id']?.toString();
+
+      if ((itemTemplateId != null &&
+              itemTemplateId.isNotEmpty &&
+              tId == itemTemplateId) ||
+          (itemTempName.isNotEmpty &&
+              tName.toLowerCase() == itemTempName.toLowerCase())) {
+        templateId = tId;
+        debugPrint("MATCHED template: tName='$tName', tId='$tId'");
+        break;
+      }
+    }
+
+    debugPrint("Final deviceId: $deviceId, templateId: $templateId");
+
     setState(() {
       _editingId = int.tryParse(item['id'].toString());
-      // Logic to pre-select based on existing name if possible
-      _selectedDeviceId = _deviceDropdownList
-          .firstWhere(
-            (d) => d['device_name'] == item['device_name'],
-            orElse: () => {'id': null},
-          )['id']
-          ?.toString();
-      _selectedCategoryId = _templateDropdownList
-          .firstWhere(
-            (t) => t['temp_name'] == item['temp_name'],
-            orElse: () => {'id': null},
-          )['id']
-          ?.toString();
+      _selectedDeviceId = deviceId;
+      _selectedCategoryId = templateId;
     });
-    _showDefaultTemplateDialog(); // Open dialog after setting state
+    _showDefaultTemplateDialog();
   }
 
   void _resetForm() {
@@ -248,9 +298,15 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
+        // Use local copies so StatefulBuilder can track them
+        String? dialogDeviceId = _selectedDeviceId;
+        String? dialogCategoryId = _selectedCategoryId;
+
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -293,26 +349,27 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 8),
                     _buildDropdown(
-                      _selectedDeviceId,
+                      dialogDeviceId,
                       _deviceDropdownList,
                       "id",
                       "device_name",
                       "Select Device Type",
                       (val) {
-                        setDialogState(() => _selectedDeviceId = val);
+                        setDialogState(() => dialogDeviceId = val);
                         setState(() => _selectedDeviceId = val);
                       },
                     ),
                     const SizedBox(height: 20),
                     _buildDropdown(
-                      _selectedCategoryId,
+                      dialogCategoryId,
                       _templateDropdownList,
                       "id",
                       "temp_name",
                       "Select Template Name",
                       (val) {
-                        setDialogState(() => _selectedCategoryId = val);
+                        setDialogState(() => dialogCategoryId = val);
                         setState(() => _selectedCategoryId = val);
                       },
                     ),
@@ -320,25 +377,38 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.grey.shade600,
+                        ElevatedButton(
+                          onPressed: () {
+                            _resetForm();
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black87,
+                            elevation: 0,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
+                              horizontal: 24,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(color: Colors.grey.shade300),
                             ),
                           ),
-                          child: const Text("CANCEL"),
+                          child: const Text(
+                            "CANCEL",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
+                            backgroundColor: Colors.blue.shade400,
                             foregroundColor: Colors.white,
+                            elevation: 0,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
+                              horizontal: 28,
+                              vertical: 14,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -355,9 +425,10 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
                                   ),
                                 )
                               : Text(
-                                  _editingId == null
-                                      ? 'SUBMIT'
-                                      : 'UPDATE RECORD',
+                                  _editingId == null ? 'SUBMIT' : 'UPDATE',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                         ),
                       ],

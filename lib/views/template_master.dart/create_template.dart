@@ -130,29 +130,14 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
     }
   }
 
-  // API 3: EDIT-FETCH (Load specific data)
-  Future<void> loadTemplateDetails(dynamic id) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/new_templateEditview'),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"api_key": _apiKey, "id": id}),
-      );
-
-      if (response.statusCode == 200) {
-        final raw = jsonDecode(response.body);
-        final data = raw['data'] ?? raw;
-        setState(() {
-          editingId = int.parse(id.toString());
-          // Key mapping from edit view
-          _templateNameController.text =
-              data['temp_name'] ?? data['template_name'] ?? "";
-        });
-        _showTemplateDialog(); // Open dialog after loading data
-      }
-    } catch (e) {
-      _showSnackBar("Record Retrieval Error.");
-    }
+  // EDIT: Load data directly from the table row item (no API call needed)
+  void loadTemplateForEdit(dynamic item) {
+    setState(() {
+      editingId = int.tryParse(item['id'].toString());
+      _templateNameController.text =
+          item['temp_name'] ?? item['template_name'] ?? "";
+    });
+    _showTemplateDialog();
   }
 
   // API 4: UPDATE DATA
@@ -343,8 +328,8 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey.shade400,
-                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black87,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
@@ -352,6 +337,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(color: Colors.grey.shade300),
                             ),
                           ),
                           child: const Text(
@@ -362,7 +348,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
                         const SizedBox(width: 12),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade700,
+                            backgroundColor: Colors.blue.shade400,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(
@@ -428,7 +414,13 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
                   ),
                 ),
                 ElevatedButton.icon(
-                  onPressed: _showTemplateDialog,
+                  onPressed: () {
+                    setState(() {
+                      editingId = null;
+                      _templateNameController.clear();
+                    });
+                    _showTemplateDialog();
+                  },
                   icon: const Icon(Icons.dashboard_customize_rounded, size: 20),
                   label: const Text(
                     "CREATE TEMPLATE",
@@ -511,7 +503,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
                       DataCell(
                         IconButton(
                           icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => loadTemplateDetails(item['id']),
+                          onPressed: () => loadTemplateForEdit(item),
                         ),
                       ),
                       DataCell(
@@ -610,8 +602,8 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
 
   Widget _buildPaginationControls() {
     int total = _filteredList.length;
-    int max = (total / int.parse(entriesValue)).ceil();
-    if (max == 0) max = 1;
+    int totalPages = (total / int.parse(entriesValue)).ceil();
+    if (totalPages == 0) totalPages = 1;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -626,32 +618,15 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
         ),
         Row(
           children: [
-            _buildNavBtn(
+            _buildPageBtn(
               "Previous",
               enabled: currentPage > 1,
               onTap: () => setState(() => currentPage--),
             ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Text(
-                "$currentPage / $max",
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            _buildNavBtn(
+            ..._buildPageNumberButtons(totalPages),
+            _buildPageBtn(
               "Next",
-              enabled: currentPage < max,
+              enabled: currentPage < totalPages,
               onTap: () => setState(() => currentPage++),
             ),
           ],
@@ -660,28 +635,76 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
     );
   }
 
-  Widget _buildNavBtn(
+  List<Widget> _buildPageNumberButtons(int totalPages) {
+    List<Widget> widgets = [];
+    if (totalPages <= 1) {
+      return [_buildPageBtn("1", enabled: false, onTap: () {}, isActive: true)];
+    }
+    for (int i = 1; i <= totalPages; i++) {
+      if (i == 1 ||
+          i == totalPages ||
+          (i >= currentPage - 1 && i <= currentPage + 1)) {
+        widgets.add(
+          _buildPageBtn(
+            "$i",
+            enabled: true,
+            onTap: () => setState(() => currentPage = i),
+            isActive: currentPage == i,
+          ),
+        );
+      } else if (i == currentPage - 2 || i == currentPage + 2) {
+        widgets.add(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              "...",
+              style: TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+          ),
+        );
+      }
+    }
+    return widgets;
+  }
+
+  Widget _buildPageBtn(
     String label, {
     required bool enabled,
     required VoidCallback onTap,
+    bool isActive = false,
   }) {
-    return ElevatedButton(
-      onPressed: enabled ? onTap : null,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: enabled ? Colors.blue.shade50 : Colors.grey.shade50,
-        foregroundColor: enabled ? Colors.blue.shade800 : Colors.black26,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(
-            color: enabled ? Colors.blue.shade100 : Colors.grey.shade200,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: label.length > 2 ? 12 : 8,
+            vertical: 8,
+          ),
+          constraints: const BoxConstraints(minWidth: 34),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isActive
+                ? Colors.blue
+                : (enabled ? Colors.white : Colors.grey.shade50),
+            border: Border.all(
+              color: isActive ? Colors.blue : Colors.grey.shade300,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isActive
+                  ? Colors.white
+                  : (enabled ? Colors.black87 : Colors.black26),
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
       ),
     );
   }
