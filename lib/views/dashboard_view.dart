@@ -97,8 +97,9 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
+  late AnimationController _bgAnimController;
   final List<Animation<double>> _cardAnimations = [];
 
   // API state
@@ -114,7 +115,7 @@ class _DashboardViewState extends State<DashboardView>
   // Video (media_kit)
   late final Player _player = Player(
     configuration: const PlayerConfiguration(
-      bufferSize: 1024 * 1024 * 16, // 16MB buffer
+      bufferSize: 1024 * 1024 * 32, // Increased to 32MB buffer
     ),
   );
   late final VideoController _videoController = VideoController(_player);
@@ -141,6 +142,10 @@ class _DashboardViewState extends State<DashboardView>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
+    _bgAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
     for (int i = 0; i < 8; i++) {
       final s = i * 0.08;
       final e = (s + 0.4).clamp(0.0, 1.0);
@@ -226,9 +231,6 @@ class _DashboardViewState extends State<DashboardView>
       _videoReadyTimer?.cancel();
       _errorSub?.cancel();
 
-      // Open a playlist for the slideshow
-      final playlist = Playlist(urls.map((u) => Media(u)).toList());
-
       _errorSub = _player.stream.error.listen((err) {
         debugPrint('MediaKit Error: $err');
         if (mounted) {
@@ -236,33 +238,32 @@ class _DashboardViewState extends State<DashboardView>
         }
       });
 
+      // Open a playlist for the slideshow
+      final playlist = Playlist(urls.map((u) => Media(u)).toList());
+
+      // Set performance properties for smooth streaming and caching
+      if (_player.platform is NativePlayer) {
+        final platform = _player.platform as NativePlayer;
+        platform.setProperty(
+          'hwdec',
+          'no',
+        ); // Fallback to software decoding if CUDA fails
+        platform.setProperty('cache', 'yes');
+        platform.setProperty('demuxer-max-bytes', '32000000');
+        platform.setProperty('demuxer-max-back-bytes', '32000000');
+        platform.setProperty('cache-secs', '15');
+      }
+
       _player.open(playlist, play: true);
       _hasEverPlayed = true;
-      // Waiting for duration/buffering events to set _videoReady = true
       _player.setPlaylistMode(PlaylistMode.loop);
       _player.setVolume(0.0);
 
-      void markReady() {
-        if (!_videoReady && mounted) {
-          setState(() => _videoReady = true);
-          _durationSub?.cancel();
-          _bufferingSub?.cancel();
-          _videoReadyTimer?.cancel();
-          _durationSub = null;
-          _bufferingSub = null;
-          _videoReadyTimer = null;
-        }
-      }
-
-      _durationSub = _player.stream.duration.listen((dur) {
-        if (dur > Duration.zero) markReady();
-      });
-
-      _bufferingSub = _player.stream.buffering.listen((buffering) {
-        if (!buffering) markReady();
-      });
-
-      _videoReadyTimer = Timer(const Duration(seconds: 8), markReady);
+      // Mark ready immediately so the Video widget renders right away.
+      // media_kit renders black until the first frame arrives — that is
+      // fine; we no longer block behind a _videoReady flag which was
+      // unreliable on Linux (stream events sometimes never fired).
+      setState(() => _videoReady = true);
     } catch (err) {
       debugPrint('Video init error: $err');
       setState(() => _videoError = err.toString());
@@ -286,6 +287,7 @@ class _DashboardViewState extends State<DashboardView>
     _slideTimer?.cancel();
     _pageCtrl.dispose();
     _player.dispose();
+    _bgAnimController.dispose();
     super.dispose();
   }
 
@@ -348,19 +350,28 @@ class _DashboardViewState extends State<DashboardView>
     }
 
     final d = _data!;
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFFF1F7FF), // Light blue mix below the top header
-            Colors.white,
-          ],
-          stops: const [0.0, 0.35],
-        ),
-      ),
+    return AnimatedBuilder(
+      animation: _bgAnimController,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            gradient: LinearGradient(
+              begin: Alignment(
+                0.0,
+                -1.0 + (_bgAnimController.value * 0.1),
+              ), // Moving subtle gradient
+              end: Alignment.bottomCenter,
+              colors: [
+                const Color(0xFFE3F2FD), // Light blue mix animated
+                Colors.white,
+              ],
+              stops: const [0.0, 0.4],
+            ),
+          ),
+          child: child,
+        );
+      },
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,9 +407,11 @@ class _DashboardViewState extends State<DashboardView>
             'TEMPLATE DETAILS',
             Icons.dashboard_customize,
             '${d.totScheTemp} / ${d.totTemp}',
-            const Color.fromARGB(255, 71, 148, 204),
-            const Color.fromARGB(20, 72, 143, 206),
+            const Color.fromARGB(255, 71, 148, 204), // Card background (Light-Medium Blue)
+            const Color.fromARGB(255, 126, 184, 224), // Border accent
             _cardAnimations[1],
+            iconContainerColor: const Color(0xFFE3F2FD), // Outer part of icon is light blue
+            iconInnerColor: const Color(0xFF0D47A1), // Inside square icon is Dark Blue
           ),
           _menuCard(
             'LOCATION',
@@ -440,8 +453,10 @@ class _DashboardViewState extends State<DashboardView>
     String count,
     Color bgColor,
     Color accentColor,
-    Animation<double> anim,
-  ) {
+    Animation<double> anim, {
+    Color? iconContainerColor,
+    Color? iconInnerColor,
+  }) {
     return Expanded(
       child: ScaleTransition(
         scale: anim,
@@ -499,12 +514,10 @@ class _DashboardViewState extends State<DashboardView>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(
-                      0.8,
-                    ), // Bright container behind logo
+                    color: iconContainerColor ?? Colors.white.withOpacity(0.8), // Bright container behind logo
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: accentColor, size: 24),
+                  child: Icon(icon, color: iconInnerColor ?? accentColor, size: 24),
                 ),
               ],
             ),
@@ -707,205 +720,211 @@ class _DashboardViewState extends State<DashboardView>
       );
     }
 
-    if (!_videoReady) {
-      return Container(
-        color: Colors.black87,
-        child: const Center(
-          child: CircularProgressIndicator(color: Colors.orange),
-        ),
-      );
-    }
-
-    // Video is ready — VLC-style controls (media_kit)
+    // Always show the Video widget — media_kit renders black until the
+    // first frame arrives which is fine (no more blank-screen gate).
+    // A thin buffering indicator is shown via StreamBuilder overlay.
     return StreamBuilder<bool>(
-      stream: _player.stream.playing,
-      builder: (context, playingSnap) {
-        final isPlaying = playingSnap.data ?? false;
-
-        // Always treat as has ever played if we are autoplaying
-        if (!_hasEverPlayed) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) setState(() => _hasEverPlayed = true);
-          });
-        }
-
-        return StreamBuilder<Duration>(
-          stream: _player.stream.position,
-          builder: (context, positionSnap) {
-            final position = positionSnap.data ?? Duration.zero;
-
+      stream: _player.stream.buffering,
+      builder: (context, bufSnap) {
+        final isBuffering = bufSnap.data ?? true;
+        return StreamBuilder<bool>(
+          stream: _player.stream.playing,
+          builder: (context, playingSnap) {
+            final isPlaying = playingSnap.data ?? false;
             return StreamBuilder<Duration>(
-              stream: _player.stream.duration,
-              builder: (context, durationSnap) {
-                final duration = durationSnap.data ?? Duration.zero;
+              stream: _player.stream.position,
+              builder: (context, positionSnap) {
+                final position = positionSnap.data ?? Duration.zero;
 
-                return StreamBuilder<double>(
-                  stream: _player.stream.volume,
-                  builder: (context, volumeSnap) {
-                    final volume = volumeSnap.data ?? 100.0;
-                    final isMuted = volume == 0.0;
-                    final progress = duration.inMilliseconds > 0
-                        ? (position.inMilliseconds / duration.inMilliseconds)
-                              .clamp(0.0, 1.0)
-                        : 0.0;
+                return StreamBuilder<Duration>(
+                  stream: _player.stream.duration,
+                  builder: (context, durationSnap) {
+                    final duration = durationSnap.data ?? Duration.zero;
 
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() => _showControls = !_showControls);
-                      },
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Stack(
-                          children: [
-                            // ── Video frame (rendered by media_kit) ──
-                            Positioned.fill(
-                              child: Container(
-                                color: Colors.black,
-                                child: Video(
-                                  controller: _videoController,
-                                  fill: Colors.black,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
+                    return StreamBuilder<double>(
+                      stream: _player.stream.volume,
+                      builder: (context, volumeSnap) {
+                        final volume = volumeSnap.data ?? 100.0;
+                        final isMuted = volume == 0.0;
+                        final progress = duration.inMilliseconds > 0
+                            ? (position.inMilliseconds /
+                                      duration.inMilliseconds)
+                                  .clamp(0.0, 1.0)
+                            : 0.0;
 
-                            // ── Gradient overlay (when controls visible) ──
-                            if (_showControls)
-                              Positioned.fill(
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.transparent,
-                                        Colors.transparent,
-                                        Colors.black54,
-                                      ],
-                                      stops: [0.0, 0.5, 1.0],
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                            // ── Big centered Play/Pause (only while controls showing) ──
-                            if (_showControls)
-                              Center(
-                                child: GestureDetector(
-                                  onTap: () => _player.playOrPause(),
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() => _showControls = !_showControls);
+                          },
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Stack(
+                              children: [
+                                // ── Video frame (rendered by media_kit) ──
+                                Positioned.fill(
                                   child: Container(
-                                    padding: const EdgeInsets.all(18),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.55),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.white54,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: Icon(
-                                      isPlaying
-                                          ? Icons.pause
-                                          : Icons.play_arrow,
-                                      color: Colors.white,
-                                      size: 42,
+                                    color: Colors.black,
+                                    child: Video(
+                                      controller: _videoController,
+                                      controls: NoVideoControls,
+                                      fill: Colors.black,
+                                      fit: BoxFit.contain,
                                     ),
                                   ),
                                 ),
-                              ),
 
-                            // ── Bottom control bar (only while playing & controls showing) ──
-                            if (_hasEverPlayed && _showControls)
-                              Positioned(
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                child: Container(
-                                  color: Colors.black54,
-                                  padding: const EdgeInsets.fromLTRB(
-                                    8,
-                                    4,
-                                    8,
-                                    6,
+                                // ── Buffering spinner overlay ──
+                                if (isBuffering)
+                                  const Positioned.fill(
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.orange,
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
                                   ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // Scrub slider
-                                      SliderTheme(
-                                        data: SliderTheme.of(context).copyWith(
-                                          trackHeight: 3,
-                                          thumbShape:
-                                              const RoundSliderThumbShape(
-                                                enabledThumbRadius: 6,
-                                              ),
-                                          overlayShape:
-                                              const RoundSliderOverlayShape(
-                                                overlayRadius: 10,
-                                              ),
-                                          activeTrackColor: Colors.orange,
-                                          inactiveTrackColor: Colors.white30,
-                                          thumbColor: Colors.orange,
-                                        ),
-                                        child: Slider(
-                                          value: progress.toDouble(),
-                                          onChanged: (v) {
-                                            _player.seek(
-                                              Duration(
-                                                milliseconds:
-                                                    (v *
-                                                            duration
-                                                                .inMilliseconds)
-                                                        .toInt(),
-                                              ),
-                                            );
-                                          },
+
+                                // ── Gradient overlay (when controls visible) ──
+                                if (_showControls)
+                                  Positioned.fill(
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: [
+                                            Colors.transparent,
+                                            Colors.transparent,
+                                            Colors.black54,
+                                          ],
+                                          stops: [0.0, 0.5, 1.0],
                                         ),
                                       ),
-                                      // Time row
-                                      Row(
+                                    ),
+                                  ),
+
+                                // ── Big centered Play/Pause (only while controls showing) ──
+                                if (_showControls)
+                                  Center(
+                                    child: GestureDetector(
+                                      onTap: () => _player.playOrPause(),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(18),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.55),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white54,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          isPlaying
+                                              ? Icons.pause
+                                              : Icons.play_arrow,
+                                          color: Colors.white,
+                                          size: 42,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                // ── Bottom control bar (only while playing & controls showing) ──
+                                if (_hasEverPlayed && _showControls)
+                                  Positioned(
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    child: Container(
+                                      color: Colors.black54,
+                                      padding: const EdgeInsets.fromLTRB(
+                                        8,
+                                        4,
+                                        8,
+                                        6,
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          GestureDetector(
-                                            onTap: () => _player.playOrPause(),
-                                            child: Icon(
-                                              isPlaying
-                                                  ? Icons.pause
-                                                  : Icons.play_arrow,
-                                              color: Colors.white,
-                                              size: 20,
+                                          // Scrub slider
+                                          SliderTheme(
+                                            data: SliderTheme.of(context).copyWith(
+                                              trackHeight: 3,
+                                              thumbShape:
+                                                  const RoundSliderThumbShape(
+                                                    enabledThumbRadius: 6,
+                                                  ),
+                                              overlayShape:
+                                                  const RoundSliderOverlayShape(
+                                                    overlayRadius: 10,
+                                                  ),
+                                              activeTrackColor: Colors.orange,
+                                              inactiveTrackColor:
+                                                  Colors.white30,
+                                              thumbColor: Colors.orange,
+                                            ),
+                                            child: Slider(
+                                              value: progress.toDouble(),
+                                              onChanged: (v) {
+                                                _player.seek(
+                                                  Duration(
+                                                    milliseconds:
+                                                        (v *
+                                                                duration
+                                                                    .inMilliseconds)
+                                                            .toInt(),
+                                                  ),
+                                                );
+                                              },
                                             ),
                                           ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            '${_formatDuration(position)} / ${_formatDuration(duration)}',
-                                            style: const TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: 10,
-                                            ),
+                                          // Time row
+                                          Row(
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () =>
+                                                    _player.playOrPause(),
+                                                child: Icon(
+                                                  isPlaying
+                                                      ? Icons.pause
+                                                      : Icons.play_arrow,
+                                                  color: Colors.white,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                '${_formatDuration(position)} / ${_formatDuration(duration)}',
+                                                style: const TextStyle(
+                                                  color: Colors.white70,
+                                                  fontSize: 10,
+                                                ),
+                                              ),
+                                              const Spacer(),
+                                              GestureDetector(
+                                                onTap: () => _player.setVolume(
+                                                  isMuted ? 100.0 : 0.0,
+                                                ),
+                                                child: Icon(
+                                                  isMuted
+                                                      ? Icons.volume_off
+                                                      : Icons.volume_up,
+                                                  color: Colors.white70,
+                                                  size: 18,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                            ],
                                           ),
-                                          const Spacer(),
-                                          GestureDetector(
-                                            onTap: () => _player.setVolume(
-                                              isMuted ? 100.0 : 0.0,
-                                            ),
-                                            child: Icon(
-                                              isMuted
-                                                  ? Icons.volume_off
-                                                  : Icons.volume_up,
-                                              color: Colors.white70,
-                                              size: 18,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
                                         ],
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     );
                   },
                 );
@@ -1035,7 +1054,6 @@ class _DashboardViewState extends State<DashboardView>
                         'Over Views',
                         d.overview.length,
                       ),
-                       
                     ],
                   ),
                 ),
@@ -1077,7 +1095,7 @@ class _DashboardViewState extends State<DashboardView>
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: Colors.grey.shade300),
-                  ), 
+                  ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<int>(
                       value: _entriesPerPage,

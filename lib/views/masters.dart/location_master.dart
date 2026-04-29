@@ -217,7 +217,7 @@ class _LocationMasterViewState extends State<LocationMasterView> {
                   children: [
                     Text(
                       editingId == null
-                          ? "Location Master"
+                          ? "Add Location Master"
                           : "Edit Location Details",
                       style: const TextStyle(
                         color: Color(0xFF0D47A1),
@@ -315,7 +315,7 @@ class _LocationMasterViewState extends State<LocationMasterView> {
                   onPressed: _showLocationDialog,
                   icon: const Icon(Icons.add_location_alt_rounded, size: 20),
                   label: const Text(
-                    "ADD LOCATION",
+                    "ADD LOCATION MASTER",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                   ),
                 ),

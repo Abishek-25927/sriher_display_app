@@ -205,7 +205,7 @@ class _DepartmentViewState extends State<DepartmentView>
               title: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 71, 152, 211),
+                  color: const Color.fromARGB(255, 55, 164, 241),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
@@ -214,16 +214,29 @@ class _DepartmentViewState extends State<DepartmentView>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      "Department Master",
-                      style: TextStyle(
-                        color: Color(0xFF0D47A1),
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    if (editingId == null)
+                      const Text(
+                        "Add Department",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    else
+                      const Text(
+                        "Edit Department",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Color(0xFF0D47A1)),
+                      icon: const Icon(
+                        Icons.close,
+                        color: Color.fromARGB(255, 245, 246, 247),
+                      ),
                       onPressed: () {
                         _clearForm();
                         Navigator.pop(context);
@@ -252,7 +265,6 @@ class _DepartmentViewState extends State<DepartmentView>
                         fillColor: Colors.grey.shade50,
                       ),
                     ),
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -261,19 +273,66 @@ class _DepartmentViewState extends State<DepartmentView>
                 vertical: 12,
               ),
               actions: [
-                TextButton(
-                  onPressed: () {
-                    _clearForm();
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(color: Colors.black54),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: handleFormSubmit,
-                  child: Text(editingId == null ? "Submit" : "Update"),
+                Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.end, // Pushes everything to the right
+                  children: [
+                    SizedBox(
+                      width:
+                          250, // This controls the total width of the button group
+                      child: Row(
+                        children: [
+                          // Both buttons use Expanded to share the 250px width equally (Flex: 1)
+                          Expanded(
+                            child: SizedBox(
+                              height: 45,
+                              child: TextButton(
+                                onPressed: () {
+                                  _clearForm();
+                                  Navigator.pop(context);
+                                },
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.red.shade600,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text(
+                                  "Cancel",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12), // Gap between buttons
+
+                          Expanded(
+                            child: SizedBox(
+                              height: 45,
+                              child: ElevatedButton(
+                                onPressed: handleFormSubmit,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green.shade600,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: Text(
+                                  editingId == null ? "Submit" : "Update",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             );
@@ -620,23 +679,30 @@ class _DepartmentViewState extends State<DepartmentView>
                   ? () => setState(() => currentPage--)
                   : null,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.white24),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: currentPage > 0
+                        ? Colors.blue.shade300
+                        : Colors.grey.shade300,
+                  ),
                 ),
                 child: Text(
                   "Prev",
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: currentPage > 0 ? Colors.black87 : Colors.grey,
+                    color: currentPage > 0 ? Colors.blue.shade700 : Colors.grey,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 15),
+
             Row(
               children: List.generate(totalPages, (index) {
                 if (totalPages > 7) {
@@ -655,28 +721,28 @@ class _DepartmentViewState extends State<DepartmentView>
                 return InkWell(
                   onTap: () => setState(() => currentPage = index),
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 10,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
                       color: currentPage == index
-                          ? Colors.white10
-                          : Colors.black.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(4),
+                          ? Colors.blue.shade600
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                         color: currentPage == index
-                            ? Colors.white
-                            : Colors.white24,
+                            ? Colors.blue.shade600
+                            : Colors.grey.shade300,
                       ),
                     ),
                     child: Text(
                       "${index + 1}",
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         color: currentPage == index
-                            ? Colors.blue
+                            ? Colors.white
                             : Colors.black87,
                         fontWeight: FontWeight.bold,
                       ),
@@ -685,25 +751,32 @@ class _DepartmentViewState extends State<DepartmentView>
                 );
               }),
             ),
-            const SizedBox(width: 15),
+
             GestureDetector(
               onTap: currentPage < totalPages - 1
                   ? () => setState(() => currentPage++)
                   : null,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.white24),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: currentPage < totalPages - 1
+                        ? Colors.blue.shade300
+                        : Colors.grey.shade300,
+                  ),
                 ),
                 child: Text(
                   "Next",
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: currentPage < totalPages - 1
-                        ? Colors.black87
+                        ? Colors.blue.shade700
                         : Colors.grey,
                   ),
                 ),

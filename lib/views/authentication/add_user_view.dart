@@ -245,9 +245,9 @@ class _AddUserViewState extends State<AddUserView> {
               titlePadding: EdgeInsets.zero,
               title: Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF0D47A1),
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade600,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
                   ),
@@ -255,16 +255,24 @@ class _AddUserViewState extends State<AddUserView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      editingDatabaseId == null
-                          ? "Add New User"
-                          : "Edit User Details",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    if (editingDatabaseId == null)
+                      const Text(
+                        "Add User",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    else
+                      const Text(
+                        "Edit User Details",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
                       onPressed: () {
@@ -283,13 +291,7 @@ class _AddUserViewState extends State<AddUserView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const SizedBox(height: 25),
-                      _buildInput(
-                        "User ID",
-                        _userIdController,
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? "Enter user id"
-                            : null,
-                      ),
+                      _buildUserIdInput(),
                       const SizedBox(height: 20),
                       _buildInput(
                         "User Name",
@@ -310,6 +312,7 @@ class _AddUserViewState extends State<AddUserView> {
                           return null;
                         },
                       ),
+
                       const SizedBox(height: 20),
                       _buildRoleDrop(),
                       const SizedBox(height: 15),
@@ -322,20 +325,39 @@ class _AddUserViewState extends State<AddUserView> {
                 vertical: 12,
               ),
               actions: [
-                OutlinedButton(
+                // --- CANCEL BUTTON ---
+                ElevatedButton(
                   onPressed: () {
                     _resetForm();
                     Navigator.pop(context);
                   },
-                  child: const Text("Cancel"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
                 ),
+                // --- SUBMIT / UPDATE BUTTON ---
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Colors.green.shade600,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   onPressed: isSubmitting
@@ -354,10 +376,20 @@ class _AddUserViewState extends State<AddUserView> {
                             color: Colors.white,
                           ),
                         )
-                      : Text(
-                          editingDatabaseId == null
-                              ? "Save User"
-                              : "Update User",
+                      : editingDatabaseId == null
+                      ? const Text(
+                          "Save User",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        )
+                      : const Text(
+                          "Update User",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
                 ),
               ],
@@ -394,18 +426,18 @@ class _AddUserViewState extends State<AddUserView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const AnimatedHeading(
-                  text: "User Management",
+                  text: "User List",
                   style: TextStyle(
                     color: Colors.blue,
                     fontWeight: FontWeight.bold,
-                    fontSize: 26,
+                    fontSize: 22,
                   ),
                 ),
                 ElevatedButton.icon(
                   onPressed: _showFormDialog,
                   icon: const Icon(Icons.person_add_alt_1, size: 20),
                   label: const Text(
-                    "ADD NEW USER",
+                    "ADD USER",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -419,7 +451,12 @@ class _AddUserViewState extends State<AddUserView> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: const Color.fromARGB(
+                      255,
+                      37,
+                      37,
+                      37,
+                    ).withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -490,6 +527,95 @@ class _AddUserViewState extends State<AddUserView> {
     );
   }
 
+  // ── User ID field with up/down stepper ──────────────────────────────────
+  Widget _buildUserIdInput() {
+    return TextFormField(
+      controller: _userIdController,
+      keyboardType: TextInputType.number,
+      validator: (v) =>
+          (v == null || v.trim().isEmpty) ? "Enter user id" : null,
+      style: const TextStyle(
+        fontSize: 14,
+        color: Colors.black,
+        fontWeight: FontWeight.w600,
+      ),
+      decoration: InputDecoration(
+        hintText: "User ID",
+        hintStyle: const TextStyle(fontSize: 13, color: Colors.black38),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.black45, width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.black45, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 16,
+        ),
+        // Up / Down stepper arrows
+        suffixIcon: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 28,
+              height: 22,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                iconSize: 16,
+                icon: const Icon(
+                  Icons.keyboard_arrow_up,
+                  color: Colors.black54,
+                ),
+                onPressed: () {
+                  final current =
+                      int.tryParse(_userIdController.text.trim()) ?? 0;
+                  _userIdController.text = (current + 1).toString();
+                  _userIdController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: _userIdController.text.length),
+                  );
+                },
+              ),
+            ),
+            SizedBox(
+              width: 28,
+              height: 22,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                iconSize: 16,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Colors.black54,
+                ),
+                onPressed: () {
+                  final current =
+                      int.tryParse(_userIdController.text.trim()) ?? 0;
+                  _userIdController.text = (current - 1).toString();
+                  _userIdController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: _userIdController.text.length),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Generic text input ────────────────────────────────────────────────────
   Widget _buildInput(
     String hint,
     TextEditingController c, {
@@ -500,19 +626,31 @@ class _AddUserViewState extends State<AddUserView> {
       controller: c,
       obscureText: isPass,
       validator: validator,
-      style: const TextStyle(fontSize: 14, color: Colors.black),
+      style: const TextStyle(
+        fontSize: 14,
+        color: Colors.black,
+        fontWeight: FontWeight.w600,
+      ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(fontSize: 14, color: Colors.black45),
+        hintStyle: const TextStyle(fontSize: 13, color: Colors.black38),
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Colors.black45, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Colors.black45, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
@@ -525,15 +663,28 @@ class _AddUserViewState extends State<AddUserView> {
   Widget _buildRoleDrop() {
     return DropdownButtonFormField<String>(
       value: selectedRoleId,
-      style: const TextStyle(fontSize: 14, color: Colors.black),
+      dropdownColor: Colors.white,
+      style: const TextStyle(
+        fontSize: 14,
+        color: Colors.black,
+        fontWeight: FontWeight.w600,
+      ),
       decoration: InputDecoration(
         hintText: "Select Role",
-        hintStyle: const TextStyle(fontSize: 14, color: Colors.black45),
+        hintStyle: const TextStyle(fontSize: 13, color: Colors.black38),
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Colors.black45, width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.black45, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
@@ -546,7 +697,10 @@ class _AddUserViewState extends State<AddUserView> {
               value: r['id'].toString(),
               child: Text(
                 r['role_name'] ?? '',
-                style: const TextStyle(color: Colors.black),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           )

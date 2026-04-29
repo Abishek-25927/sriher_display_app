@@ -92,6 +92,12 @@ class _MappingViewState extends State<MappingView> {
         } else if (dataField is List) {
           _deviceList = dataField;
         }
+        // Sort by device_code ascending (1001, 1003, 1004 …)
+        _deviceList.sort((a, b) {
+          final ca = int.tryParse(a['device_code']?.toString() ?? '0') ?? 0;
+          final cb = int.tryParse(b['device_code']?.toString() ?? '0') ?? 0;
+          return ca.compareTo(cb);
+        });
       }
 
       if (locRes.statusCode == 200) {
@@ -203,15 +209,39 @@ class _MappingViewState extends State<MappingView> {
         final parsed = jsonDecode(res.body);
         dynamic data = parsed['data'];
         if (data is List && data.isNotEmpty) data = data.first;
+
+        // Try to find the device in _deviceList by device_id first,
+        // then fall back to matching by device_code string.
+        String? foundDeviceId;
+        final deviceIdStr = data['device_id']?.toString();
+        if (deviceIdStr != null) {
+          final byId = _deviceList.firstWhere(
+            (d) => d['id'].toString() == deviceIdStr,
+            orElse: () => <String, dynamic>{},
+          );
+          if ((byId as Map).isNotEmpty) foundDeviceId = deviceIdStr;
+        }
+        if (foundDeviceId == null) {
+          final deviceCode = data['device_code']?.toString();
+          if (deviceCode != null) {
+            final byCode = _deviceList.firstWhere(
+              (d) => d['device_code']?.toString() == deviceCode,
+              orElse: () => <String, dynamic>{},
+            );
+            if ((byCode as Map).isNotEmpty) {
+              foundDeviceId = byCode['id']?.toString();
+            }
+          }
+        }
+
         setState(() {
           _editingId = int.parse(id.toString());
-          _selDeviceId = data['device_id']?.toString();
+          _selDeviceId = foundDeviceId;
           _selLocationId = data['location_id']?.toString();
           _devNameCtrl.text = data['device_name'] ?? '';
           _devModelCtrl.text = data['device_model'] ?? '';
         });
         _showMappingDialog(); // Open dialog after loading data
-        _snack('Record loaded for editing.');
       }
     } catch (e) {
       _snack('Edit load error: $e');
@@ -311,7 +341,7 @@ class _MappingViewState extends State<MappingView> {
               title: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
-                  color: Color(0xFF000000),
+                  color: Color.fromARGB(255, 47, 133, 203), // light blue
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
@@ -321,15 +351,15 @@ class _MappingViewState extends State<MappingView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      _editingId == null ? "Mapping" : "Edit Mapping Details",
+                      _editingId == null ? "Create Mapping" : "Edit Mapping Details",
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Color.fromARGB(255, 247, 247, 248),
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: const Icon(Icons.close, color: Color.fromARGB(255, 248, 249, 249)),
                       onPressed: () {
                         _clearForm();
                         Navigator.pop(context);
@@ -362,6 +392,7 @@ class _MappingViewState extends State<MappingView> {
                                     value: _selDeviceId,
                                     decoration: _inputDec('Select Device Code'),
                                     isExpanded: true,
+                                    menuMaxHeight: 200,
                                     items: _deviceList.map((d) {
                                       return DropdownMenuItem<String>(
                                         value: d['id'].toString(),
@@ -374,6 +405,17 @@ class _MappingViewState extends State<MappingView> {
                                       );
                                     }).toList(),
                                     onChanged: (v) {
+                                      // Auto-fill Device Name & Model from selected device
+                                      final dev = _deviceList.firstWhere(
+                                        (d) => d['id'].toString() == v,
+                                        orElse: () => <String, dynamic>{},
+                                      );
+                                      if ((dev as Map).isNotEmpty) {
+                                        _devNameCtrl.text =
+                                            dev['device_name']?.toString() ?? '';
+                                        _devModelCtrl.text =
+                                            dev['device_model']?.toString() ?? '';
+                                      }
                                       setDialogState(() => _selDeviceId = v);
                                       setState(() => _selDeviceId = v);
                                     },
@@ -415,6 +457,7 @@ class _MappingViewState extends State<MappingView> {
                                       'Select Location Name',
                                     ),
                                     isExpanded: true,
+                                    menuMaxHeight: 200,
                                     items: _locationList.map((l) {
                                       return DropdownMenuItem<String>(
                                         value: l['id'].toString(),
@@ -445,7 +488,15 @@ class _MappingViewState extends State<MappingView> {
                 vertical: 12,
               ),
               actions: [
-                OutlinedButton(
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
                   onPressed: () {
                     _clearForm();
                     Navigator.pop(context);
@@ -454,7 +505,7 @@ class _MappingViewState extends State<MappingView> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF000000),
+                    backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
@@ -965,7 +1016,7 @@ class _MappingViewState extends State<MappingView> {
                                 '$sno',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),
@@ -974,7 +1025,7 @@ class _MappingViewState extends State<MappingView> {
                                 item['device_code']?.toString() ?? '-',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),
@@ -983,7 +1034,7 @@ class _MappingViewState extends State<MappingView> {
                                 item['device_name']?.toString() ?? '-',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),
@@ -992,7 +1043,7 @@ class _MappingViewState extends State<MappingView> {
                                 item['device_model']?.toString() ?? '-',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),
@@ -1001,7 +1052,7 @@ class _MappingViewState extends State<MappingView> {
                                 item['location_name']?.toString() ?? '-',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),
@@ -1010,7 +1061,7 @@ class _MappingViewState extends State<MappingView> {
                                 item['floor']?.toString() ?? '-',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),
@@ -1019,7 +1070,7 @@ class _MappingViewState extends State<MappingView> {
                                 item['sublocation']?.toString() ?? '-',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ),

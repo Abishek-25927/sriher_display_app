@@ -470,25 +470,7 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                       ),
                     )
                   : Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.touch_app_outlined,
-                            size: 80,
-                            color: Colors.blue.shade100,
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            "Complete configuration to view files",
-                            style: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontSize: 18,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ),
+                   
                     ),
             ),
           ],
@@ -533,17 +515,17 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
           ),
           child: Row(
             children: [
-              Expanded(flex: 3, child: Text("File", style: _headerStyle())),
+              Expanded(flex: 2, child: Text("File", style: _headerStyle())),
               const SizedBox(width: 12),
               Expanded(
                 flex: 4,
                 child: Text("File Name", style: _headerStyle()),
               ),
               const SizedBox(width: 12),
-              Expanded(flex: 3, child: Text("Duration", style: _headerStyle())),
+              Expanded(flex: 2, child: Text("Duration", style: _headerStyle())),
               const SizedBox(width: 12),
               Expanded(
-                flex: 3,
+                flex: 2,
                 child: Text(
                   "Action",
                   textAlign: TextAlign.center,
@@ -611,16 +593,19 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                       child: Row(
                         children: [
                           Expanded(
-                            flex: 3,
-                            child: Container(
-                              width: 75,
-                              height: 75,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey.shade200),
+                            flex: 2,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                width: 75,
+                                height: 75,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.grey.shade200),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: _buildFilePreview(file),
                               ),
-                              clipBehavior: Clip.antiAlias,
-                              child: _buildFilePreview(file),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -632,54 +617,59 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            flex: 3,
-                            child: SizedBox(
-                              width: 65,
-                              height: 34,
-                              child: TextFormField(
-                                controller: controller,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                            flex: 2,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: SizedBox(
+                                width: 65,
+                                height: 34,
+                                child: TextFormField(
+                                  controller: controller,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 8,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                      borderSide: const BorderSide(
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                                  ),
+                                  readOnly: true,
                                 ),
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 8,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                    borderSide: BorderSide(
-                                      color: Colors.grey.shade300,
-                                    ),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                    borderSide: BorderSide(
-                                      color: Colors.grey.shade300,
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6),
-                                    borderSide: const BorderSide(
-                                      color: Colors.blue,
-                                    ),
-                                  ),
-                                ),
-                                readOnly: true,
                               ),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            flex: 3,
+                            flex: 2,
                             child: Center(
                               child: ElevatedButton(
                                 onPressed: () =>
@@ -1260,88 +1250,86 @@ class VideoThumbnail extends StatefulWidget {
 }
 
 class _VideoThumbnailState extends State<VideoThumbnail> {
-  late final Player _player;
-  late final VideoController _controller;
+  Player? _player;
+  VideoController? _controller;
   bool _isPlaying = false;
-  bool _videoOpened = false;
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
-    _player = Player();
-    _controller = VideoController(_player);
-    // Open video, wait a moment for first frame, then pause
-    _player
-        .open(Media(widget.url), play: true)
-        .then((_) async {
-          await Future.delayed(const Duration(milliseconds: 500));
-          if (mounted) {
-            await _player.pause();
-            setState(() {
-              _isPlaying = false;
-              _videoOpened = true;
-            });
-          }
-        })
-        .catchError((_) {
-          if (mounted) setState(() => _videoOpened = true);
-        });
-    // Mark opened as soon as we get the first frame/duration event
-    _player.stream.duration.listen((dur) {
-      if (dur > Duration.zero && mounted && !_videoOpened) {
-        setState(() => _videoOpened = true);
+  }
+
+  void _togglePlay() {
+    if (!_initialized) {
+      final player = Player();
+      final controller = VideoController(player);
+      
+      // Performance properties for thumbnails
+      if (player.platform is NativePlayer) {
+        (player.platform as NativePlayer).setProperty('hwdec', 'no'); // Fallback to software decoding if CUDA fails
+        (player.platform as NativePlayer).setProperty('cache', 'yes');
+        (player.platform as NativePlayer).setProperty('demuxer-max-bytes', '10000000');
       }
-    });
-    _player.stream.playing.listen((playing) {
-      if (mounted) setState(() => _isPlaying = playing);
-    });
+
+      player.open(Media(widget.url), play: true);
+      
+      player.stream.playing.listen((playing) {
+        if (mounted) setState(() => _isPlaying = playing);
+      });
+      
+      setState(() {
+        _player = player;
+        _controller = controller;
+        _isPlaying = true;
+        _initialized = true;
+      });
+    } else {
+      _player?.playOrPause();
+    }
   }
 
   @override
   void dispose() {
-    _player.dispose();
+    _player?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        if (_isPlaying) {
-          _player.pause();
-        } else {
-          _player.play();
-        }
-      },
+      onTap: _togglePlay,
       child: Stack(
         fit: StackFit.expand,
         alignment: Alignment.center,
         children: [
-          // Black background always behind video
           Container(color: Colors.black),
-          Video(
-            controller: _controller,
-            controls: NoVideoControls,
-            fit: BoxFit.cover,
-            fill: Colors.black, // Prevents blue flash
-          ),
-          // Show dark overlay with video icon while loading
-          if (!_videoOpened)
+          if (_initialized && _controller != null)
+            Video(
+              controller: _controller!,
+              controls: NoVideoControls,
+              fit: BoxFit.cover,
+              fill: Colors.black,
+            ),
+          if (!_initialized)
             Container(
               color: Colors.black54,
-              child: const Center(
-                child: Icon(Icons.videocam, color: Colors.white54, size: 28),
-              ),
-            ),
-          // Play overlay when paused and loaded
-          if (_videoOpened && !_isPlaying)
-            Container(
-              color: Colors.black38,
               child: const Center(
                 child: Icon(
                   Icons.play_circle_fill,
                   color: Colors.white,
                   size: 32,
+                ),
+              ),
+            ),
+          if (_initialized && _isPlaying)
+            Container(
+              color: Colors.transparent,
+              child: const Center(
+                child: Icon(
+                  Icons.pause_circle_filled,
+                  color: Colors.white54,
+                  size: 28,
                 ),
               ),
             ),

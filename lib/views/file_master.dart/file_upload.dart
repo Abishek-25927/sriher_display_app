@@ -174,22 +174,47 @@ class _FileUploadViewState extends State<FileUploadView> {
       final response = await http.post(
         Uri.parse('$_baseUrl/fileEditview'),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"api_key": _apiKey, "id": id.toString()}),
+        // Send id as integer, not string
+        body: jsonEncode({"api_key": _apiKey, "id": int.parse(id.toString())}),
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body)['data'];
+        final decoded = jsonDecode(response.body);
+        // Normalize: data could be a Map or a single-item List
+        dynamic raw = decoded['data'];
+        if (raw is List && raw.isNotEmpty) raw = raw.first;
+        if (raw == null) {
+          _showSnackBar("No data returned for this record.");
+          return;
+        }
+        final Map<String, dynamic> data = Map<String, dynamic>.from(raw);
+
         setState(() {
           editingId = int.parse(id.toString());
-          _nameController.text = data['user_filename'] ?? "";
-          _descController.text = data['description'] ?? "";
+          // user_filename → name field
+          _nameController.text =
+              data['user_filename']?.toString() ?? data['name']?.toString() ?? '';
+          // description field
+          _descController.text = data['description']?.toString() ?? '';
+          // category_id dropdown
           _selectedDeptId = data['category_id']?.toString();
-          _selectedType = data['type'] ?? "Permanent";
+          // group5 is the type field used by insert/update APIs
+          _selectedType =
+              data['group5']?.toString() ??
+              data['type']?.toString() ??
+              'Permanent';
         });
-        _showUploadDialog(); // Open the dialog after loading details
+
+        // Open the edit dialog after state is set
+        if (mounted) _showUploadDialog();
+      } else {
+        _showSnackBar(
+          "Server error ${response.statusCode}: Unable to fetch record.",
+        );
       }
     } catch (e) {
-      _showSnackBar("Record Retrieval Failed.");
+      debugPrint("editFileDetails error: $e");
+      _showSnackBar("Could not load record. Please try again.");
     }
   }
 
@@ -350,7 +375,7 @@ class _FileUploadViewState extends State<FileUploadView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      editingId == null ? "File Upload" : "Edit File Metadata",
+                      editingId == null ? "Upload File" : "Edit File",
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -402,11 +427,17 @@ class _FileUploadViewState extends State<FileUploadView> {
                       style: TextStyle(color: Colors.black45),
                     ),
                     dropdownColor: Colors.white,
+                    menuMaxHeight: 200,
                     style: const TextStyle(color: Colors.black87),
                     decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
                       enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue.shade400, width: 1.5),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -515,31 +546,58 @@ class _FileUploadViewState extends State<FileUploadView> {
                 ),
               ],
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: isSubmitting
-                  ? null
-                  : (editingId == null ? insertFileAction : updateFileAction),
-              child: isSubmitting
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // Cancel button — only shown in edit mode
+                if (editingId != null) ...[
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
                       ),
-                    )
-                  : Text(editingId == null ? "SUBMIT" : "UPDATE"),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () {
+                      _resetForm();
+                      Navigator.pop(context);
+                    },
+                    child: const Text("CANCEL"),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: isSubmitting
+                      ? null
+                      : (editingId == null ? insertFileAction : updateFileAction),
+                  child: isSubmitting
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(editingId == null ? "SUBMIT" : "UPDATE"),
+                ),
+              ],
             ),
           ],
         ),
@@ -561,7 +619,7 @@ class _FileUploadViewState extends State<FileUploadView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const AnimatedHeading(
-                  text: "File Repository",
+                  text: "Uploaded Files List",
                   style: TextStyle(
                     color: Colors.blue,
                     fontWeight: FontWeight.bold,
@@ -572,7 +630,7 @@ class _FileUploadViewState extends State<FileUploadView> {
                   onPressed: _showUploadDialog,
                   icon: const Icon(Icons.cloud_upload_rounded, size: 20),
                   label: const Text(
-                    "UPLOAD NEW FILE",
+                    "UPLOAD FILE",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                   ),
                 ),
@@ -674,7 +732,7 @@ class _FileUploadViewState extends State<FileUploadView> {
         DataCell(
           Text(
             item['id']?.toString() ?? "-",
-            style: const TextStyle(color: Colors.white70),
+            style: const TextStyle(color: Colors.black87, fontSize: 12),
           ),
         ),
         DataCell(
@@ -683,8 +741,8 @@ class _FileUploadViewState extends State<FileUploadView> {
             height: 50,
             margin: const EdgeInsets.symmetric(vertical: 4),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.white10),
-              color: Colors.black26,
+              border: Border.all(color: Colors.grey.shade200),
+              color: Colors.grey.shade100,
             ),
             child:
                 (item['file_name'] != null &&
@@ -695,40 +753,40 @@ class _FileUploadViewState extends State<FileUploadView> {
                     errorBuilder: (context, error, stackTrace) => const Icon(
                       Icons.broken_image,
                       size: 20,
-                      color: Colors.white38,
+                      color: Colors.grey,
                     ),
                   )
-                : const Icon(Icons.image, size: 20, color: Colors.white38),
+                : const Icon(Icons.image, size: 20, color: Colors.grey),
           ),
         ),
         DataCell(
           Text(
             item['user_filename'] ?? "-",
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.black87, fontSize: 12),
           ),
         ),
         DataCell(
           Text(
             item['description'] ?? "-",
-            style: const TextStyle(color: Colors.white70),
+            style: const TextStyle(color: Colors.black87, fontSize: 12),
           ),
         ),
         DataCell(
           Text(
             item['type'] ?? "-",
-            style: const TextStyle(color: Colors.white70),
+            style: const TextStyle(color: Colors.black87, fontSize: 12),
           ),
         ),
         DataCell(
           Text(
             item['valid_from_date'] ?? "-",
-            style: const TextStyle(color: Colors.white70),
+            style: const TextStyle(color: Colors.black87, fontSize: 12),
           ),
         ),
         DataCell(
           Text(
             item['valid_upto_date'] ?? "-",
-            style: const TextStyle(color: Colors.white70),
+            style: const TextStyle(color: Colors.black87, fontSize: 12),
           ),
         ),
         DataCell(
@@ -736,7 +794,7 @@ class _FileUploadViewState extends State<FileUploadView> {
             scale: 0.7,
             child: Switch(
               value: item['file_status'] == 1 || item['file_status'] == "1",
-              activeColor: Colors.greenAccent,
+              activeColor: Colors.green,
               onChanged: (v) =>
                   toggleFileStatus(item['id'], item['file_status']),
             ),
@@ -770,9 +828,14 @@ class _FileUploadViewState extends State<FileUploadView> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(fontSize: 13, color: Colors.black54),
-        border: const OutlineInputBorder(),
+        border: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade400),
+        ),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: Colors.grey.shade400),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.blue.shade400, width: 1.5),
         ),
         alignLabelWithHint: true,
       ),

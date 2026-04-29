@@ -232,7 +232,7 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // --- COPY SECTION ---
-          const AnimatedHeading(text: "Copy Schedule Settings"),
+          const AnimatedHeading(text: "Copy Schedule - Devices"),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(32),
@@ -251,28 +251,15 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.copy_all, color: Colors.blue, size: 24),
-                    const SizedBox(width: 12),
-                    Text(
-                      "Devices Synchronization",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade900,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
+               
+                
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: _buildDropdown(
-                        label: "Source Device",
-                        hintText: "Select device to copy from",
+                        label: "",
+                        hintText: "Select device Name",
                         value: selectedSourceDeviceId,
                         items: deviceList,
                         onChanged: (val) {
@@ -292,8 +279,8 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
                     const SizedBox(width: 24),
                     Expanded(
                       child: _buildDropdown(
-                        label: "Target Device",
-                        hintText: "Select device to assign to",
+                        label: "",
+                        hintText: "Select Assign Device Name",
                         value: selectedTargetDeviceId,
                         items: deviceList,
                         onChanged: (val) {
@@ -440,7 +427,7 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
           const SizedBox(height: 48),
 
           // --- WIPE OFF SECTION ---
-          const AnimatedHeading(text: "Wipe Off Schedule"),
+          const AnimatedHeading(text: "Wipe Off Devices"),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(32),
@@ -459,29 +446,16 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.delete_sweep, color: Colors.red, size: 24),
-                    const SizedBox(width: 12),
-                    Text(
-                      "Clear Device Schedule",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red.shade900,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
+               
+                 
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Expanded(
                       flex: 2,
                       child: _buildDropdown(
-                        label: "Select Device",
-                        hintText: "Select device to wipe completely",
+                        label: " ",
+                        hintText: "Select device Name",
                         value: selectedWipeDeviceId,
                         items: deviceList,
                         onChanged: (val) =>
@@ -489,66 +463,11 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
                       ),
                     ),
                     const SizedBox(width: 24),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade600,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 20,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: isSubmitingWipe ? null : _wipeOff,
-                      child: isSubmitingWipe
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              "WIPE ALL SCHEDULES",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                    ),
-                    const Spacer(),
+                  
+                     
                   ],
                 ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.shade100),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: Colors.red.shade700,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: Text(
-                          "Warning: This will permanently stop all playback and remove all assignments on the selected device.",
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+               
               ],
             ),
           ),

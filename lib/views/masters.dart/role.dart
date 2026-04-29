@@ -323,9 +323,9 @@ class _RoleViewState extends State<RoleView>
               titlePadding: EdgeInsets.zero,
               title: Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF000000),
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade600,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
                   ),
@@ -335,7 +335,7 @@ class _RoleViewState extends State<RoleView>
                   children: [
                     Text(
                       editingId == null
-                          ? "Create New Role"
+                          ? "Create Roles"
                           : "Edit Role Details",
                       style: const TextStyle(
                         color: Colors.white,
@@ -391,7 +391,7 @@ class _RoleViewState extends State<RoleView>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const AnimatedHeading(
-                  text: "Role Management",
+                  text: "Roles List",
                   style: TextStyle(
                     color: Colors.blue,
                     fontWeight: FontWeight.bold,
@@ -402,7 +402,7 @@ class _RoleViewState extends State<RoleView>
                   onPressed: _showRoleDialog,
                   icon: const Icon(Icons.add_moderator, size: 20),
                   label: const Text(
-                    "CREATE ROLE",
+                    "CREATE ROLES",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                   ),
                 ),
@@ -601,20 +601,38 @@ class _RoleViewState extends State<RoleView>
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              OutlinedButton(
-                onPressed: () {
-                  _resetForm();
-                  if (Navigator.canPop(context)) Navigator.pop(context);
-                },
-                child: const Text("Cancel", style: TextStyle(fontSize: 13)),
-              ),
-              const SizedBox(width: 8),
+              // --- CANCEL BUTTON ---
               SizedBox(
-                height: 40,
-                width: 120,
+                height: 40, // Fixed height for both
+                child: ElevatedButton(
+                  onPressed: () {
+                    _resetForm();
+                    if (Navigator.canPop(context)) Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 12), // Gap between buttons
+              // --- SUBMIT / UPDATE BUTTON ---
+              SizedBox(
+                height: 40, // Same fixed height
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF000000),
+                    backgroundColor: Colors.green.shade600,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

@@ -415,7 +415,6 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(flex: 5, child: _buildLeftColumn()),
-                      const VerticalDivider(width: 1),
                       Expanded(
                         flex: 7,
                         child: isSelectionComplete

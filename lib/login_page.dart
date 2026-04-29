@@ -19,6 +19,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _userIdController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  final _userIdFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+
   late AnimationController _entryController;
   late AnimationController _buttonController;
   late Animation<double> _fadeAnim;
@@ -69,6 +72,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     _buttonController.dispose();
     _userIdController.dispose();
     _passwordController.dispose();
+    _userIdFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -225,7 +230,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       constraints: const BoxConstraints(maxWidth: 400),
       margin: const EdgeInsets.symmetric(horizontal: 32.0),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE3F2FD), width: 1.5),
         boxShadow: [
@@ -239,36 +244,39 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       padding: const EdgeInsets.all(32.0),
       child: Form(
         key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.7, end: 1.0),
-              duration: const Duration(milliseconds: 700),
-              curve: Curves.elasticOut,
-              builder: (context, scale, child) {
-                return Transform.scale(scale: scale, child: child);
-              },
-              child: Image.asset(
-                'assets/images/logo.png',
-                height: 80,
-                errorBuilder: (c, e, s) => const Icon(
-                  Icons.display_settings,
-                  size: 60,
-                  color: Color(0xFF0D47A1),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Sign In',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0D47A1),
-                letterSpacing: 1.2,
-              ),
-            ),
+        child:Column(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.7, end: 1.0),
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.elasticOut,
+      builder: (context, scale, child) {
+        return Transform.scale(scale: scale, child: child);
+      },
+      child: Image.asset(
+        'assets/images/logo.png',
+        height: 80, // 1. Slightly reduced height from 100 to 80
+        errorBuilder: (c, e, s) => const Icon(
+          Icons.display_settings,
+          size: 40,
+          color: Color(0xFF0D47A1),
+        ),
+      ),
+    ),
+    
+    // 2. Add a specific (or even negative) gap here
+ 
+
+    const Text(
+      'Sign In',
+      style: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFF0D47A1),
+        letterSpacing: 1.2,
+      ),
+    ),
             if (_errorMessage != null) ...[
               const SizedBox(height: 8),
               Text(
@@ -283,7 +291,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             ],
             const SizedBox(height: 6),
             const Text(
-              'Welcome back to SRIHER Display',
+              'Welcome to SRIHER Display',
               style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
             const SizedBox(height: 28),
@@ -291,50 +299,66 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               controller: _userIdController,
               hint: 'Email / User ID',
               icon: Icons.person_outline,
+              focusNode: _userIdFocusNode,
+              nextFocusNode: _passwordFocusNode,
+              textInputAction: TextInputAction.next,
               validator: (v) => (v == null || v.trim().isEmpty)
                   ? 'Enter your Email or User ID'
                   : null,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             _buildTextField(
               controller: _passwordController,
               hint: 'Password',
               icon: Icons.lock_outline,
               isPassword: true,
+              focusNode: _passwordFocusNode,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _isLoggingIn ? null : _handleLogin(),
               validator: (v) => (v == null || v.trim().isEmpty)
                   ? 'Enter your password'
                   : null,
             ),
-            const SizedBox(height: 28),
-            ScaleTransition(
-              scale: _buttonController,
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoggingIn ? null : _handleLogin,
-                  child: _isLoggingIn
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                          ),
-                        )
-                      : const Text(
-                          'LOGIN',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            letterSpacing: 2,
-                          ),
-                        ),
+            const SizedBox(height: 15),
+          ScaleTransition(
+  scale: _buttonController,
+  child: SizedBox(
+    width: double.infinity,
+    height: 50,
+    child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        // Use 8 for a modern, subtle curve. 
+        // 4 is very sharp, 30 is a pill. 8-10 is the "sweet spot."
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8), 
+        ),
+        backgroundColor: const Color(0xFF0D47A1), // Professional SRIHER Navy
+        foregroundColor: Colors.white,
+        elevation: 2,
+      ),
+      onPressed: _isLoggingIn ? null : _handleLogin,
+      child: _isLoggingIn
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Colors.white,
                 ),
               ),
+            )
+          : const Text(
+              'Log in',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                letterSpacing: 2,
+              ),
             ),
+    ),
+  ),
+),
           ],
         ),
       ),
@@ -346,12 +370,21 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     required String hint,
     required IconData icon,
     bool isPassword = false,
+    FocusNode? focusNode,
+    FocusNode? nextFocusNode,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onSubmitted,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       validator: validator,
       controller: controller,
+      focusNode: focusNode,
       obscureText: isPassword && _isObscure,
+      textInputAction: textInputAction,
+      onFieldSubmitted: onSubmitted ?? (nextFocusNode != null
+          ? (_) => FocusScope.of(context).requestFocus(nextFocusNode)
+          : null),
       style: const TextStyle(color: Colors.black87, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
