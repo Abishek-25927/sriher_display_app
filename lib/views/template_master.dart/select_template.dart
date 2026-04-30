@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
 
 class SelectTemplateView extends StatefulWidget {
   const SelectTemplateView({super.key});
@@ -929,315 +930,100 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
     final scrollController = ScrollController();
     List<dynamic> dialogFiles = List.from(assignedFiles);
 
-    showDialog(
+    StylishDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          return Dialog(
-            backgroundColor: Colors.white,
-            surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: SizedBox(
-              width: 600,
-              height: MediaQuery.of(context).size.height * 0.82,
-              child: Column(
+      title: "CHANGE PLAY ORDER",
+      maxWidth: 700,
+      builder: (context, setDialogState) {
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: Column(
+            children: [
+              const Text(
+                "Drag and drop to reorder files. This sequence determines the display loop.",
+                style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: ReorderableListView.builder(
+                    scrollController: scrollController,
+                    itemCount: dialogFiles.length,
+                    onReorder: (oldIndex, newIndex) {
+                      setDialogState(() {
+                        if (newIndex > oldIndex) newIndex -= 1;
+                        final item = dialogFiles.removeAt(oldIndex);
+                        dialogFiles.insert(newIndex, item);
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      final file = dialogFiles[index];
+                      return Container(
+                        key: ValueKey(file['id']),
+                        decoration: BoxDecoration(
+                          border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0).withOpacity(0.5))),
+                        ),
+                        child: ListTile(
+                          leading: const Icon(Icons.drag_handle_rounded, color: Color(0xFF94A3B8)),
+                          title: Text(file['user_filename'] ?? file['file_name'] ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          subtitle: Text("Type: ${file['file_type']}", style: const TextStyle(fontSize: 12)),
+                          trailing: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: const BoxDecoration(color: Color(0xFF0F172A), shape: BoxShape.circle),
+                            alignment: Alignment.center,
+                            child: Text("${index + 1}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              Row(
                 children: [
-                  // ── Header ──
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade600,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(14),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.sort, color: Colors.white, size: 20),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Text(
-                            "Change Play Order",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          "${dialogFiles.length} files",
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // ── Column Headers ──
-                  Container(
-                    color: Colors.blue.shade50,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 40), // drag handle space
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 1,
-                          child: Text("#", style: _headerStyle()),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text("File", style: _headerStyle()),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 4,
-                          child: Text("File Name", style: _headerStyle()),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 2,
-                          child: Text("File Type", style: _headerStyle()),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-
-                  // ── Reorderable List ──
                   Expanded(
-                    child: ReorderableListView.builder(
-                      scrollController: scrollController,
-                      itemCount: dialogFiles.length,
-                      onReorder: (oldIndex, newIndex) {
-                        setDialogState(() {
-                          if (newIndex > oldIndex) newIndex -= 1;
-                          final item = dialogFiles.removeAt(oldIndex);
-                          dialogFiles.insert(newIndex, item);
-                        });
-                      },
-                      itemBuilder: (context, index) {
-                        final file = dialogFiles[index];
-                        return Container(
-                          key: ValueKey(file['id']),
-                          decoration: BoxDecoration(
-                            color: index.isEven
-                                ? Colors.white
-                                : Colors.grey.shade50,
-                            border: Border(
-                              bottom: BorderSide(color: Colors.grey.shade100),
-                            ),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          child: Row(
-                            children: [
-                              // Drag handle (built-in via ReorderableListView)
-                              const Icon(
-                                Icons.drag_handle,
-                                color: Colors.blueGrey,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 8),
-                              // Index number
-                              Expanded(
-                                flex: 1,
-                                child: Container(
-                                  width: 28,
-                                  height: 28,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade100,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    "${index + 1}",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue.shade800,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // File thumbnail
-                              Expanded(
-                                flex: 2,
-                                child: Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: Colors.grey.shade200,
-                                    ),
-                                  ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: _buildFilePreview(file),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // File Name
-                              Expanded(
-                                flex: 4,
-                                child: Text(
-                                  file['user_filename'] ??
-                                      file['file_name'] ??
-                                      '-',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // File Type badge
-                              Expanded(
-                                flex: 2,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    (file['file_type'] ?? '-')
-                                        .toString()
-                                        .toUpperCase(),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue.shade700,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text("Cancel", style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
                     ),
                   ),
-
-                  // ── Bottom Bar ──
-                  const Divider(height: 1),
-                  Container(
-                    color: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      children: [
-                        // Top button — scrolls back to top
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            scrollController.animateTo(
-                              0,
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeInOut,
-                            );
-                          },
-                          icon: const Icon(Icons.keyboard_arrow_up, size: 18),
-                          label: const Text(
-                            "Top",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade50,
-                            foregroundColor: Colors.blue.shade800,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(color: Colors.blue.shade200),
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        // Close button
-                        ElevatedButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black87,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(color: Colors.grey.shade300),
-                            ),
-                          ),
-                          child: const Text(
-                            "Close",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        // Update button
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              assignedFiles = List.from(dialogFiles);
-                            });
-                            _updatePlayOrder();
-                            Navigator.pop(ctx);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade600,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            "Update",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() => assignedFiles = List.from(dialogFiles));
+                        _updatePlayOrder();
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F172A),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text("Update Play Order", style: TextStyle(fontWeight: FontWeight.w900)),
                     ),
                   ),
                 ],
               ),
-            ),
-          );
-        },
-      ),
-    ).whenComplete(() => scrollController.dispose());
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

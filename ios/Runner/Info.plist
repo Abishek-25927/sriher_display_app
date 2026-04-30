@@ -4,6 +4,12 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to let you upload media assets for digital signage.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to your camera to let you take photos for digital signage assets.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to your microphone for video recordings.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

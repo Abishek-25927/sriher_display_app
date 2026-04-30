@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
 
 class DefaultTemplateView extends StatefulWidget {
   const DefaultTemplateView({super.key});
@@ -294,150 +295,85 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
   // ──────────────────────────────────────────────────────────────────────────
 
   void _showDefaultTemplateDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        // Use local copies so StatefulBuilder can track them
-        String? dialogDeviceId = _selectedDeviceId;
-        String? dialogCategoryId = _selectedCategoryId;
+    String? dialogDeviceId = _selectedDeviceId;
+    String? dialogCategoryId = _selectedCategoryId;
 
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: Colors.white,
-              surfaceTintColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
+    StylishDialog.show(
+      context: context,
+      title: _editingId == null ? "CREATE DEFAULT TEMPLATE" : "EDIT DEFAULT TEMPLATE",
+      maxWidth: 480,
+      builder: (context, setDialogState) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Assign a default template to a device type for automatic fallback display.",
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+            ),
+            const SizedBox(height: 24),
+            const Text("Device Type", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.0, color: Color(0xFF0F172A))),
+            const SizedBox(height: 8),
+            _buildDropdown(
+              dialogDeviceId,
+              _deviceDropdownList,
+              "id",
+              "device_name",
+              "Select Device Type",
+              (val) {
+                setDialogState(() => dialogDeviceId = val);
+                setState(() => _selectedDeviceId = val);
+              },
+            ),
+            const SizedBox(height: 20),
+            const Text("Template Name", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.0, color: Color(0xFF0F172A))),
+            const SizedBox(height: 8),
+            _buildDropdown(
+              dialogCategoryId,
+              _templateDropdownList,
+              "id",
+              "temp_name",
+              "Select Template Name",
+              (val) {
+                setDialogState(() => dialogCategoryId = val);
+                setState(() => _selectedCategoryId = val);
+              },
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      _resetForm();
+                      Navigator.pop(context);
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text("Cancel", style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _editingId == null
-                          ? "Create Default Template"
-                          : "Edit Default Template",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _submitAction,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () {
-                        _resetForm();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
+                    child: _isSubmitting
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : Text(_editingId == null ? 'SUBMIT' : 'UPDATE', style: const TextStyle(fontWeight: FontWeight.w900)),
+                  ),
                 ),
-              ),
-              content: SizedBox(
-                width: 400,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    _buildDropdown(
-                      dialogDeviceId,
-                      _deviceDropdownList,
-                      "id",
-                      "device_name",
-                      "Select Device Type",
-                      (val) {
-                        setDialogState(() => dialogDeviceId = val);
-                        setState(() => _selectedDeviceId = val);
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    _buildDropdown(
-                      dialogCategoryId,
-                      _templateDropdownList,
-                      "id",
-                      "temp_name",
-                      "Select Template Name",
-                      (val) {
-                        setDialogState(() => dialogCategoryId = val);
-                        setState(() => _selectedCategoryId = val);
-                      },
-                    ),
-                    const SizedBox(height: 30),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            _resetForm();
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black87,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(color: Colors.grey.shade300),
-                            ),
-                          ),
-                          child: const Text(
-                            "CANCEL",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade400,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 28,
-                              vertical: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: _isSubmitting ? null : _submitAction,
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  _editingId == null ? 'SUBMIT' : 'UPDATE',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+              ],
+            ),
+          ],
         );
       },
     );

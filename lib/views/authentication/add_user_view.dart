@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
 
 class AddUserView extends StatefulWidget {
   const AddUserView({super.key});
@@ -228,175 +229,106 @@ class _AddUserViewState extends State<AddUserView> {
     );
   }
 
-  // ──────────────────────────── POPUP DIALOG ────────────────────────────────
-
   void _showFormDialog() {
-    showDialog(
+    StylishDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: Colors.white,
+      title: editingDatabaseId == null ? "Add User" : "Edit User",
+      subtitle: "Provide system credentials and role",
+      icon: editingDatabaseId == null
+          ? Icons.person_add_rounded
+          : Icons.edit_note_rounded,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            _buildUserIdInput(),
+            const SizedBox(height: 20),
+            _buildInput(
+              "User Name",
+              _userNameController,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? "Enter user name" : null,
+            ),
+            const SizedBox(height: 20),
+            _buildInput(
+              "Password",
+              _passwordController,
+              isPass: true,
+              validator: (v) {
+                if (editingDatabaseId != null) return null;
+                if (v == null || v.trim().isEmpty) return "Enter password";
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            _buildRoleDrop(),
+          ],
+        ),
+      ),
+      actions: [
+        Expanded(
+          child: TextButton(
+            onPressed: () {
+              _resetForm();
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade600,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
+            ),
+            child: const Text(
+              "Cancel",
+              style: TextStyle(
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 2,
+          child: StatefulBuilder(
+            builder: (context, setBtnState) {
+              return ElevatedButton(
+                onPressed: isSubmitting
+                    ? null
+                    : () async {
+                        setBtnState(() => isSubmitting = true);
+                        await handleSubmit();
+                        if (mounted) Navigator.pop(context);
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0F172A),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (editingDatabaseId == null)
-                      const Text(
-                        "Add User",
-                        style: TextStyle(
+                child: isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
                           color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
                         ),
                       )
-                    else
-                      const Text(
-                        "Edit User Details",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    : Text(
+                        editingDatabaseId == null
+                            ? "Create User Account"
+                            : "Update Account",
+                        style: const TextStyle(fontWeight: FontWeight.w900),
                       ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () {
-                        _resetForm();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              content: SizedBox(
-                width: 450,
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 25),
-                      _buildUserIdInput(),
-                      const SizedBox(height: 20),
-                      _buildInput(
-                        "User Name",
-                        _userNameController,
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? "Enter user name"
-                            : null,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildInput(
-                        "Password",
-                        _passwordController,
-                        isPass: true,
-                        validator: (v) {
-                          if (editingDatabaseId != null) return null;
-                          if (v == null || v.trim().isEmpty)
-                            return "Enter password";
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-                      _buildRoleDrop(),
-                      const SizedBox(height: 15),
-                    ],
-                  ),
-                ),
-              ),
-              actionsPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              actions: [
-                // --- CANCEL BUTTON ---
-                ElevatedButton(
-                  onPressed: () {
-                    _resetForm();
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
-                ),
-                // --- SUBMIT / UPDATE BUTTON ---
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: isSubmitting
-                      ? null
-                      : () async {
-                          setDialogState(() => isSubmitting = true);
-                          await handleSubmit();
-                          if (mounted) Navigator.pop(context);
-                        },
-                  child: isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : editingDatabaseId == null
-                      ? const Text(
-                          "Save User",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        )
-                      : const Text(
-                          "Update User",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -771,7 +703,7 @@ class _AddUserViewState extends State<AddUserView> {
         ),
         DataCell(
           Transform.scale(
-            scale: 0.8,
+            scale: 0.7,
             child: Switch(
               value: isActive,
               activeColor: Colors.green,

@@ -1,0 +1,170 @@
+Analyzing sriher_display_app...                                 
+
+  error • Target of URI doesn't exist: 'views/file_master/file_upload.dart' • lib/home_screen.dart:8:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/template_master/create_template.dart' • lib/home_screen.dart:9:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/template_master/default_template.dart' • lib/home_screen.dart:10:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/template_master/select_template.dart' • lib/home_screen.dart:11:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/schedule_allocate/schedule_allocate_main.dart' • lib/home_screen.dart:12:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/schedule_allocate/assign_device.dart' • lib/home_screen.dart:13:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/schedule_allocate/schedule_list.dart' • lib/home_screen.dart:14:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/schedule_allocate/specific_ranges.dart' • lib/home_screen.dart:15:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/schedule_allocate/copy_wipeoff.dart' • lib/home_screen.dart:16:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/masters/role.dart' • lib/home_screen.dart:17:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/masters/device_master.dart' • lib/home_screen.dart:18:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/masters/department.dart' • lib/home_screen.dart:19:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/masters/location_master.dart' • lib/home_screen.dart:20:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'views/masters/mapping.dart' • lib/home_screen.dart:21:8 • uri_does_not_exist
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/home_screen.dart:169:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/home_screen.dart:185:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/home_screen.dart:247:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/home_screen.dart:273:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/home_screen.dart:297:31 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/home_screen.dart:321:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/home_screen.dart:327:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/home_screen.dart:347:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/home_screen.dart:377:67 • deprecated_member_use
+  error • The name 'FileUploadView' isn't a class • lib/home_screen.dart:440:28 • creation_with_non_type
+  error • The name 'CreateTemplateView' isn't a class • lib/home_screen.dart:441:28 • creation_with_non_type
+  error • The name 'DefaultTemplateView' isn't a class • lib/home_screen.dart:442:28 • creation_with_non_type
+  error • The name 'SelectTemplateView' isn't a class • lib/home_screen.dart:443:28 • creation_with_non_type
+  error • The method 'ScheduleAllocateView' isn't defined for the type '_HomeScreenState' • lib/home_screen.dart:444:22 • undefined_method
+  error • The name 'AssignDeviceView' isn't a class • lib/home_screen.dart:449:28 • creation_with_non_type
+  error • The method 'ScheduleListView' isn't defined for the type '_HomeScreenState' • lib/home_screen.dart:450:22 • undefined_method
+  error • The name 'SpecificRangesView' isn't a class • lib/home_screen.dart:454:28 • creation_with_non_type
+  error • The name 'CopyWipeoffView' isn't a class • lib/home_screen.dart:455:29 • creation_with_non_type
+  error • The name 'RoleView' isn't a class • lib/home_screen.dart:456:29 • creation_with_non_type
+  error • The name 'DeviceMasterView' isn't a class • lib/home_screen.dart:457:29 • creation_with_non_type
+  error • The name 'DepartmentView' isn't a class • lib/home_screen.dart:458:29 • creation_with_non_type
+  error • The name 'LocationMasterView' isn't a class • lib/home_screen.dart:459:29 • creation_with_non_type
+  error • The name 'MappingView' isn't a class • lib/home_screen.dart:460:29 • creation_with_non_type
+   info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/login_page.dart:3:8 • unnecessary_import
+  error • The named parameter 'child' is required, but there's no corresponding argument • lib/login_page.dart:208:17 • missing_required_argument
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:221:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:238:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:272:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:284:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:286:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:314:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:324:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:326:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:389:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:458:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:475:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:480:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:487:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:490:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_page.dart:494:58 • deprecated_member_use
+warning • Unused import: 'home_screen.dart' • lib/main.dart:5:8 • unused_import
+   info • 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre • lib/main.dart:35:11 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/views/authentication/add_user_view.dart:181:9 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/views/authentication/add_user_view.dart:202:11 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/views/authentication/add_user_view.dart:311:29 • curly_braces_in_flow_control_structures
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/views/authentication/add_user_view.dart:368:54 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/authentication/add_user_view.dart:459:23 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/authentication/add_user_view.dart:665:7 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/views/authentication/add_user_view.dart:777:15 • deprecated_member_use
+warning • Unused import: 'package:flutter/scheduler.dart' • lib/views/dashboard_view.dart:4:8 • unused_import
+warning • Unused import: '../widgets/animated_heading.dart' • lib/views/dashboard_view.dart:8:8 • unused_import
+warning • Unused import: '../widgets/glass_card.dart' • lib/views/dashboard_view.dart:9:8 • unused_import
+warning • The value of the field '_videoReady' isn't used • lib/views/dashboard_view.dart:112:8 • unused_field
+warning • The value of the field '_videoError' isn't used • lib/views/dashboard_view.dart:113:11 • unused_field
+   info • The private field _entriesPerPage could be 'final' • lib/views/dashboard_view.dart:116:7 • prefer_final_fields
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/dashboard_view.dart:329:30 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/dashboard_view.dart:340:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/dashboard_view.dart:424:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/dashboard_view.dart:507:84 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/dashboard_view.dart:626:49 • deprecated_member_use
+   info • Use the end-of-line form ('///') for doc comments • lib/views/file_master.dart/file_upload.dart:7:1 • slash_for_doc_comments
+warning • The value of the field '_selectedFile' isn't used • lib/views/file_master.dart/file_upload.dart:47:17 • unused_field
+   info • Statements in an if should be enclosed in a block • lib/views/file_master.dart/file_upload.dart:92:11 • curly_braces_in_flow_control_structures
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/file_master.dart/file_upload.dart:424:21 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/views/file_master.dart/file_upload.dart:528:19 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/views/file_master.dart/file_upload.dart:530:19 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/views/file_master.dart/file_upload.dart:539:19 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/views/file_master.dart/file_upload.dart:541:19 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/file_master.dart/file_upload.dart:649:43 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/views/file_master.dart/file_upload.dart:797:15 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/file_master.dart/file_upload.dart:902:17 • deprecated_member_use
+warning • The value of the field '_entryController' isn't used • lib/views/masters.dart/department.dart:34:28 • unused_field
+warning • The value of the field '_leftFade' isn't used • lib/views/masters.dart/department.dart:35:26 • unused_field
+warning • The value of the field '_leftSlide' isn't used • lib/views/masters.dart/department.dart:36:26 • unused_field
+warning • The value of the field '_rightFade' isn't used • lib/views/masters.dart/department.dart:37:26 • unused_field
+warning • The value of the field '_rightSlide' isn't used • lib/views/masters.dart/department.dart:38:26 • unused_field
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/masters.dart/department.dart:389:43 • deprecated_member_use
+warning • The declaration '_buildFormCard' isn't referenced • lib/views/masters.dart/department.dart:405:10 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/masters.dart/department.dart:408:29 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/views/masters.dart/department.dart:576:15 • deprecated_member_use
+warning • The declaration '_buildSetexttionLabel' isn't referenced • lib/views/masters.dart/department.dart:585:10 • unused_element
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/department.dart:612:17 • deprecated_member_use
+warning • The declaration '_buildFormSection' isn't referenced • lib/views/masters.dart/device_master.dart:548:10 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/masters.dart/device_master.dart:559:33 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/views/masters.dart/device_master.dart:757:15 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/device_master.dart:811:9 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/device_master.dart:873:17 • deprecated_member_use
+warning • The declaration '_confirmDeletion' isn't referenced • lib/views/masters.dart/device_master.dart:967:8 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/masters.dart/location_master.dart:332:43 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/views/masters.dart/location_master.dart:427:39 • deprecated_member_use
+   info • Empty catch block • lib/views/masters.dart/mapping.dart:324:17 • empty_catches
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/mapping.dart:392:37 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/mapping.dart:455:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/masters.dart/mapping.dart:639:43 • deprecated_member_use
+warning • The declaration '_sectionTitle' isn't referenced • lib/views/masters.dart/mapping.dart:655:10 • unused_element
+warning • The declaration '_buildFormCard' isn't referenced • lib/views/masters.dart/mapping.dart:666:10 • unused_element
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/mapping.dart:861:23 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/masters.dart/role.dart:421:43 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/masters.dart/role.dart:803:17 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/assign_device.dart:196:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/assign_device.dart:308:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/assign_device.dart:329:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/assign_device.dart:463:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/assign_device.dart:484:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/assign_device.dart:580:37 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/views/schedule_allocate.dart/copy_wipeoff.dart:90:7 • curly_braces_in_flow_control_structures
+warning • The declaration '_wipeOff' isn't referenced • lib/views/schedule_allocate.dart/copy_wipeoff.dart:161:16 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/copy_wipeoff.dart:244:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/copy_wipeoff.dart:439:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/schedule_allocate_main.dart:475:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/schedule_allocate_main.dart:643:41 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/schedule_allocate.dart/schedule_allocate_main.dart:846:11 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/schedule_allocate.dart/schedule_allocate_main.dart:902:11 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/schedule_allocate.dart/schedule_allocate_main.dart:1034:19 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/schedule_allocate_main.dart:1170:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/schedule_allocate_main.dart:1198:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/schedule_list.dart:173:47 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/views/schedule_allocate.dart/schedule_list.dart:315:15 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/schedule_allocate.dart/schedule_list.dart:428:19 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/schedule_allocate.dart/schedule_list.dart:602:27 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/schedule_allocate.dart/schedule_list.dart:643:27 • deprecated_member_use
+warning • The declaration '_fetchOffDates' isn't referenced • lib/views/schedule_allocate.dart/specific_ranges.dart:120:16 • unused_element
+   info • Statements in an if should be enclosed in a block • lib/views/schedule_allocate.dart/specific_ranges.dart:122:7 • curly_braces_in_flow_control_structures
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/schedule_allocate.dart/specific_ranges.dart:586:43 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/views/schedule_allocate.dart/specific_ranges.dart:974:61 • unnecessary_underscores
+   info • Unnecessary use of multiple underscores • lib/views/schedule_allocate.dart/specific_ranges.dart:974:65 • unnecessary_underscores
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/views/schedule_allocate.dart/specific_ranges.dart:1054:11 • use_null_aware_elements
+   info • Statements in an if should be enclosed in a block • lib/views/schedule_allocate.dart/specific_ranges.dart:1278:15 • curly_braces_in_flow_control_structures
+   info • Use the end-of-line form ('///') for doc comments • lib/views/template_master.dart/create_template.dart:6:1 • slash_for_doc_comments
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/template_master.dart/create_template.dart:441:43 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/views/template_master.dart/create_template.dart:514:31 • deprecated_member_use
+warning • The declaration '_deleteItem' isn't referenced • lib/views/template_master.dart/default_template.dart:176:16 • unused_element
+warning • The declaration '_toggleStatus' isn't referenced • lib/views/template_master.dart/default_template.dart:192:16 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/template_master.dart/default_template.dart:488:43 • deprecated_member_use
+warning • The declaration '_buildLabel' isn't referenced • lib/views/template_master.dart/default_template.dart:628:10 • unused_element
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/views/template_master.dart/default_template.dart:697:17 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/views/template_master.dart/default_template.dart:800:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/views/template_master.dart/select_template.dart:248:11 • curly_braces_in_flow_control_structures
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/template_master.dart/select_template.dart:282:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/template_master.dart/select_template.dart:341:58 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/views/template_master.dart/select_template.dart:348:35 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/views/template_master.dart/select_template.dart:350:35 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/views/template_master.dart/select_template.dart:363:35 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/views/template_master.dart/select_template.dart:365:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/views/template_master.dart/select_template.dart:400:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/animated_background.dart:99:31 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/animated_background.dart:111:31 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/glass_card.dart:36:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/glass_card.dart:50:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/glass_card.dart:53:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/glass_card.dart:60:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/glass_card.dart:61:43 • deprecated_member_use
+
+166 issues found. (ran in 1.5s)

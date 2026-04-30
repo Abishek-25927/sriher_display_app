@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
 
 class MappingView extends StatefulWidget {
   const MappingView({super.key});
@@ -84,15 +85,14 @@ class _MappingViewState extends State<MappingView> {
 
       if (devRes.statusCode == 200) {
         final parsed = jsonDecode(devRes.body);
-        // deviceview returns: { "data": { "DeviceMasters": [...] } }
         final dataField = parsed['data'];
+        if (!mounted) return;
         if (dataField is Map) {
           final masters = dataField['DeviceMasters'];
           if (masters is List) _deviceList = masters;
         } else if (dataField is List) {
           _deviceList = dataField;
         }
-        // Sort by device_code ascending (1001, 1003, 1004 …)
         _deviceList.sort((a, b) {
           final ca = int.tryParse(a['device_code']?.toString() ?? '0') ?? 0;
           final cb = int.tryParse(b['device_code']?.toString() ?? '0') ?? 0;
@@ -103,6 +103,7 @@ class _MappingViewState extends State<MappingView> {
       if (locRes.statusCode == 200) {
         final parsed = jsonDecode(locRes.body);
         final dataField = parsed['data'];
+        if (!mounted) return;
         if (dataField is List) {
           _locationList = dataField;
         } else if (dataField is Map) {
@@ -130,6 +131,7 @@ class _MappingViewState extends State<MappingView> {
         final parsed = jsonDecode(res.body);
         List<dynamic> data = [];
         final dataField = parsed['data'];
+        if (!mounted) return;
         if (dataField is List) {
           data = dataField;
         } else if (dataField is Map) {
@@ -144,6 +146,7 @@ class _MappingViewState extends State<MappingView> {
         setState(() => _mappingList = data);
       }
     } catch (e) {
+      if (!mounted) return;
       _snack('Fetch error: $e');
     } finally {
       if (mounted) setState(() => _tableLoading = false);
@@ -183,14 +186,17 @@ class _MappingViewState extends State<MappingView> {
         }),
       );
       if (res.statusCode == 200) {
+        if (!mounted) return;
         _snack('Mapping added successfully!');
         _clearForm();
-        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+        if (Navigator.canPop(context)) Navigator.pop(context);
         await _fetchMappings();
       } else {
+        if (!mounted) return;
         _snack('Server error: ${res.statusCode}');
       }
     } catch (e) {
+      if (!mounted) return;
       _snack('Insert error: $e');
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -210,8 +216,6 @@ class _MappingViewState extends State<MappingView> {
         dynamic data = parsed['data'];
         if (data is List && data.isNotEmpty) data = data.first;
 
-        // Try to find the device in _deviceList by device_id first,
-        // then fall back to matching by device_code string.
         String? foundDeviceId;
         final deviceIdStr = data['device_id']?.toString();
         if (deviceIdStr != null) {
@@ -234,6 +238,7 @@ class _MappingViewState extends State<MappingView> {
           }
         }
 
+        if (!mounted) return;
         setState(() {
           _editingId = int.parse(id.toString());
           _selDeviceId = foundDeviceId;
@@ -244,6 +249,7 @@ class _MappingViewState extends State<MappingView> {
         _showMappingDialog(); // Open dialog after loading data
       }
     } catch (e) {
+      if (!mounted) return;
       _snack('Edit load error: $e');
     }
   }
@@ -273,14 +279,17 @@ class _MappingViewState extends State<MappingView> {
         }),
       );
       if (res.statusCode == 200) {
+        if (!mounted) return;
         _snack('Record updated!');
         _clearForm();
-        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+        if (Navigator.canPop(context)) Navigator.pop(context);
         await _fetchMappings();
       } else {
+        if (!mounted) return;
         _snack('Update failed: ${res.statusCode}');
       }
     } catch (e) {
+      if (!mounted) return;
       _snack('Update error: $e');
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -289,23 +298,64 @@ class _MappingViewState extends State<MappingView> {
 
   // API 5: Delete
   Future<void> _delete(dynamic id) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await StylishDialog.show<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: const Text('Are you sure you want to delete this mapping?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+      title: "CONFIRM DELETE",
+      maxWidth: 400,
+      builder: (context, setPopupState) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Are you sure you want to delete this mapping? All associated data will be removed.",
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        color: Color(0xFF64748B),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Delete Mapping",
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
     if (confirm != true) return;
 
@@ -316,219 +366,183 @@ class _MappingViewState extends State<MappingView> {
         body: jsonEncode({'api_key': _apiKey, 'id': int.parse(id.toString())}),
       );
       if (res.statusCode == 200) {
+        if (!mounted) return;
         _snack('Mapping deleted.');
         await _fetchMappings();
       } else {
+        if (!mounted) return;
         _snack('Delete failed: ${res.statusCode}');
       }
-    } catch (e) {}
+    } catch (e) {
+      if (!mounted) return;
+      debugPrint('Delete error: $e');
+    }
   }
 
   // ──────────────────────────── POPUP DIALOG ────────────────────────────────
 
   void _showMappingDialog() {
-    showDialog(
+    StylishDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color.fromARGB(255, 47, 133, 203), // light blue
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
+      title: _editingId == null
+          ? "Create Device Mapping"
+          : "Edit Mapping Details",
+      subtitle: "Link display hardware to facility locations",
+      icon: _editingId == null
+          ? Icons.add_link_rounded
+          : Icons.edit_note_rounded,
+      width: MediaQuery.of(context).size.width * 0.7,
+      builder: (context, setDialogState) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader("DEVICE INFORMATION"),
+            Row(
+              children: [
+                Expanded(
+                  child: _dropsLoading
+                      ? const Center(
+                          child: SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : _buildDropdownField(
+                          hint: "Select Device Code",
+                          value: _selDeviceId,
+                          items: _deviceList
+                              .map(
+                                (d) => DropdownMenuItem<String>(
+                                  value: d['id'].toString(),
+                                  child: Text(
+                                    d['device_code']?.toString() ??
+                                        d['id'].toString(),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (v) {
+                            final dev = _deviceList.firstWhere(
+                              (d) => d['id'].toString() == v,
+                              orElse: () => <String, dynamic>{},
+                            );
+                            if ((dev as Map).isNotEmpty) {
+                              _devNameCtrl.text =
+                                  dev['device_name']?.toString() ?? '';
+                              _devModelCtrl.text =
+                                  dev['device_model']?.toString() ?? '';
+                            }
+                            setDialogState(() => _selDeviceId = v);
+                            setState(() => _selDeviceId = v);
+                          },
+                        ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildTextField(
+                    "Device Name",
+                    _devNameCtrl,
+                    readOnly: true,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _editingId == null ? "Create Mapping" : "Edit Mapping Details",
-                      style: const TextStyle(
-                        color: Color.fromARGB(255, 247, 247, 248),
-                        fontSize: 18,
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildTextField("Device Model", _devModelCtrl, readOnly: true),
+
+            const SizedBox(height: 32),
+            _buildSectionHeader("LOCATION ASSIGNMENT"),
+            _dropsLoading
+                ? const Center(
+                    child: SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : _buildDropdownField(
+                    hint: "Select Location Name",
+                    value: _selLocationId,
+                    items: _locationList
+                        .map(
+                          (l) => DropdownMenuItem<String>(
+                            value: l['id'].toString(),
+                            child: Text(
+                              l['location_name']?.toString() ??
+                                  l['id'].toString(),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) {
+                      setDialogState(() => _selLocationId = v);
+                      setState(() => _selLocationId = v);
+                    },
+                  ),
+
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      _clearForm();
+                      Navigator.pop(context);
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        color: Color(0xFF64748B),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Color.fromARGB(255, 248, 249, 249)),
-                      onPressed: () {
-                        _clearForm();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.7,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 10),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _dropsLoading
-                                ? const Center(
-                                    child: SizedBox(
-                                      height: 48,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    ),
-                                  )
-                                : DropdownButtonFormField<String>(
-                                    value: _selDeviceId,
-                                    decoration: _inputDec('Select Device Code'),
-                                    isExpanded: true,
-                                    menuMaxHeight: 200,
-                                    items: _deviceList.map((d) {
-                                      return DropdownMenuItem<String>(
-                                        value: d['id'].toString(),
-                                        child: Text(
-                                          d['device_code']?.toString() ??
-                                              d['id'].toString(),
-                                          style: const TextStyle(fontSize: 13),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (v) {
-                                      // Auto-fill Device Name & Model from selected device
-                                      final dev = _deviceList.firstWhere(
-                                        (d) => d['id'].toString() == v,
-                                        orElse: () => <String, dynamic>{},
-                                      );
-                                      if ((dev as Map).isNotEmpty) {
-                                        _devNameCtrl.text =
-                                            dev['device_name']?.toString() ?? '';
-                                        _devModelCtrl.text =
-                                            dev['device_model']?.toString() ?? '';
-                                      }
-                                      setDialogState(() => _selDeviceId = v);
-                                      setState(() => _selDeviceId = v);
-                                    },
-                                  ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _devNameCtrl,
-                              decoration: _hintDec('Device Name'),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _devModelCtrl,
-                              decoration: _hintDec('Device Model'),
-                            ),
-                          ),
-                        ],
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: _submitting
+                        ? null
+                        : (_editingId == null ? _insert : _update),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      const SizedBox(height: 18),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: _dropsLoading
-                                ? const Center(
-                                    child: SizedBox(
-                                      height: 48,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    ),
-                                  )
-                                : DropdownButtonFormField<String>(
-                                    value: _selLocationId,
-                                    decoration: _inputDec(
-                                      'Select Location Name',
-                                    ),
-                                    isExpanded: true,
-                                    menuMaxHeight: 200,
-                                    items: _locationList.map((l) {
-                                      return DropdownMenuItem<String>(
-                                        value: l['id'].toString(),
-                                        child: Text(
-                                          l['location_name']?.toString() ??
-                                              l['id'].toString(),
-                                          style: const TextStyle(fontSize: 13),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (v) {
-                                      setDialogState(() => _selLocationId = v);
-                                      setState(() => _selLocationId = v);
-                                    },
-                                  ),
-                          ),
-                          const Expanded(child: SizedBox()),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
-                ),
-              ),
-              actionsPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              actions: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
                     ),
-                  ),
-                  onPressed: () {
-                    _clearForm();
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Cancel"),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                  ),
-                  onPressed: _submitting
-                      ? null
-                      : (_editingId == null ? _insert : _update),
-                  child: _submitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+                    child: _submitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            _editingId == null
+                                ? "Save Mapping"
+                                : "Update Mapping",
+                            style: const TextStyle(fontWeight: FontWeight.w900),
                           ),
-                        )
-                      : Text(_editingId == null ? "Submit" : "Update"),
+                  ),
                 ),
               ],
-            );
-          },
+            ),
+          ],
         );
       },
     );
@@ -821,17 +835,90 @@ class _MappingViewState extends State<MappingView> {
 
   InputDecoration _inputDec(String label) => InputDecoration(
     labelText: label,
-    border: const OutlineInputBorder(),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+    labelStyle: const TextStyle(
+      color: Color(0xFF64748B),
+      fontSize: 13,
+      fontWeight: FontWeight.w500,
+    ),
+    filled: true,
+    fillColor: const Color(0xFFF8FAFC),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: Colors.grey.shade200),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: Colors.grey.shade200),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
   );
 
-  // hintText shows inside the field and disappears when typing
-  InputDecoration _hintDec(String hint) => InputDecoration(
-    hintText: hint,
-    hintStyle: const TextStyle(color: Colors.grey),
-    border: const OutlineInputBorder(),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-  );
+  InputDecoration _hintDec(String hint) => _inputDec(hint);
+
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    bool readOnly = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      readOnly: readOnly,
+      style: const TextStyle(
+        fontSize: 14,
+        color: Color(0xFF1E293B),
+        fontWeight: FontWeight.w600,
+      ),
+      decoration: _inputDec(label),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String hint,
+    String? value,
+    required List<DropdownMenuItem<String>> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      hint: Text(
+        hint,
+        style: const TextStyle(
+          fontSize: 13,
+          color: Color(0xFF64748B),
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      dropdownColor: Colors.white,
+      style: const TextStyle(
+        color: Color(0xFF1E293B),
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+      ),
+      decoration: _inputDec(hint),
+      items: items,
+      onChanged: onChanged,
+      isExpanded: true,
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: Colors.blue.shade700,
+          fontWeight: FontWeight.w900,
+          fontSize: 11,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
 
   // ─── TABLE CARD ───────────────────────────────────────────────────────────
 

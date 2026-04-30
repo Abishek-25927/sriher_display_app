@@ -1,7 +1,9 @@
+import 'package:intl/intl.dart';
+import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../../widgets/animated_heading.dart';
 
 class CopyWipeoffView extends StatefulWidget {
   const CopyWipeoffView({super.key});
@@ -164,26 +166,65 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
       return;
     }
 
-    // Show confirmation dialog
-    bool? confirm = await showDialog<bool>(
+    // Show confirmation dialog using StylishDialog
+    bool? confirm = await StylishDialog.show<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Confirm Wipe Off"),
-        content: const Text(
-          "Are you sure you want to permanently remove ALL schedules from this device? This action cannot be undone.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("CANCEL"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text("WIPE EVERYTHING"),
-          ),
-        ],
-      ),
+      title: "CONFIRM WIPE OFF",
+      maxWidth: 480,
+      builder: (context, setPopupState) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Are you sure you want to permanently remove ALL schedules from this device? This action cannot be undone.",
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        color: Color(0xFF64748B),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Wipe Everything",
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
 
     if (confirm != true) return;
@@ -251,8 +292,6 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-               
-                
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -446,8 +485,6 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-               
-                 
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -463,11 +500,8 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
                       ),
                     ),
                     const SizedBox(width: 24),
-                  
-                     
                   ],
                 ),
-               
               ],
             ),
           ),

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
 
 /**
  * FileUploadView - Master Module
@@ -139,8 +140,7 @@ class _FileUploadViewState extends State<FileUploadView> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "api_key": _apiKey,
-          "category_id":
-              int.tryParse(_selectedDeptId!) ?? int.parse(_selectedDeptId!),
+          "category_id": int.parse(_selectedDeptId!),
           "name": _nameController.text.trim(),
           "desc": _descController.text.trim(),
           "group5": _selectedType,
@@ -193,7 +193,9 @@ class _FileUploadViewState extends State<FileUploadView> {
           editingId = int.parse(id.toString());
           // user_filename → name field
           _nameController.text =
-              data['user_filename']?.toString() ?? data['name']?.toString() ?? '';
+              data['user_filename']?.toString() ??
+              data['name']?.toString() ??
+              '';
           // description field
           _descController.text = data['description']?.toString() ?? '';
           // category_id dropdown
@@ -351,60 +353,16 @@ class _FileUploadViewState extends State<FileUploadView> {
 
   // ─── POPUP DIALOG FOR UPLOAD ───────────────────────────────────────────
   void _showUploadDialog() {
-    showDialog(
+    StylishDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      editingId == null ? "Upload File" : "Edit File",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () {
-                        _resetForm();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.6,
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: _buildFormCardInDialog(setDialogState),
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+      title: editingId == null ? "Upload File" : "Edit File",
+      subtitle: "Add or manage media assets for display",
+      icon: editingId == null
+          ? Icons.cloud_upload_rounded
+          : Icons.edit_note_rounded,
+      width: MediaQuery.of(context).size.width * 0.6,
+      builder: (context, setDialogState) =>
+          _buildFormCardInDialog(setDialogState),
     );
   }
 
@@ -437,7 +395,10 @@ class _FileUploadViewState extends State<FileUploadView> {
                         borderSide: BorderSide(color: Colors.grey.shade400),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.blue.shade400, width: 1.5),
+                        borderSide: BorderSide(
+                          color: Colors.blue.shade400,
+                          width: 1.5,
+                        ),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -455,7 +416,6 @@ class _FileUploadViewState extends State<FileUploadView> {
                     onChanged: (val) =>
                         setDialogState(() => _selectedDeptId = val),
                   ),
-
                   const SizedBox(height: 20),
                   Row(
                     children: [
@@ -512,92 +472,86 @@ class _FileUploadViewState extends State<FileUploadView> {
         ),
         const SizedBox(height: 25),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                const Text(
-                  "Type: ",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                Radio<String>(
-                  value: "Permanent",
-                  groupValue: _selectedType,
-                  activeColor: Colors.blue,
-                  onChanged: (v) => setDialogState(() => _selectedType = v!),
-                ),
-                const Text(
-                  "Permanent",
-                  style: TextStyle(color: Colors.black87),
-                ),
-                const SizedBox(width: 10),
-                Radio<String>(
-                  value: "Short Term",
-                  groupValue: _selectedType,
-                  activeColor: Colors.blue,
-                  onChanged: (v) => setDialogState(() => _selectedType = v!),
-                ),
-                const Text(
-                  "Short Term",
-                  style: TextStyle(color: Colors.black87),
-                ),
-              ],
+            const Text(
+              "Type: ",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // Cancel button — only shown in edit mode
-                if (editingId != null) ...[
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () {
-                      _resetForm();
-                      Navigator.pop(context);
-                    },
-                    child: const Text("CANCEL"),
+            Radio<String>(
+              value: "Permanent",
+              groupValue: _selectedType,
+              activeColor: Colors.blue,
+              onChanged: (v) => setDialogState(() => _selectedType = v!),
+            ),
+            const Text("Permanent", style: TextStyle(color: Colors.black87)),
+            const SizedBox(width: 10),
+            Radio<String>(
+              value: "Short Term",
+              groupValue: _selectedType,
+              activeColor: Colors.blue,
+              onChanged: (v) => setDialogState(() => _selectedType = v!),
+            ),
+            const Text("Short Term", style: TextStyle(color: Colors.black87)),
+          ],
+        ),
+        const SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: () {
+                  _resetForm();
+                  Navigator.pop(context);
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  const SizedBox(width: 10),
-                ],
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: isSubmitting
-                      ? null
-                      : (editingId == null ? insertFileAction : updateFileAction),
-                  child: isSubmitting
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(editingId == null ? "SUBMIT" : "UPDATE"),
                 ),
-              ],
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: isSubmitting
+                    ? null
+                    : (editingId == null ? insertFileAction : updateFileAction),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0F172A),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        editingId == null ? "Save Asset" : "Update Asset",
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+              ),
             ),
           ],
         ),

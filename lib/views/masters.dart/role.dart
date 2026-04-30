@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Privilege definitions
@@ -91,6 +92,7 @@ class _RoleViewState extends State<RoleView>
         final payload = data is Map && data.containsKey('data')
             ? data['data']
             : data;
+        if (!mounted) return;
         setState(() {
           allRoles =
               (payload is List
@@ -100,9 +102,11 @@ class _RoleViewState extends State<RoleView>
           isLoading = false;
         });
       } else {
+        if (!mounted) return;
         setState(() => isLoading = false);
       }
     } catch (_) {
+      if (!mounted) return;
       setState(() => isLoading = false);
       _snack("Failed to load roles. Check connection.", isError: true);
     }
@@ -153,11 +157,7 @@ class _RoleViewState extends State<RoleView>
           }
         } else if (rawPrivs is String && rawPrivs.isNotEmpty) {
           final parts = rawPrivs.split(',').map((s) => s.trim()).toList();
-          // Heuristic: if they are pairs like "1,1,3,1", group them; else just add them
-          // If the list of parts only contains single integers, they might be pairs.
-          // However, most likely the API returns ["1,1", "3,1"] as strings in a list.
           if (parts.length > 1 && !parts[0].contains(',')) {
-            // Possible "1,1,3,1" format
             for (int i = 0; i < parts.length - 1; i += 2) {
               privSet.add("${parts[i]},${parts[i + 1]}");
             }
@@ -166,6 +166,7 @@ class _RoleViewState extends State<RoleView>
           }
         }
 
+        if (!mounted) return;
         setState(() {
           editingId = id;
           _roleNameController.text =
@@ -177,10 +178,12 @@ class _RoleViewState extends State<RoleView>
         });
         _showRoleDialog();
       } else {
+        if (!mounted) return;
         setState(() => isLoading = false);
       }
     } catch (_) {
       // Fallback: use row data we already have
+      if (!mounted) return;
       setState(() {
         editingId = id;
         _roleNameController.text = role['role_name']?.toString() ?? '';
@@ -224,14 +227,17 @@ class _RoleViewState extends State<RoleView>
           .timeout(const Duration(seconds: 15));
 
       if (res.statusCode == 200) {
+        if (!mounted) return;
         _snack(isUpdate ? "Role updated!" : "Role created!");
         _resetForm();
-        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+        if (Navigator.canPop(context)) Navigator.pop(context);
         fetchRoles();
       } else {
+        if (!mounted) return;
         _snack("Server error (${res.statusCode}). Try again.", isError: true);
       }
     } catch (_) {
+      if (!mounted) return;
       _snack("Connection failed. Check network.", isError: true);
     } finally {
       if (mounted) setState(() => isSubmitting = false);
@@ -243,25 +249,64 @@ class _RoleViewState extends State<RoleView>
     final id = int.tryParse(role['id']?.toString() ?? '');
     if (id == null) return;
 
-    final confirm = await showDialog<bool>(
+    final confirm = await StylishDialog.show<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Delete Role"),
-        content: Text(
-          "Are you sure you want to delete \"${role['role_name']}\"?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("Delete", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+      title: "DELETE ROLE",
+      maxWidth: 400,
+      builder: (context, setPopupState) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Are you sure you want to delete \"${role['role_name']}\"? This action cannot be undone.",
+              style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        color: Color(0xFF64748B),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Delete Role",
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
 
     if (confirm != true) return;
@@ -276,12 +321,15 @@ class _RoleViewState extends State<RoleView>
           .timeout(const Duration(seconds: 15));
 
       if (res.statusCode == 200) {
+        if (!mounted) return;
         _snack("Role deleted.");
         fetchRoles();
       } else {
+        if (!mounted) return;
         _snack("Delete failed (${res.statusCode}).", isError: true);
       }
     } catch (_) {
+      if (!mounted) return;
       _snack("Connection failed.", isError: true);
     }
   }
@@ -310,59 +358,17 @@ class _RoleViewState extends State<RoleView>
   // ──────────────────────────── POPUP DIALOG ────────────────────────────────
 
   void _showRoleDialog() {
-    showDialog(
+    StylishDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade600,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      editingId == null
-                          ? "Create Roles"
-                          : "Edit Role Details",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () {
-                        _resetForm();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.6,
-                child: SingleChildScrollView(
-                  child: _buildRoleForm(setDialogState),
-                ),
-              ),
-            );
-          },
-        );
-      },
+      title: editingId == null ? "Create Roles" : "Edit Role Details",
+      subtitle: "Configure system permissions and access levels",
+      icon: editingId == null ? Icons.add_moderator : Icons.edit_note_rounded,
+      width: MediaQuery.of(context).size.width * 0.6,
+      child: StatefulBuilder(
+        builder: (context, setDialogState) {
+          return _buildRoleForm(setDialogState);
+        },
+      ),
     );
   }
 
@@ -385,104 +391,106 @@ class _RoleViewState extends State<RoleView>
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
               children: [
-                const AnimatedHeading(
-                  text: "Roles List",
-                  style: TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _showRoleDialog,
-                  icon: const Icon(Icons.add_moderator, size: 20),
-                  label: const Text(
-                    "CREATE ROLES",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Main List Container
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const AnimatedHeading(
+                      text: "Roles List",
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _showRoleDialog,
+                      icon: const Icon(Icons.add_moderator, size: 20),
+                      label: const Text(
+                        "CREATE ROLES",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                   ],
-                  border: Border.all(color: Colors.grey.shade200),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: [
-                      _buildListHeader(),
-                      const SizedBox(height: 16),
-                      Expanded(
-                        child: isLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : paged.isEmpty
-                            ? const Center(child: Text("No roles found."))
-                            : _buildTableContainer(paged, filtered.length),
-                      ),
-                      const SizedBox(height: 20),
-                      _buildFooter(paged.length, filtered.length),
-                    ],
-                  ),
+                const SizedBox(height: 20),
+                _buildListHeader(),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : paged.isEmpty
+                      ? const Center(child: Text("No roles found."))
+                      : _buildTableContainer(paged, filtered.length),
                 ),
-              ),
+                const SizedBox(height: 20),
+                _buildFooter(paged.length, filtered.length),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildTableContainer(List<dynamic> paged, int totalFiltered) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: MediaQuery.of(context).size.width - 100,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade100),
           ),
-          child: DataTable(
-            columnSpacing: 24,
-            headingRowHeight: 56,
-            dataRowMaxHeight: 60,
-            headingRowColor: WidgetStateProperty.all(Colors.blue.shade50),
-            columns: [
-              _buildCol('#'),
-              _buildCol('Role'),
-              _buildCol('Edit'),
-              _buildCol('Action'),
-            ],
-            rows: paged
-                .asMap()
-                .entries
-                .map((e) => _buildRow(e.key + 1, e.value))
-                .toList(),
+          clipBehavior: Clip.antiAlias,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                child: DataTable(
+                  columnSpacing: 24,
+                  headingRowHeight: 45,
+                  dataRowMaxHeight: 56,
+                  horizontalMargin: 20,
+                  headingRowColor: WidgetStateProperty.all(Colors.blue.shade50),
+                  columns: [
+                    _buildCol('#'),
+                    _buildCol('Role'),
+                    _buildCol('Edit'),
+                    _buildCol('Action'),
+                  ],
+                  rows: paged
+                      .asMap()
+                      .entries
+                      .map((e) => _buildRow(e.key + 1, e.value))
+                      .toList(),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -509,152 +517,156 @@ class _RoleViewState extends State<RoleView>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Role Name field
-          const Text.rich(TextSpan(children: [
-                
-              ],
-            )),
+          const Text(
+            "Role Name",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
           const SizedBox(height: 8),
           TextFormField(
             controller: _roleNameController,
             validator: (v) =>
                 (v == null || v.trim().isEmpty) ? "Enter role name" : null,
             style: const TextStyle(fontSize: 14),
-            decoration: const InputDecoration(
-              hintText: 'Enter Role Name',
-              hintStyle: TextStyle(fontSize: 13),
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 12,
+            decoration: InputDecoration(
+              hintText: 'e.g. Administrator',
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
               ),
             ),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 20),
 
-          // Select All
           Row(
             children: [
-              Checkbox(
-                value: allSelected,
-                tristate: true,
-                onChanged: (v) {
-                  if (setDialogState != null) {
-                    setDialogState(() {
+              const Text(
+                "Permissions",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const Spacer(),
+              Transform.scale(
+                scale: 0.9,
+                child: Checkbox(
+                  value: allSelected,
+                  onChanged: (v) {
+                    if (setDialogState != null) {
+                      setDialogState(() {
+                        if (v == true) {
+                          _selectedPrivs.addAll(
+                            _allPrivileges.map((p) => p.id),
+                          );
+                        } else {
+                          _selectedPrivs.clear();
+                        }
+                      });
+                    }
+                    setState(() {
                       if (v == true) {
                         _selectedPrivs.addAll(_allPrivileges.map((p) => p.id));
                       } else {
                         _selectedPrivs.clear();
                       }
                     });
-                  }
-                  setState(() {
-                    if (v == true) {
-                      _selectedPrivs.addAll(_allPrivileges.map((p) => p.id));
-                    } else {
-                      _selectedPrivs.clear();
-                    }
-                  });
-                },
+                  },
+                ),
               ),
-              const Text(
-                "Select All",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
+              const Text("Select All", style: TextStyle(fontSize: 12)),
             ],
           ),
           const Divider(),
 
           // Privileges table
-          Table(
-            border: TableBorder.all(color: Colors.grey[300]!),
-            columnWidths: const {
-              0: FlexColumnWidth(1),
-              1: FlexColumnWidth(2.5),
-            },
-            children: [
-              _buildPrivRow("Dashboard", [_allPrivileges[0]], setDialogState),
-              _buildPrivRow("Authentication", [
-                _allPrivileges[1],
-              ], setDialogState),
-              _buildPrivRow(
-                "Masters",
-                _allPrivileges.sublist(2, 7),
-                setDialogState,
+          SizedBox(
+            height: 400, // Fixed height for scrolling permissions
+            child: SingleChildScrollView(
+              child: Table(
+                border: TableBorder.all(color: Colors.grey.shade200),
+                columnWidths: const {
+                  0: FlexColumnWidth(1.2),
+                  1: FlexColumnWidth(2.5),
+                },
+                children: [
+                  _buildPrivRow("Dashboard", [
+                    _allPrivileges[0],
+                  ], setDialogState),
+                  _buildPrivRow("Users", [_allPrivileges[1]], setDialogState),
+                  _buildPrivRow(
+                    "System",
+                    _allPrivileges.sublist(2, 7),
+                    setDialogState,
+                  ),
+                  _buildPrivRow("Files", [_allPrivileges[7]], setDialogState),
+                  _buildPrivRow(
+                    "Templates",
+                    _allPrivileges.sublist(8, 11),
+                    setDialogState,
+                  ),
+                  _buildPrivRow(
+                    "Scheduling",
+                    _allPrivileges.sublist(11, 16),
+                    setDialogState,
+                  ),
+                ],
               ),
-              _buildPrivRow("File Master", [_allPrivileges[7]], setDialogState),
-              _buildPrivRow(
-                "Template Master",
-                _allPrivileges.sublist(8, 11),
-                setDialogState,
-              ),
-              _buildPrivRow(
-                "Schedule",
-                _allPrivileges.sublist(11),
-                setDialogState,
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 24),
 
-          // Buttons
+          // Action Buttons
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              // --- CANCEL BUTTON ---
-              SizedBox(
-                height: 40, // Fixed height for both
-                child: ElevatedButton(
+              Expanded(
+                child: TextButton(
                   onPressed: () {
                     _resetForm();
-                    if (Navigator.canPop(context)) Navigator.pop(context);
+                    Navigator.pop(context);
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade600,
-                    foregroundColor: Colors.white,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: const Text(
                     "Cancel",
                     style: TextStyle(
+                      color: Colors.grey,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13,
                     ),
                   ),
                 ),
               ),
-
-              const SizedBox(width: 12), // Gap between buttons
-              // --- SUBMIT / UPDATE BUTTON ---
-              SizedBox(
-                height: 40, // Same fixed height
+              const SizedBox(width: 16),
+              Expanded(
+                flex: 2,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade600,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 4,
-                  ),
                   onPressed: isSubmitting ? null : handleSubmit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
                   child: isSubmitting
                       ? const SizedBox(
-                          width: 18,
-                          height: 18,
+                          height: 20,
+                          width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Colors.white,
                           ),
                         )
                       : Text(
-                          editingId == null ? "Submit" : "Update",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
+                          editingId == null ? "Create Role" : "Update Role",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                 ),
               ),
@@ -727,23 +739,12 @@ class _RoleViewState extends State<RoleView>
 
   DataColumn _buildCol(String label) {
     return DataColumn(
-      label: Expanded(
-        child: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: Colors.blue.shade800,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
-                ),
-              ),
-            ),
-            const Spacer(),
-            Icon(Icons.unfold_more, color: Colors.blue.shade300, size: 14),
-          ],
+      label: Text(
+        label,
+        style: TextStyle(
+          color: Colors.blue.shade800,
+          fontWeight: FontWeight.bold,
+          fontSize: 11,
         ),
       ),
     );
@@ -793,19 +794,29 @@ class _RoleViewState extends State<RoleView>
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
-                color: Colors.black87,
+                color: Color(0xFF64748B),
               ),
             ),
+            const SizedBox(width: 8),
             SizedBox(
-              width: 70,
-              height: 35,
+              width: 80,
+              height: 38,
               child: DropdownButtonFormField<String>(
                 value: entriesValue,
                 dropdownColor: Colors.white,
                 style: const TextStyle(color: Colors.black87, fontSize: 13),
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 5),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
                 ),
                 items: ["10", "25", "50"]
                     .map((v) => DropdownMenuItem(value: v, child: Text(v)))
@@ -813,33 +824,45 @@ class _RoleViewState extends State<RoleView>
                 onChanged: (v) => setState(() => entriesValue = v!),
               ),
             ),
+            const SizedBox(width: 8),
             const Text(
               " entries",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
-                color: Colors.black87,
+                color: Color(0xFF64748B),
               ),
             ),
           ],
         ),
         SizedBox(
           width: 250,
-          height: 40,
+          height: 38,
           child: TextField(
             controller: _searchController,
-            onChanged: (val) {
-              setState(() {
-                searchQuery = val;
-              });
-            },
+            onChanged: (val) => setState(() => searchQuery = val),
             decoration: InputDecoration(
-              hintText: "Search Roles...",
-              prefixIcon: const Icon(Icons.search),
+              hintText: 'Search roles...',
+              hintStyle: const TextStyle(
+                color: Color(0xFF94A3B8),
+                fontSize: 13,
+              ),
+              prefixIcon: const Icon(
+                Icons.search,
+                size: 18,
+                color: Color(0xFF94A3B8),
+              ),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade200),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade200),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             ),
           ),
         ),

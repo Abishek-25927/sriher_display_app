@@ -2,8 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class AnimatedBackground extends StatefulWidget {
-  final Widget child;
-  const AnimatedBackground({super.key, required this.child});
+  final Widget? child;
+  const AnimatedBackground({super.key, this.child});
 
   @override
   State<AnimatedBackground> createState() => _AnimatedBackgroundState();
@@ -12,7 +12,8 @@ class AnimatedBackground extends StatefulWidget {
 class _AnimatedBackgroundState extends State<AnimatedBackground>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  final List<Particle> particles = List.generate(20, (index) => Particle());
+  final List<Particle> particles = List.generate(25, (index) => Particle());
+  Offset _mousePosition = Offset.zero;
 
   @override
   void initState() {
@@ -31,20 +32,28 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white, // Pure White
-      body: Stack(
+    return MouseRegion(
+      onHover: (event) {
+        setState(() {
+          _mousePosition = event.localPosition;
+        });
+      },
+      child: Stack(
         children: [
           AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
               return CustomPaint(
-                painter: ParticlePainter(particles, _controller.value),
+                painter: ParticlePainter(
+                  particles,
+                  _controller.value,
+                  _mousePosition,
+                ),
                 size: Size.infinite,
               );
             },
           ),
-          widget.child,
+          if (widget.child != null) widget.child!,
         ],
       ),
     );
@@ -58,6 +67,7 @@ class Particle {
   late double speed;
   late double opacity;
   late double angle;
+  late Color color;
 
   Particle() {
     reset();
@@ -66,10 +76,13 @@ class Particle {
   void reset() {
     x = Random().nextDouble();
     y = Random().nextDouble();
-    size = Random().nextDouble() * 50 + 10;
-    speed = Random().nextDouble() * 0.0006 + 0.0002;
-    opacity = Random().nextDouble() * 0.2 + 0.05;
+    size = Random().nextDouble() * 40 + 5;
+    speed = Random().nextDouble() * 0.0004 + 0.0001;
+    opacity = Random().nextDouble() * 0.15 + 0.05;
     angle = Random().nextDouble() * pi * 2;
+    color = Random().nextBool()
+        ? const Color(0xFF3B82F6)
+        : const Color(0xFF10B981);
   }
 
   void update() {
@@ -86,36 +99,46 @@ class Particle {
 class ParticlePainter extends CustomPainter {
   final List<Particle> particles;
   final double progress;
+  final Offset mousePos;
 
-  ParticlePainter(this.particles, this.progress);
+  ParticlePainter(this.particles, this.progress, this.mousePos);
 
   @override
   void paint(Canvas canvas, Size size) {
     for (var particle in particles) {
       particle.update();
 
-      // Draw "Bubble" effect
+      // Parallax effect based on mouse position
+      double dx = 0;
+      double dy = 0;
+      if (mousePos != Offset.zero) {
+        double relX = (mousePos.dx / size.width) - 0.5;
+        double relY = (mousePos.dy / size.height) - 0.5;
+        dx = relX * (particle.size * 0.5);
+        dy = relY * (particle.size * 0.5);
+      }
+
       final paint = Paint()
-        ..color = Colors.blue.withOpacity(particle.opacity)
+        ..color = particle.color.withOpacity(particle.opacity)
         ..style = PaintingStyle.fill
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12); // Airy feel
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, particle.size * 0.4);
 
       canvas.drawCircle(
-        Offset(particle.x * size.width, particle.y * size.height),
+        Offset(particle.x * size.width + dx, particle.y * size.height + dy),
         particle.size,
         paint,
       );
 
-      // Subtle rim light for the bubble
-      final rimPaint = Paint()
-        ..color = Colors.blue.withOpacity(particle.opacity * 0.5)
+      // Subtle glow
+      final glowPaint = Paint()
+        ..color = particle.color.withOpacity(particle.opacity * 0.3)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5;
+        ..strokeWidth = 1.0;
 
       canvas.drawCircle(
-        Offset(particle.x * size.width, particle.y * size.height),
-        particle.size,
-        rimPaint,
+        Offset(particle.x * size.width + dx, particle.y * size.height + dy),
+        particle.size * 1.2,
+        glowPaint,
       );
     }
   }

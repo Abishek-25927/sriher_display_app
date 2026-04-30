@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
 
 /**
  * CreateTemplateView Master Module
@@ -249,146 +250,88 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
 
   // ─── POPUP DIALOG FOR TEMPLATE ───────────────────────────────────────────
   void _showTemplateDialog() {
-    showDialog(
+    StylishDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
+      title: editingId == null ? "Create New Template" : "Edit Template",
+      subtitle: "Define template metadata and layout settings",
+      icon: editingId == null
+          ? Icons.dashboard_customize_rounded
+          : Icons.edit_note_rounded,
+      width: 400,
+      child: TextFormField(
+        controller: _templateNameController,
+        style: const TextStyle(fontSize: 14),
+        decoration: InputDecoration(
+          labelText: 'Template Name',
+          hintText: 'Enter template name',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 18,
+          ),
+        ),
+      ),
+      actions: [
+        Expanded(
+          child: TextButton(
+            onPressed: () {
+              setState(() {
+                editingId = null;
+                _templateNameController.clear();
+              });
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
+            ),
+            child: const Text(
+              "Cancel",
+              style: TextStyle(
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 2,
+          child: ElevatedButton(
+            onPressed: isSubmitting
+                ? null
+                : (editingId == null
+                      ? insertTemplateAction
+                      : updateTemplateAction),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F172A),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: isSubmitting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    editingId == null ? 'Save Template' : 'Update Metadata',
+                    style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      editingId == null
-                          ? "Create New Template"
-                          : "Edit Template",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () {
-                        setState(() {
-                          editingId = null;
-                          _templateNameController.clear();
-                        });
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              content: SizedBox(
-                width: 400,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _templateNameController,
-                      style: const TextStyle(fontSize: 14),
-                      decoration: InputDecoration(
-                        labelText: 'Template Name',
-                        hintText: 'Enter template name',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              editingId = null;
-                              _templateNameController.clear();
-                            });
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black87,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(color: Colors.grey.shade300),
-                            ),
-                          ),
-                          child: const Text(
-                            "CANCEL",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade400,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 28,
-                              vertical: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: isSubmitting
-                              ? null
-                              : (editingId == null
-                                    ? insertTemplateAction
-                                    : updateTemplateAction),
-                          child: isSubmitting
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  editingId == null ? 'SUBMIT' : 'UPDATE',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 
@@ -509,11 +452,14 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
                       DataCell(
                         Row(
                           children: [
-                            Switch(
-                              value: item['status'] == 1,
-                              activeColor: Colors.green,
-                              onChanged: (v) =>
-                                  toggleStatus(item['id'], item['status']),
+                            Transform.scale(
+                              scale: 0.7,
+                              child: Switch(
+                                value: item['status'] == 1,
+                                activeColor: Colors.green,
+                                onChanged: (v) =>
+                                    toggleStatus(item['id'], item['status']),
+                              ),
                             ),
                           ],
                         ),

@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ScheduleListView extends StatefulWidget {
   final Function(Map<String, dynamic>)? onEdit;
@@ -551,150 +552,119 @@ class _ScheduleListViewState extends State<ScheduleListView> {
     int selectedYear = DateTime.now().year;
     int selectedMonth = DateTime.now().month;
 
-    showDialog(
+    StylishDialog.show(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setPopupState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          backgroundColor: Colors.white,
-          title: Container(
-            padding: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+      title: "SELECT ARCHIVE PERIOD",
+      maxWidth: 450,
+      builder: (context, setPopupState) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "View schedules from a previous month and year.",
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
             ),
-            child: const Row(
+            const SizedBox(height: 24),
+            Row(
               children: [
-                Icon(Icons.calendar_month, color: Colors.blue),
-                SizedBox(width: 12),
-                Text(
-                  "Select Archive Period",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Colors.black87,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Year",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<int>(
+                        value: selectedYear,
+                        decoration: const InputDecoration(
+                          fillColor: Color(0xFFF8FAFC),
+                        ),
+                        onChanged: (y) =>
+                            setPopupState(() => selectedYear = y!),
+                        items:
+                            List.generate(
+                                  5,
+                                  (index) => DateTime.now().year - index,
+                                )
+                                .map(
+                                  (y) => DropdownMenuItem(
+                                    value: y,
+                                    child: Text(y.toString()),
+                                  ),
+                                )
+                                .toList(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Month",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<int>(
+                        value: selectedMonth,
+                        decoration: const InputDecoration(
+                          fillColor: Color(0xFFF8FAFC),
+                        ),
+                        onChanged: (m) =>
+                            setPopupState(() => selectedMonth = m!),
+                        items: List.generate(12, (index) => index + 1)
+                            .map(
+                              (m) => DropdownMenuItem(
+                                value: m,
+                                child: Text(
+                                  DateFormat('MMMM').format(DateTime(2024, m)),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Year",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: Colors.black54,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<int>(
-                          value: selectedYear,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onChanged: (y) =>
-                              setPopupState(() => selectedYear = y!),
-                          items:
-                              List.generate(
-                                    5,
-                                    (index) => DateTime.now().year - index,
-                                  )
-                                  .map(
-                                    (y) => DropdownMenuItem(
-                                      value: y,
-                                      child: Text(y.toString()),
-                                    ),
-                                  )
-                                  .toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Month",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: Colors.black54,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<int>(
-                          value: selectedMonth,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onChanged: (m) =>
-                              setPopupState(() => selectedMonth = m!),
-                          items: List.generate(12, (index) => index + 1)
-                              .map(
-                                (m) => DropdownMenuItem(
-                                  value: m,
-                                  child: Text(
-                                    DateFormat(
-                                      'MMMM',
-                                    ).format(DateTime(2024, m)),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      "CANCEL",
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Cancel",
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: Color(0xFF64748B),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade600,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 14,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
                     onPressed: () {
                       setState(() {
                         showActive = false;
@@ -705,17 +675,26 @@ class _ScheduleListViewState extends State<ScheduleListView> {
                       _fetchSchedules();
                       Navigator.pop(context);
                     },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
                     child: const Text(
-                      "VIEW RECORDS",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      "View Records",
+                      style: TextStyle(fontWeight: FontWeight.w900),
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 }

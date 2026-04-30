@@ -18,6 +18,7 @@ import 'package:sriher_display_application/views/masters.dart/device_master.dart
 import 'package:sriher_display_application/views/masters.dart/department.dart';
 import 'package:sriher_display_application/views/masters.dart/location_master.dart';
 import 'package:sriher_display_application/views/masters.dart/mapping.dart';
+import 'package:sriher_display_application/widgets/stylish_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,7 +29,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _selectedIndex = 0;
-  int _previousIndex = 0;
   String? _userName;
   String? _userRole;
 
@@ -47,14 +47,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.initState();
     _sidebarController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 800),
     );
     _sidebarFade = CurvedAnimation(
       parent: _sidebarController,
       curve: Curves.easeOut,
     );
-    _sidebarSlide = Tween<Offset>(begin: const Offset(-1, 0), end: Offset.zero)
-        .animate(
+    _sidebarSlide =
+        Tween<Offset>(begin: const Offset(-0.1, 0), end: Offset.zero).animate(
           CurvedAnimation(
             parent: _sidebarController,
             curve: Curves.easeOutCubic,
@@ -63,10 +63,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _viewController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 350),
+      duration: const Duration(milliseconds: 400),
     );
-    _viewFade = CurvedAnimation(parent: _viewController, curve: Curves.easeOut);
-    _viewSlide = Tween<Offset>(begin: const Offset(0.04, 0), end: Offset.zero)
+    _viewFade = CurvedAnimation(parent: _viewController, curve: Curves.easeIn);
+    _viewSlide = Tween<Offset>(begin: const Offset(0.01, 0), end: Offset.zero)
         .animate(
           CurvedAnimation(parent: _viewController, curve: Curves.easeOutCubic),
         );
@@ -92,15 +92,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _selectIndex(int index) {
-    if (_selectedIndex == index) {
-      if (index != 6) {
-        _scheduleEditData = null;
-        _isScheduleExtend = false;
-      }
-      return;
-    }
+    if (_selectedIndex == index) return;
+
     setState(() {
-      _previousIndex = _selectedIndex;
       _selectedIndex = index;
       if (index != 6) {
         _scheduleEditData = null;
@@ -117,7 +111,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() {
       _scheduleEditData = editData;
       _isScheduleExtend = isExtend;
-      _previousIndex = _selectedIndex;
       _selectedIndex = 6;
     });
     _viewController.forward(from: 0.0);
@@ -125,420 +118,501 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Row(
+        children: [
+          // Sidebar
+          SlideTransition(
+            position: _sidebarSlide,
+            child: FadeTransition(
+              opacity: _sidebarFade,
+              child: _buildSidebar(theme),
+            ),
+          ),
+
+          // Main Content
+          Expanded(
+            child: Column(
+              children: [
+                _buildHeader(theme),
+                Expanded(
+                  child: FadeTransition(
+                    opacity: _viewFade,
+                    child: SlideTransition(
+                      position: _viewSlide,
+                      child: Container(
+                        margin: const EdgeInsets.fromLTRB(0, 0, 24, 24),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: _getSelectedView(),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSidebar(ThemeData theme) {
     return Container(
-      color: const Color(0xFFF0F7FF),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.blue.shade600,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 18,
-                bottom: 8,
-              ),
-              child: Row(
-                children: [
-                  _buildDynamicHeader(),
-                  const Spacer(),
-                  if (_userName != null)
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      duration: const Duration(milliseconds: 600),
-                      curve: Curves.easeOutBack,
-                      builder: (context, v, child) =>
-                          Transform.scale(scale: v, child: child),
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 10),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                          ),
-                        ),
-                        child: Text(
-                          _userName!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
-                    ),
-                  _AnimatedIconButton(
-                    icon: Icons.logout_rounded,
-                    color: Colors.blue.shade600,
-                    onPressed: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.clear();
-                      if (!mounted) return;
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginPage(),
-                        ),
-                        (route) => false,
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-            Expanded(
-              child: Row(
-                children: [
-                  SlideTransition(
-                    position: _sidebarSlide,
-                    child: FadeTransition(
-                      opacity: _sidebarFade,
-                      child: Container(
-                        width: 230,
-                        margin: const EdgeInsets.only(
-                          left: 12,
-                          bottom: 12,
-                          top: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(2, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 20),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              child: Row(
-                                children: [
-                                  Image.asset(
-                                    'assets/images/sriher_logo.png',
-                                    height: 24,
-                                    width: 24,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(
-                                              Icons.display_settings,
-                                              size: 24,
-                                              color: Colors.blue,
-                                            ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const Text(
-                                    "SRIHER Display",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.blue,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Divider(
-                              color: Colors.grey.shade100,
-                              indent: 16,
-                              endIndent: 16,
-                            ),
-                            Expanded(
-                              child: ListView(
-                                padding: EdgeInsets.zero,
-                                children: [
-                                  _buildSidebarItem(
-                                    Icons.dashboard,
-                                    'Dashboard',
-                                    0,
-                                  ),
-                                  _buildExpansionTile(
-                                    icon: Icons.security,
-                                    title: 'Authentication',
-                                    children: [
-                                      _buildSidebarItem(
-                                        Icons.person_add,
-                                        'Add User',
-                                        1,
-                                        isSub: true,
-                                      ),
-                                    ],
-                                  ),
-                                  _buildExpansionTile(
-                                    icon: Icons.storage,
-                                    title: 'Masters',
-                                    initiallyExpanded: _selectedIndex >= 11,
-                                    children: [
-                                      _buildSidebarItem(
-                                        Icons.admin_panel_settings,
-                                        'Role',
-                                        11,
-                                        isSub: true,
-                                      ),
-                                      _buildSidebarItem(
-                                        Icons.devices,
-                                        'Device Master',
-                                        12,
-                                        isSub: true,
-                                      ),
-                                      _buildSidebarItem(
-                                        Icons.domain,
-                                        'Department',
-                                        13,
-                                        isSub: true,
-                                      ),
-                                      _buildSidebarItem(
-                                        Icons.location_on,
-                                        'Location Master',
-                                        14,
-                                        isSub: true,
-                                      ),
-                                      _buildSidebarItem(
-                                        Icons.map,
-                                        'Mapping',
-                                        15,
-                                        isSub: true,
-                                      ),
-                                    ],
-                                  ),
-                                  _buildExpansionTile(
-                                    icon: Icons.folder,
-                                    title: 'File Master',
-                                    children: [
-                                      _buildSidebarItem(
-                                        Icons.upload_file,
-                                        'File Upload',
-                                        2,
-                                        isSub: true,
-                                      ),
-                                    ],
-                                  ),
-                                  _buildExpansionTile(
-                                    icon: Icons.art_track,
-                                    title: 'Template Master',
-                                    initiallyExpanded:
-                                        _selectedIndex >= 3 &&
-                                        _selectedIndex <= 5,
-                                    children: [
-                                      _buildSidebarItem(
-                                        Icons.create,
-                                        'Create Template',
-                                        3,
-                                        isSub: true,
-                                      ),
-                                      _buildSidebarItem(
-                                        Icons.branding_watermark,
-                                        'Default Template',
-                                        4,
-                                        isSub: true,
-                                      ),
-                                      _buildSidebarItem(
-                                        Icons.select_all,
-                                        'Select Template',
-                                        5,
-                                        isSub: true,
-                                      ),
-                                    ],
-                                  ),
-                                  _buildExpansionTile(
-                                    icon: Icons.schedule,
-                                    title: 'Schedule',
-                                    initiallyExpanded:
-                                        _selectedIndex >= 6 &&
-                                        _selectedIndex <= 10,
-                                    children: [
-                                      _buildSidebarItem(
-                                        Icons.calendar_today,
-                                        'Schedule Allocate',
-                                        6,
-                                        isSub: true,
-                                      ),
-                                      _buildSidebarItem(
-                                        Icons.assignment_ind,
-                                        'Assign Device',
-                                        7,
-                                        isSub: true,
-                                      ),
-                                      _buildSidebarItem(
-                                        Icons.list,
-                                        'Schedule List',
-                                        8,
-                                        isSub: true,
-                                      ),
-                                      _buildSidebarItem(
-                                        Icons.date_range,
-                                        'Specific Ranges',
-                                        9,
-                                        isSub: true,
-                                      ),
-                                      _buildSidebarItem(
-                                        Icons.delete_sweep,
-                                        'Copy and Wipe Off',
-                                        10,
-                                        isSub: true,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 12, right: 12),
-                      decoration: const BoxDecoration(
-                        color: Colors.transparent,
-                      ),
-                      child: FadeTransition(
-                        opacity: _viewFade,
-                        child: SlideTransition(
-                          position: _viewSlide,
-                          child: _getSelectedView(),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDynamicHeader() {
-    bool isDashboard = _selectedIndex == 0;
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      child: RichText(
-        key: ValueKey(_selectedIndex),
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: "SRIHER ",
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            TextSpan(
-              text: isDashboard ? "/ DISPLAY" : "/ SRIHER DISPLAY",
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSidebarItem(
-    IconData icon,
-    String title,
-    int index, {
-    bool isSub = false,
-  }) {
-    final bool isSelected = _selectedIndex == index;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      width: 260,
+      margin: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        color: const Color(0xFF0F172A), // Slate 900
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withOpacity(0.15),
+            blurRadius: 30,
+            offset: const Offset(4, 10),
+          ),
+        ],
       ),
-      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      child: ListTile(
-        dense: true,
-        leading: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Icon(
-            icon,
-            key: ValueKey(isSelected ? '${index}_sel' : '${index}_unsel'),
-            color: isSelected
-                ? Colors.blue.shade700
-                : (isSub ? Colors.grey.shade400 : Colors.grey.shade600),
-            size: isSub ? 18 : 20,
+      child: Column(
+        children: [
+          // Sidebar Logo
+          Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    height: 24,
+                    width: 24,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.display_settings_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  "SRIHER",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontSize: isSub ? 13 : 14,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? Colors.blue.shade900 : Colors.black87,
+
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                _buildSidebarItem(Icons.dashboard_rounded, 'Dashboard', 0),
+                const SizedBox(height: 16),
+                _buildSectionHeader('MANAGEMENT'),
+                _buildSidebarItem(Icons.person_add_rounded, 'Add User', 1),
+                _buildSidebarItem(
+                  Icons.folder_shared_rounded,
+                  'File Upload',
+                  2,
+                ),
+                const SizedBox(height: 16),
+                _buildSectionHeader('TEMPLATES'),
+                _buildSidebarItem(Icons.add_box_rounded, 'Create New', 3),
+                _buildSidebarItem(
+                  Icons.auto_awesome_mosaic_rounded,
+                  'Default Templates',
+                  4,
+                ),
+                _buildSidebarItem(
+                  Icons.library_add_check_rounded,
+                  'Selection',
+                  5,
+                ),
+                const SizedBox(height: 16),
+                _buildSectionHeader('SCHEDULING'),
+                _buildSidebarItem(Icons.calendar_month_rounded, 'Allocate', 6),
+                _buildSidebarItem(Icons.devices_rounded, 'Assign Device', 7),
+                _buildSidebarItem(Icons.list_alt_rounded, 'Schedule List', 8),
+                _buildSidebarItem(
+                  Icons.date_range_rounded,
+                  'Specific Ranges',
+                  9,
+                ),
+                _buildSidebarItem(
+                  Icons.cleaning_services_rounded,
+                  'Maintenance',
+                  10,
+                ),
+                const SizedBox(height: 16),
+                _buildSectionHeader('SYSTEM MASTERS'),
+                _buildSidebarItem(
+                  Icons.admin_panel_settings_rounded,
+                  'Roles',
+                  11,
+                ),
+                _buildSidebarItem(Icons.settings_cell_rounded, 'Devices', 12),
+                _buildSidebarItem(Icons.business_rounded, 'Departments', 13),
+                _buildSidebarItem(Icons.location_on_rounded, 'Locations', 14),
+                _buildSidebarItem(Icons.map_rounded, 'Mapping', 15),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
-        ),
-        contentPadding: isSub
-            ? const EdgeInsets.only(left: 32, right: 8)
-            : const EdgeInsets.symmetric(horizontal: 8),
-        selected: isSelected,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        onTap: () => _selectIndex(index),
+
+          // User Info / Logout
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.03),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(24),
+              ),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: const Color(0xFF3B82F6),
+                  radius: 18,
+                  child: Text(
+                    _userName?.isNotEmpty == true
+                        ? _userName![0].toUpperCase()
+                        : 'U',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _userName ?? "User",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        _userRole ?? "Administrator",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.5),
+                          fontSize: 11,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    color: Colors.white54,
+                    size: 20,
+                  ),
+                  onPressed: () => _handleLogout(),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildExpansionTile({
-    required IconData icon,
-    required String title,
-    required List<Widget> children,
-    bool initiallyExpanded = false,
-  }) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        dividerColor: Colors.transparent,
-        unselectedWidgetColor: Colors.grey.shade400,
-      ),
-      child: ExpansionTile(
-        leading: Icon(icon, color: Colors.blue.shade600, size: 20),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.3),
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.5,
         ),
-        iconColor: Colors.black87,
-        collapsedIconColor: Colors.black54,
-        initiallyExpanded: initiallyExpanded,
-        childrenPadding: EdgeInsets.zero,
-        expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
-        children: children,
       ),
+    );
+  }
+
+  Widget _buildSidebarItem(IconData icon, String title, int index) {
+    final isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () => _selectIndex(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? const LinearGradient(
+                  colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isSelected ? null : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF3B82F6).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
+              size: 18,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: TextStyle(
+                color: isSelected
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.6),
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                letterSpacing: 0.2,
+              ),
+            ),
+            if (isSelected) ...[
+              const Spacer(),
+              Container(
+                width: 4,
+                height: 4,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(ThemeData theme) {
+    return Container(
+      height: 72,
+      margin: const EdgeInsets.fromLTRB(0, 24, 24, 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Text(
+            _getPageTitle(),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF0F172A),
+              letterSpacing: -0.5,
+            ),
+          ),
+          const Spacer(),
+          // Container(
+          //   width: 300,
+          //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          //   decoration: BoxDecoration(
+          //     color: const Color(0xFFF1F5F9),
+          //     borderRadius: BorderRadius.circular(14),
+          //   ),
+          //   child: Row(
+          //     children: [
+          //       const Icon(
+          //         Icons.search_rounded,
+          //         size: 16,
+          //         color: Color(0xFF64748B),
+          //       ),
+          //       const SizedBox(width: 10),
+          //       Text(
+          //         "Search assets, devices...",
+          //         style: TextStyle(
+          //           color: const Color(0xFF64748B).withOpacity(0.5),
+          //           fontSize: 13,
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          // const SizedBox(width: 20),
+          // _buildHeaderAction(Icons.notifications_none_rounded),
+          const SizedBox(width: 12),
+          _buildHeaderAction(Icons.logout_rounded, onTap: _handleLogout),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderAction(IconData icon, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: const Color(0xFF64748B), size: 20),
+      ),
+    );
+  }
+
+  String _getPageTitle() {
+    switch (_selectedIndex) {
+      case 0:
+        return "Dashboard Overview";
+      case 1:
+        return "User Management";
+      case 2:
+        return "File Management";
+      case 3:
+        return "Create Template";
+      case 4:
+        return "Default Templates";
+      case 5:
+        return "Template Selection";
+      case 6:
+        return "Schedule Allocation";
+      case 7:
+        return "Device Assignment";
+      case 8:
+        return "Schedule Registry";
+      case 9:
+        return "Time Ranges";
+      case 10:
+        return "Copy & Cleanup";
+      case 11:
+        return "Role Configuration";
+      case 12:
+        return "Hardware Devices";
+      case 13:
+        return "Department Directory";
+      case 14:
+        return "Location Directory";
+      case 15:
+        return "Asset Mapping";
+      default:
+        return "SRIHER Display";
+    }
+  }
+
+  Future<void> _handleLogout() async {
+    final confirm = await StylishDialog.show<bool>(
+      context: context,
+      title: "CONFIRM LOGOUT",
+      subtitle: "Are you sure you want to end your session?",
+      icon: Icons.logout_rounded,
+      maxWidth: 400,
+      builder: (context, setPopupState) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "You will need to sign in again to access the dashboard and manage display settings.",
+              style: TextStyle(
+                color: Color(0xFF64748B),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        color: Color(0xFF64748B),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Logout Now",
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (route) => false,
     );
   }
 
@@ -588,70 +662,5 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       default:
         return const DashboardView();
     }
-  }
-}
-
-class _AnimatedIconButton extends StatefulWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback onPressed;
-
-  const _AnimatedIconButton({
-    required this.icon,
-    required this.color,
-    required this.onPressed,
-  });
-
-  @override
-  State<_AnimatedIconButton> createState() => _AnimatedIconButtonState();
-}
-
-class _AnimatedIconButtonState extends State<_AnimatedIconButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-      lowerBound: 0.85,
-      upperBound: 1.0,
-      value: 1.0,
-    );
-    _scale = _ctrl;
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _scale,
-      builder: (context, child) =>
-          Transform.scale(scale: _scale.value, child: child),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-        ),
-        child: IconButton(
-          onPressed: () async {
-            await _ctrl.reverse();
-            await _ctrl.forward();
-            widget.onPressed();
-          },
-          icon: Icon(widget.icon),
-          color: widget.color,
-          iconSize: 24,
-        ),
-      ),
-    );
   }
 }

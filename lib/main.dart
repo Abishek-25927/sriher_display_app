@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_page.dart';
-import 'home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,41 +22,81 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        useMaterial3: true,
         brightness: Brightness.light,
-        primaryColor: Colors.blue.shade700,
-        scaffoldBackgroundColor: Colors.white,
+        primaryColor: const Color(0xFF0F172A), // Deep Navy
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC), // Slate 50
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.light,
+          seedColor: const Color(0xFF3B82F6), // Azure Blue
+          primary: const Color(0xFF0F172A),
+          secondary: const Color(0xFF3B82F6),
+          surface: Colors.white,
+        ),
+        fontFamily:
+            'Inter', // Modern sans-serif (will fallback to Roboto if not found)
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(
+            color: Color(0xFF0F172A),
+            fontWeight: FontWeight.bold,
+          ),
+          titleLarge: TextStyle(
+            color: Color(0xFF0F172A),
+            fontWeight: FontWeight.w600,
+          ),
+          bodyMedium: TextStyle(color: Color(0xFF334155)), // Slate 700
+          bodySmall: TextStyle(color: Color(0xFF64748B)), // Slate 500
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue.shade700,
+            backgroundColor: const Color(0xFF0F172A),
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(12),
             ),
-            elevation: 2,
           ),
         ),
         cardTheme: CardThemeData(
           color: Colors.white,
-          elevation: 4,
-          shadowColor: Colors.black12,
+          elevation: 0,
           shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE2E8F0)), // Slate 200
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFF1F5F9), // Slate 100
+          border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey.shade200),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
           ),
         ),
         dataTableTheme: DataTableThemeData(
-          headingRowColor: WidgetStateProperty.all(Colors.blue.shade50),
-          headingTextStyle: TextStyle(
+          headingRowColor: WidgetStateProperty.all(const Color(0xFFF1F5F9)),
+          headingTextStyle: const TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.blue.shade800,
+            color: Color(0xFF0F172A),
+            fontSize: 13,
+          ),
+          dataTextStyle: const TextStyle(
+            color: Color(0xFF334155),
             fontSize: 12,
           ),
-          dataTextStyle: const TextStyle(color: Colors.black87, fontSize: 11),
+          dividerThickness: 1,
         ),
       ),
       home: const LoginPage(), // Changed to always show login page as requested

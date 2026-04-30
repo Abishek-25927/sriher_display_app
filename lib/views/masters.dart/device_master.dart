@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
 
 class DeviceMasterView extends StatefulWidget {
   const DeviceMasterView({super.key});
@@ -73,9 +74,7 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
 
       if (response.statusCode == 200) {
         final dynamic decoded = jsonDecode(response.body);
-        // Debug logging to help identify correct keys
-        debugPrint("API Response: $decoded");
-
+        if (!mounted) return;
         setState(() {
           if (decoded is List) {
             deviceList = decoded;
@@ -98,10 +97,12 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
           isLoading = false;
         });
       } else {
+        if (!mounted) return;
         _showSnackBar("Server Error: ${response.statusCode}");
         setState(() => isLoading = false);
       }
     } catch (e) {
+      if (!mounted) return;
       _showSnackBar("Network Error: $e");
       setState(() => isLoading = false);
     }
@@ -149,7 +150,7 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
       if (response.statusCode == 200) {
         final resData = jsonDecode(response.body);
         final status = resData['status']?.toString().toLowerCase();
-        // Sriher API uses 'Success', '1', or sometimes just status: 1
+        if (!mounted) return;
         if (status == 'success' || status == '1' || resData['status'] == 1) {
           _showSnackBar(
             isUpdate
@@ -157,7 +158,7 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
                 : "Device Created Successfully",
           );
           _clearForm();
-          if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+          if (Navigator.canPop(context)) Navigator.pop(context);
           await fetchDevices(); // Ensure we await the refresh
         } else {
           _showSnackBar(
@@ -166,6 +167,7 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
         }
       }
     } catch (e) {
+      if (!mounted) return;
       _showSnackBar("Error sending data: $e");
     }
   }
@@ -183,9 +185,6 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
 
       if (response.statusCode == 200) {
         final dynamic decoded = jsonDecode(response.body);
-        debugPrint("Edit API: $decoded");
-
-        // Try multiple possible response structures
         dynamic device;
         if (decoded is Map) {
           final rawData = decoded['device_data'] ?? decoded['data'];
@@ -194,7 +193,6 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
           } else if (rawData is List && rawData.isNotEmpty) {
             device = rawData[0];
           } else {
-            // Fallback: the root map itself might be the device
             final keys = ['device_code', 'device_name', 'device_model'];
             if (keys.any((k) => decoded.containsKey(k))) {
               device = decoded;
@@ -202,6 +200,7 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
           }
         }
 
+        if (!mounted) return;
         if (device != null && device is Map) {
           setState(() {
             editingId = intId ?? (id is int ? id : null);
@@ -221,7 +220,6 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
           });
           _showDeviceDialog();
         } else {
-          // Fallback: use row data already available and open dialog
           setState(() {
             editingId = intId ?? (id is int ? id : null);
           });
@@ -231,9 +229,11 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
           );
         }
       } else {
+        if (!mounted) return;
         _showSnackBar("Server Error: ${response.statusCode}");
       }
     } catch (e) {
+      if (!mounted) return;
       _showSnackBar("Error loading details for edit: $e");
       setState(() => editingId = int.tryParse(id.toString()));
       _showDeviceDialog();
@@ -255,12 +255,15 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
       );
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
         _showSnackBar("Device deleted successfully");
         fetchDevices();
       } else {
+        if (!mounted) return;
         _showSnackBar("Server Error: ${response.statusCode}");
       }
     } catch (e) {
+      if (!mounted) return;
       _showSnackBar("Delete request failed: $e");
     }
   }
@@ -289,215 +292,122 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
   // ──────────────────────────── POPUP DIALOG ────────────────────────────────
 
   void _showDeviceDialog() {
-    showDialog(
+    StylishDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade600,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
+      title: editingId == null ? "Create New Device" : "Edit Device Details",
+      subtitle: "Configure system hardware and specifications",
+      icon: editingId == null ? Icons.add_to_queue_rounded : Icons.edit_note_rounded,
+      width: MediaQuery.of(context).size.width * 0.7,
+      builder: (context, setDialogState) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader("DEVICE IDENTITY"),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField("Device Name", _deviceNameController),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // --- Separate titles so each can be edited independently ---
-                    if (editingId == null)
-                      const Text(
-                        "Create New Device",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    else
-                      const Text(
-                        "Edit Device",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () {
-                        _clearForm();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.7,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildDropdownField(
-                              hint: "Type of Device",
-                              value: selectedDeviceType,
-                              items: [
-                                "Android Smart TV",
-                                "LED Display",
-                                "Projector",
-                                "Linux Player",
-                              ],
-                              onChanged: (val) {
-                                setDialogState(() => selectedDeviceType = val);
-                                setState(() => selectedDeviceType = val);
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _buildTextField(
-                              "Device ID/Code",
-                              _deviceCodeController,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _buildTextField(
-                              "Device Name",
-                              _deviceNameController,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 15),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              "Model Number",
-                              _modelController,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _buildTextField("OS System", _osController),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _buildTextField(
-                              "Year of Model",
-                              _yearController,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 15),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              "Warranty Status",
-                              _warrantyController,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _buildTextField(
-                              "Serial Number",
-                              _serialNoController,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _buildTextField(
-                              "Manufacturer",
-                              _manufacturerController,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actionsPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              actions: [
-                // --- CANCEL BUTTON ---
-                ElevatedButton(
-                  onPressed: () {
-                    _clearForm();
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
-                ),
-                // --- SAVE / UPDATE BUTTON ---
-                ElevatedButton(
-                  onPressed: () async {
-                    await handleFormSubmit();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: editingId == null
-                      ? const Text(
-                          "Save Device",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        )
-                      : const Text(
-                          "Update Device",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildTextField("Device ID/Code", _deviceCodeController),
                 ),
               ],
-            );
-          },
+            ),
+            const SizedBox(height: 16),
+            _buildDropdownField(
+              hint: "Type of Device",
+              value: selectedDeviceType,
+              items: ["Android Smart TV", "LED Display", "Projector", "Linux Player"],
+              onChanged: (val) {
+                setDialogState(() => selectedDeviceType = val);
+                setState(() => selectedDeviceType = val);
+              },
+            ),
+            const SizedBox(height: 32),
+            _buildSectionHeader("HARDWARE SPECIFICATIONS"),
+            Row(
+              children: [
+                Expanded(child: _buildTextField("Model Number", _modelController)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildTextField("OS System", _osController)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: _buildTextField("Year of Model", _yearController)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildTextField("Serial Number", _serialNoController)),
+              ],
+            ),
+            const SizedBox(height: 32),
+            _buildSectionHeader("MANUFACTURING DETAILS"),
+            Row(
+              children: [
+                Expanded(child: _buildTextField("Manufacturer", _manufacturerController)),
+                const SizedBox(width: 16),
+                Expanded(child: _buildTextField("Warranty Status", _warrantyController)),
+              ],
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      _clearForm();
+                      Navigator.pop(context);
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text("Cancel", style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await handleFormSubmit();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Text(
+                      editingId == null ? "Save Device" : "Update Device",
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         );
       },
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: Colors.blue.shade700,
+          fontWeight: FontWeight.w900,
+          fontSize: 11,
+          letterSpacing: 1.2,
+        ),
+      ),
     );
   }
 
@@ -768,33 +678,27 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
   // --- REUSABLE COMPONENTS ---
 
   Widget _buildTextField(String hint, TextEditingController controller) {
-    return SizedBox(
-      height: 46,
-      child: TextFormField(
-        controller: controller,
-        style: const TextStyle(fontSize: 14, color: Colors.black87),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.black45, fontSize: 12),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.black45, width: 1.5),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.black45, width: 1.5),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 12,
-          ),
+    return TextFormField(
+      controller: controller,
+      style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
+      decoration: InputDecoration(
+        labelText: hint,
+        labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200),
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }
@@ -805,50 +709,41 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
     required List<String> items,
     required ValueChanged<String?> onChanged,
   }) {
-    return SizedBox(
-      height: 46,
-      child: DropdownButtonFormField<String>(
-        value: value,
-        hint: Text(
-          hint,
-          style: const TextStyle(fontSize: 12, color: Colors.black45),
-        ),
-        dropdownColor: Colors.white,
-        style: const TextStyle(color: Colors.black87, fontSize: 14),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.black45, width: 1.5),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.black45, width: 1.5),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 12,
-          ),
-        ),
-        items: items
-            .map(
-              (e) => DropdownMenuItem(
-                value: e,
-                child: Text(
-                  e,
-                  style: const TextStyle(fontSize: 13, color: Colors.black87),
-                ),
-              ),
-            )
-            .toList(),
-        onChanged: onChanged,
-        isExpanded: true,
+    return DropdownButtonFormField<String>(
+      value: value,
+      hint: Text(
+        hint,
+        style: const TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
       ),
+      dropdownColor: Colors.white,
+      style: const TextStyle(color: Color(0xFF1E293B), fontSize: 14, fontWeight: FontWeight.w600),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+      items: items
+          .map(
+            (e) => DropdownMenuItem(
+              value: e,
+              child: Text(e),
+            ),
+          )
+          .toList(),
+      onChanged: onChanged,
+      isExpanded: true,
     );
   }
 
@@ -965,27 +860,54 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
   }
 
   void _confirmDeletion(dynamic id) {
-    showDialog(
+    StylishDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Confirm Deletion"),
-        content: const Text(
-          "Are you sure you want to remove this device from the records?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              deleteDevice(id);
-            },
-            child: const Text("Delete"),
-          ),
-        ],
-      ),
+      title: "CONFIRM DELETION",
+      maxWidth: 400,
+      builder: (context, setPopupState) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Are you sure you want to remove this device from the records? This action cannot be undone.",
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text("Cancel", style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      deleteDevice(id);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text("Delete Device", style: TextStyle(fontWeight: FontWeight.w900)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 }

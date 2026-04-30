@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
 
 class LocationMasterView extends StatefulWidget {
   const LocationMasterView({super.key});
@@ -57,15 +58,18 @@ class _LocationMasterViewState extends State<LocationMasterView> {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> decoded = jsonDecode(response.body);
+        if (!mounted) return;
         setState(() {
           locationList = decoded['data'] ?? decoded['location_list'] ?? [];
           isLoading = false;
         });
       } else {
+        if (!mounted) return;
         _showSnackBar("Failed to load list from server");
         setState(() => isLoading = false);
       }
     } catch (e) {
+      if (!mounted) return;
       _showSnackBar("Network Error: $e");
       setState(() => isLoading = false);
     }
@@ -89,12 +93,14 @@ class _LocationMasterViewState extends State<LocationMasterView> {
       );
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
         _showSnackBar("Location Saved Successfully!");
         _clearForm();
-        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+        if (Navigator.canPop(context)) Navigator.pop(context);
         fetchLocations();
       }
     } catch (e) {
+      if (!mounted) return;
       _showSnackBar("Submit Error: $e");
     }
   }
@@ -111,6 +117,7 @@ class _LocationMasterViewState extends State<LocationMasterView> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body)['data'];
+        if (!mounted) return;
         setState(() {
           editingId = int.parse(id.toString());
           _buildingAreaController.text = data['location_name'] ?? "";
@@ -120,6 +127,7 @@ class _LocationMasterViewState extends State<LocationMasterView> {
         _showLocationDialog();
       }
     } catch (e) {
+      if (!mounted) return;
       _showSnackBar("Error loading details for edit");
     }
   }
@@ -143,12 +151,14 @@ class _LocationMasterViewState extends State<LocationMasterView> {
       );
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
         _showSnackBar("Location Updated Successfully!");
         _clearForm();
-        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+        if (Navigator.canPop(context)) Navigator.pop(context);
         fetchLocations();
       }
     } catch (e) {
+      if (!mounted) return;
       _showSnackBar("Update Error: $e");
     }
   }
@@ -170,9 +180,11 @@ class _LocationMasterViewState extends State<LocationMasterView> {
       );
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
         fetchLocations();
       }
     } catch (e) {
+      if (!mounted) return;
       debugPrint("Status Toggle Error: $e");
     }
   }
@@ -191,104 +203,61 @@ class _LocationMasterViewState extends State<LocationMasterView> {
   }
 
   void _showLocationDialog() {
-    showDialog(
+    StylishDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      editingId == null
-                          ? "Add Location Master"
-                          : "Edit Location Details",
-                      style: const TextStyle(
-                        color: Color(0xFF0D47A1),
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Color(0xFF0D47A1)),
-                      onPressed: () {
-                        _clearForm();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.4,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 10),
-                      _buildSmallTextField(
-                        'Building/Area Name',
-                        _buildingAreaController,
-                      ),
-                      const SizedBox(height: 15),
-                      _buildSmallTextField('Floor Name', _floorNameController),
-                      const SizedBox(height: 15),
-                      _buildSmallTextField(
-                        'Sub Location Name',
-                        _subLocationController,
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
-                ),
-              ),
-              actionsPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              actions: [
-                OutlinedButton(
-                  onPressed: () {
-                    _clearForm();
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Cancel"),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                  ),
-                  onPressed: editingId == null
-                      ? submitNewLocation
-                      : updateLocation,
-                  child: Text(editingId == null ? "Submit" : "Update"),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      title: editingId == null ? "Add Location Master" : "Edit Location",
+      subtitle: "Configure building areas and floor levels",
+      icon: editingId == null ? Icons.add_location_alt_rounded : Icons.edit_location_alt_rounded,
+      width: MediaQuery.of(context).size.width * 0.4,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildSmallTextField(
+            'Building/Area Name',
+            _buildingAreaController,
+          ),
+          const SizedBox(height: 20),
+          _buildSmallTextField('Floor Name', _floorNameController),
+          const SizedBox(height: 20),
+          _buildSmallTextField(
+            'Sub Location Name',
+            _subLocationController,
+          ),
+        ],
+      ),
+      actions: [
+        Expanded(
+          child: TextButton(
+            onPressed: () {
+              _clearForm();
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: const Text("Cancel", style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 2,
+          child: ElevatedButton(
+            onPressed: editingId == null ? submitNewLocation : updateLocation,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F172A),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: Text(
+              editingId == null ? "Save Location" : "Update Location",
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

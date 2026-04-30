@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../widgets/animated_heading.dart';
+import '../../widgets/stylish_dialog.dart';
 
 class DepartmentView extends StatefulWidget {
   const DepartmentView({super.key});
@@ -10,8 +11,7 @@ class DepartmentView extends StatefulWidget {
   State<DepartmentView> createState() => _DepartmentViewState();
 }
 
-class _DepartmentViewState extends State<DepartmentView>
-    with SingleTickerProviderStateMixin {
+class _DepartmentViewState extends State<DepartmentView> {
   // --- API CONFIGURATION ---
   final String _apiKey =
       "933cdb13cb54e31e694f82bf7f75f0144a9495036db0243b85dd855be53c06f2";
@@ -29,13 +29,6 @@ class _DepartmentViewState extends State<DepartmentView>
   final TextEditingController _departmentNameController =
       TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-
-  // --- ANIMATIONS ---
-  late AnimationController _entryController;
-  late Animation<double> _leftFade;
-  late Animation<Offset> _leftSlide;
-  late Animation<double> _rightFade;
-  late Animation<Offset> _rightSlide;
 
   @override
   void initState() {
@@ -66,6 +59,7 @@ class _DepartmentViewState extends State<DepartmentView>
 
       if (response.statusCode == 200) {
         final dynamic decoded = jsonDecode(response.body);
+        if (!mounted) return;
         setState(() {
           if (decoded is Map) {
             categoryList = decoded['data'] ?? decoded['category_list'] ?? [];
@@ -77,6 +71,7 @@ class _DepartmentViewState extends State<DepartmentView>
         });
       }
     } catch (e) {
+      if (!mounted) return;
       _showSnackBar("Connection Error: $e");
       setState(() => isLoading = false);
     }
@@ -108,12 +103,14 @@ class _DepartmentViewState extends State<DepartmentView>
       );
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
         _showSnackBar(isUpdate ? "Department Updated!" : "Department Saved!");
         _clearForm();
-        if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+        if (Navigator.canPop(context)) Navigator.pop(context);
         fetchCategories(); // Refresh table immediately
       }
     } catch (e) {
+      if (!mounted) return;
       _showSnackBar("Submit failed: $e");
     }
   }
@@ -129,6 +126,7 @@ class _DepartmentViewState extends State<DepartmentView>
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body)['data'];
+        if (!mounted) return;
         setState(() {
           editingId = int.parse(id.toString());
           _departmentNameController.text = data['category_name'] ?? "";
@@ -136,6 +134,7 @@ class _DepartmentViewState extends State<DepartmentView>
         _showDepartmentDialog(); // Open dialog after loading data
       }
     } catch (e) {
+      if (!mounted) return;
       _showSnackBar("Error loading data");
     }
   }
@@ -157,6 +156,7 @@ class _DepartmentViewState extends State<DepartmentView>
       );
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
         fetchCategories();
       }
     } catch (e) {
@@ -180,165 +180,84 @@ class _DepartmentViewState extends State<DepartmentView>
             ),
           )
           .toList();
-      currentPage = 0; // Reset pagination on search
     });
   }
 
-  void _showSnackBar(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
-  // ──────────────────────────── POPUP DIALOG ────────────────────────────────
-
   void _showDepartmentDialog() {
-    showDialog(
+    StylishDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
+      title: editingId == null ? "Add Department" : "Edit Department",
+      subtitle: "Manage organizational units and categories",
+      icon: editingId == null
+          ? Icons.add_business_rounded
+          : Icons.edit_note_rounded,
+      width: MediaQuery.of(context).size.width * 0.4,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextFormField(
+            controller: _departmentNameController,
+            style: const TextStyle(color: Colors.black87),
+            decoration: InputDecoration(
+              hintText: 'Department Name',
+              hintStyle: const TextStyle(color: Colors.black45),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 18,
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        Expanded(
+          child: TextButton(
+            onPressed: () {
+              _clearForm();
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
-              titlePadding: EdgeInsets.zero,
-              title: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 55, 164, 241),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (editingId == null)
-                      const Text(
-                        "Add Department",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    else
-                      const Text(
-                        "Edit Department",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.close,
-                        color: Color.fromARGB(255, 245, 246, 247),
-                      ),
-                      onPressed: () {
-                        _clearForm();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
+            ),
+            child: const Text(
+              "Cancel",
+              style: TextStyle(
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.bold,
               ),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.4,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 10),
-                    TextFormField(
-                      controller: _departmentNameController,
-                      style: const TextStyle(color: Colors.black87),
-                      decoration: InputDecoration(
-                        hintText: 'Department Name',
-                        hintStyle: const TextStyle(color: Colors.black45),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                      ),
-                    ),
-                  ],
-                ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 2,
+          child: ElevatedButton(
+            onPressed: handleFormSubmit,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F172A),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              actionsPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              actions: [
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.end, // Pushes everything to the right
-                  children: [
-                    SizedBox(
-                      width:
-                          250, // This controls the total width of the button group
-                      child: Row(
-                        children: [
-                          // Both buttons use Expanded to share the 250px width equally (Flex: 1)
-                          Expanded(
-                            child: SizedBox(
-                              height: 45,
-                              child: TextButton(
-                                onPressed: () {
-                                  _clearForm();
-                                  Navigator.pop(context);
-                                },
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.red.shade600,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: const Text(
-                                  "Cancel",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 12), // Gap between buttons
-
-                          Expanded(
-                            child: SizedBox(
-                              height: 45,
-                              child: ElevatedButton(
-                                onPressed: handleFormSubmit,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green.shade600,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: Text(
-                                  editingId == null ? "Submit" : "Update",
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        );
-      },
+            ),
+            child: Text(
+              editingId == null ? "Save Department" : "Update Department",
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -785,6 +704,20 @@ class _DepartmentViewState extends State<DepartmentView>
           ],
         ),
       ],
+    );
+  }
+
+  void _showSnackBar(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: const Color(0xFF0F172A),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        margin: const EdgeInsets.all(24),
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 }
