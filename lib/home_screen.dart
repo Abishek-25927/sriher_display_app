@@ -231,15 +231,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 16),
                 _buildSectionHeader('TEMPLATES'),
-                _buildSidebarItem(Icons.add_box_rounded, 'Create New', 3),
+                _buildSidebarItem(Icons.add_box_rounded, 'Create Template', 3),
                 _buildSidebarItem(
                   Icons.auto_awesome_mosaic_rounded,
-                  'Default Templates',
+                  'Default Template',
                   4,
                 ),
                 _buildSidebarItem(
                   Icons.library_add_check_rounded,
-                  'Selection',
+                  'Select Template',
                   5,
                 ),
                 const SizedBox(height: 16),

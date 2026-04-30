@@ -670,7 +670,7 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
               hintText: "Search devices...",
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),

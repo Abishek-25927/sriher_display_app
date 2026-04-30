@@ -532,7 +532,7 @@ class _RoleViewState extends State<RoleView>
               filled: true,
               fillColor: Colors.grey.shade50,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.zero,
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
@@ -810,11 +810,11 @@ class _RoleViewState extends State<RoleView>
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.zero,
                     borderSide: BorderSide(color: Colors.grey.shade200),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.zero,
                     borderSide: BorderSide(color: Colors.grey.shade200),
                   ),
                 ),
@@ -855,11 +855,11 @@ class _RoleViewState extends State<RoleView>
               filled: true,
               fillColor: const Color(0xFFF8FAFC),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
                 borderSide: BorderSide(color: Colors.grey.shade200),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
                 borderSide: BorderSide(color: Colors.grey.shade200),
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12),
@@ -870,37 +870,54 @@ class _RoleViewState extends State<RoleView>
     );
   }
 
-  Widget _buildPagination() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _pageBtn("Prev"),
-        _pageBtn("1", active: true),
-        _pageBtn("Next"),
-      ],
-    );
+ Widget _buildPagination() {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      // Only the first button gets left rounded corners
+      _pageBtn("Prev", position: "first"),
+      _pageBtn("1", active: true, position: "middle"),
+      _pageBtn("2", position: "middle"), // Example of an extra page
+      // Only the last button gets right rounded corners
+      _pageBtn("Next", position: "last"),
+    ],
+  );
+}
+ Widget _pageBtn(String label, {bool active = false, String position = "middle"}) {
+  // Define border radius based on position to keep the bar look
+  BorderRadius borderRadius;
+  if (position == "first") {
+    borderRadius = const BorderRadius.only(topLeft: Radius.circular(6), bottomLeft: Radius.circular(6));
+  } else if (position == "last") {
+    borderRadius = const BorderRadius.only(topRight: Radius.circular(6), bottomRight: Radius.circular(6));
+  } else {
+    borderRadius = BorderRadius.zero; // Square edges for middle buttons
   }
 
-  Widget _pageBtn(String label, {bool active = false}) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          backgroundColor: active ? Colors.blue : Colors.grey.shade100,
-          foregroundColor: active ? Colors.white : Colors.black87,
-          side: active
-              ? const BorderSide(color: Colors.blue)
-              : BorderSide(color: Colors.grey.shade300),
-          padding: EdgeInsets.symmetric(horizontal: label.length > 1 ? 15 : 12),
-          minimumSize: const Size(40, 36),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+  return Container(
+    // REMOVED: margin: const EdgeInsets.symmetric(horizontal: 4),
+    child: OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        backgroundColor: active ? Colors.blue : Colors.white,
+        foregroundColor: active ? Colors.white : Colors.black87,
+        // Use a slightly thinner side to prevent thick double borders
+        side: BorderSide(
+          color: active ? Colors.blue : Colors.grey.shade300,
+          width: 0.8, 
         ),
-        onPressed: () {},
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-        ),
+        padding: EdgeInsets.symmetric(horizontal: label.length > 1 ? 15 : 12),
+        minimumSize: const Size(40, 36),
+        shape: RoundedRectangleBorder(borderRadius: borderRadius),
+        // Remove standard button elevation and overlay to keep it flat
+        elevation: 0,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
-    );
-  }
+      onPressed: () {},
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      ),
+    ),
+  );
 }
+    }

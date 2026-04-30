@@ -428,7 +428,7 @@ class _FileUploadViewState extends State<FileUploadView> {
                             vertical: 12,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.zero,
                           ),
                         ),
                         onPressed: () async {
@@ -510,7 +510,7 @@ class _FileUploadViewState extends State<FileUploadView> {
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.zero,
                   ),
                 ),
                 child: const Text(
@@ -809,7 +809,7 @@ class _FileUploadViewState extends State<FileUploadView> {
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           side: BorderSide(
             color: enabled ? Colors.blue.shade100 : Colors.grey.shade200,
           ),
@@ -893,7 +893,7 @@ class _FileUploadViewState extends State<FileUploadView> {
               hintText: "Search files...",
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
@@ -926,12 +926,11 @@ class _FileUploadViewState extends State<FileUploadView> {
               enabled: currentPage > 1,
               onTap: () => setState(() => currentPage--),
             ),
-            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
                 border: Border.all(color: Colors.grey.shade300),
               ),
               child: Text(
@@ -943,7 +942,6 @@ class _FileUploadViewState extends State<FileUploadView> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
             _buildNavBtn(
               "Next",
               enabled: currentPage < maxPages,

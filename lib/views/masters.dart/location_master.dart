@@ -486,7 +486,7 @@ class _LocationMasterViewState extends State<LocationMasterView> {
               hintText: "Search Locations...",
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
@@ -549,7 +549,7 @@ class _LocationMasterViewState extends State<LocationMasterView> {
 
   Widget _pageBtn(String label, {bool active = false}) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: EdgeInsets.zero,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           backgroundColor: active ? Colors.blue : Colors.grey.shade100,
@@ -559,7 +559,7 @@ class _LocationMasterViewState extends State<LocationMasterView> {
               : BorderSide(color: Colors.grey.shade300),
           padding: EdgeInsets.symmetric(horizontal: label.length > 1 ? 15 : 12),
           minimumSize: const Size(40, 36),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         ),
         onPressed: () {},
         child: Text(

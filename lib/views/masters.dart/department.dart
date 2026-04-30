@@ -203,7 +203,7 @@ class _DepartmentViewState extends State<DepartmentView> {
               hintText: 'Department Name',
               hintStyle: const TextStyle(color: Colors.black45),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.zero,
               ),
               filled: true,
               fillColor: Colors.grey.shade50,
@@ -348,7 +348,7 @@ class _DepartmentViewState extends State<DepartmentView> {
               hintText: 'Enter Department Name',
               hintStyle: const TextStyle(color: Colors.white54),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
               ),
               filled: true,
               fillColor: Colors.white10,
@@ -565,7 +565,7 @@ class _DepartmentViewState extends State<DepartmentView> {
               hintText: "Search Departments...",
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
@@ -575,137 +575,124 @@ class _DepartmentViewState extends State<DepartmentView> {
     );
   }
 
-  Widget _buildTableFooter() {
-    int rowsPerPage = int.parse(entriesValue);
-    int totalPages = (filteredList.length / rowsPerPage).ceil();
-    if (totalPages == 0) totalPages = 1;
+ Widget _buildTableFooter() {
+  int rowsPerPage = int.parse(entriesValue);
+  int totalPages = (filteredList.length / rowsPerPage).ceil();
+  if (totalPages == 0) totalPages = 1;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          "Total: ${filteredList.length} Departments",
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey,
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(
+        "Total: ${filteredList.length} Departments",
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey,
+        ),
+      ),
+      // Use a single Row for all buttons to keep them tight together
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // --- PREV BUTTON ---
+          GestureDetector(
+            onTap: currentPage > 0 ? () => setState(() => currentPage--) : null,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                // Removed right radius to connect to the next button
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(6),
+                  bottomLeft: Radius.circular(6),
+                ),
+                border: Border.all(
+                  color: currentPage > 0 ? Colors.blue.shade300 : Colors.grey.shade300,
+                ),
+              ),
+              child: Text(
+                "Prev",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: currentPage > 0 ? Colors.blue.shade700 : Colors.grey,
+                ),
+              ),
+            ),
           ),
-        ),
-        Row(
-          children: [
-            GestureDetector(
-              onTap: currentPage > 0
-                  ? () => setState(() => currentPage--)
-                  : null,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: currentPage > 0
-                        ? Colors.blue.shade300
-                        : Colors.grey.shade300,
-                  ),
-                ),
-                child: Text(
-                  "Prev",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: currentPage > 0 ? Colors.blue.shade700 : Colors.grey,
-                  ),
-                ),
-              ),
-            ),
 
-            Row(
-              children: List.generate(totalPages, (index) {
-                if (totalPages > 7) {
-                  if (index != 0 &&
-                      index != totalPages - 1 &&
-                      (index < currentPage - 1 || index > currentPage + 1)) {
-                    if (index == currentPage - 2 || index == currentPage + 2) {
-                      return const Text(
-                        "...",
-                        style: TextStyle(color: Colors.white54),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  }
+          // --- NUMBER BUTTONS ---
+          // Using a Wrap or simple Row without margins
+          ...List.generate(totalPages, (index) {
+            if (totalPages > 7) {
+              if (index != 0 &&
+                  index != totalPages - 1 &&
+                  (index < currentPage - 1 || index > currentPage + 1)) {
+                if (index == currentPage - 2 || index == currentPage + 2) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: const Text("...", style: TextStyle(color: Colors.grey)),
+                  );
                 }
-                return InkWell(
-                  onTap: () => setState(() => currentPage = index),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: currentPage == index
-                          ? Colors.blue.shade600
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: currentPage == index
-                            ? Colors.blue.shade600
-                            : Colors.grey.shade300,
-                      ),
-                    ),
-                    child: Text(
-                      "${index + 1}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: currentPage == index
-                            ? Colors.white
-                            : Colors.black87,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-
-            GestureDetector(
-              onTap: currentPage < totalPages - 1
-                  ? () => setState(() => currentPage++)
-                  : null,
+                return const SizedBox.shrink();
+              }
+            }
+            return InkWell(
+              onTap: () => setState(() => currentPage = index),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
+                // REMOVED MARGIN HERE to eliminate gaps
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
+                  color: currentPage == index ? Colors.blue.shade600 : Colors.white,
+                  // Removed borderRadius to keep buttons flush against each other
                   border: Border.all(
-                    color: currentPage < totalPages - 1
-                        ? Colors.blue.shade300
-                        : Colors.grey.shade300,
+                    color: currentPage == index ? Colors.blue.shade600 : Colors.grey.shade300,
                   ),
                 ),
                 child: Text(
-                  "Next",
+                  "${index + 1}",
                   style: TextStyle(
                     fontSize: 12,
+                    color: currentPage == index ? Colors.white : Colors.black87,
                     fontWeight: FontWeight.bold,
-                    color: currentPage < totalPages - 1
-                        ? Colors.blue.shade700
-                        : Colors.grey,
                   ),
                 ),
               ),
+            );
+          }),
+
+          // --- NEXT BUTTON ---
+          GestureDetector(
+            onTap: currentPage < totalPages - 1 ? () => setState(() => currentPage++) : null,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                // Removed left radius to connect to the previous button
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(6),
+                  bottomRight: Radius.circular(6),
+                ),
+                border: Border.all(
+                  color: currentPage < totalPages - 1 ? Colors.blue.shade300 : Colors.grey.shade300,
+                ),
+              ),
+              child: Text(
+                "Next",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: currentPage < totalPages - 1 ? Colors.blue.shade700 : Colors.grey,
+                ),
+              ),
             ),
-          ],
-        ),
-      ],
-    );
-  }
+          ),
+        ],
+      ),
+    ],
+  );
+}
 
   void _showSnackBar(String msg) {
     if (!mounted) return;

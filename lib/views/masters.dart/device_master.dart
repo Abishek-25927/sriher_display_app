@@ -687,15 +687,15 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: Colors.grey.shade200),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: Colors.grey.shade200),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.zero,
           borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -721,15 +721,15 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: Colors.grey.shade200),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: Colors.grey.shade200),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.zero,
           borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -801,7 +801,7 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
               hintText: "Search Devices...",
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
@@ -826,9 +826,9 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
         Row(
           children: [
             _buildPageBtn("Previous"),
-            const SizedBox(width: 4),
+             
             _buildPageBtn("1", active: true),
-            const SizedBox(width: 4),
+           
             _buildPageBtn("Next"),
           ],
         ),
@@ -838,7 +838,7 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
 
   Widget _buildPageBtn(String label, {bool active = false}) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: EdgeInsets.zero,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           backgroundColor: active ? Colors.blue : Colors.grey.shade100,
@@ -848,7 +848,7 @@ class _DeviceMasterViewState extends State<DeviceMasterView> {
               : BorderSide(color: Colors.grey.shade300),
           padding: EdgeInsets.symmetric(horizontal: label.length > 1 ? 15 : 12),
           minimumSize: const Size(40, 36),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         ),
         onPressed: () {},
         child: Text(

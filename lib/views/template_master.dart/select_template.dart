@@ -645,19 +645,19 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                                       vertical: 8,
                                     ),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.zero,
                                       borderSide: BorderSide(
                                         color: Colors.grey.shade300,
                                       ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.zero,
                                       borderSide: BorderSide(
                                         color: Colors.grey.shade300,
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.zero,
                                       borderSide: const BorderSide(
                                         color: Colors.blue,
                                       ),
@@ -948,10 +948,11 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.zero,
                     border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: ReorderableListView.builder(
+                    buildDefaultDragHandles: false,
                     scrollController: scrollController,
                     itemCount: dialogFiles.length,
                     onReorder: (oldIndex, newIndex) {
@@ -968,16 +969,58 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                         decoration: BoxDecoration(
                           border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0).withOpacity(0.5))),
                         ),
-                        child: ListTile(
-                          leading: const Icon(Icons.drag_handle_rounded, color: Color(0xFF94A3B8)),
-                          title: Text(file['user_filename'] ?? file['file_name'] ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                          subtitle: Text("Type: ${file['file_type']}", style: const TextStyle(fontSize: 12)),
-                          trailing: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: const BoxDecoration(color: Color(0xFF0F172A), shape: BoxShape.circle),
-                            alignment: Alignment.center,
-                            child: Text("${index + 1}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Text(file['user_filename'] ?? file['file_name'] ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                flex: 2,
+                                child: Center(
+                                  child: Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.grey.shade300),
+                                      borderRadius: BorderRadius.zero,
+                                    ),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: _buildFilePreview(file),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                flex: 2,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.zero,
+                                  ),
+                                  child: Text(
+                                    file['file_type']?.toString() ?? '-',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue.shade700),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ReorderableDragStartListener(
+                                index: index,
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: const BoxDecoration(color: Color(0xFF0F172A), borderRadius: BorderRadius.zero),
+                                  alignment: Alignment.center,
+                                  child: Text("${index + 1}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -993,7 +1036,7 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                       onPressed: () => Navigator.pop(context),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       ),
                       child: const Text("Cancel", style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
                     ),
@@ -1012,7 +1055,7 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       ),
                       child: const Text("Update Play Order", style: TextStyle(fontWeight: FontWeight.w900)),
                     ),

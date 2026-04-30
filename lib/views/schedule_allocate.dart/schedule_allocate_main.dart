@@ -671,56 +671,52 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                               return DataRow(
                                 cells: [
                                   DataCell(
-                                    Center(
-                                      child: Text(
-                                        index.toString(),
-                                        style: const TextStyle(
-                                          fontSize: 12.0,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
-                                        ),
+                                    Text(
+                                      index.toString(),
+                                      style: const TextStyle(
+                                        fontSize: 12.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
                                       ),
                                     ),
                                   ),
                                   DataCell(
-                                    Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 8.0,
-                                        ),
-                                        child: Container(
-                                          clipBehavior: Clip.antiAlias,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.grey.shade300,
-                                            ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0,
+                                      ),
+                                      child: Container(
+                                        clipBehavior: Clip.antiAlias,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            4,
                                           ),
-                                          child: file['file_name'] != null
-                                              ? Image.network(
-                                                  "$_baseUrl/uploads/${file['file_name']}",
-                                                  height: 65,
-                                                  width: 50,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder:
-                                                      (
-                                                        context,
-                                                        error,
-                                                        stackTrace,
-                                                      ) => const Icon(
-                                                        Icons.broken_image,
-                                                        size: 30,
-                                                        color: Colors.grey,
-                                                      ),
-                                                )
-                                              : const Icon(
-                                                  Icons.image,
-                                                  size: 20,
-                                                  color: Colors.grey,
-                                                ),
+                                          border: Border.all(
+                                            color: Colors.grey.shade300,
+                                          ),
                                         ),
+                                        child: file['file_name'] != null
+                                            ? Image.network(
+                                                "$_baseUrl/uploads/${file['file_name']}",
+                                                height: 65,
+                                                width: 50,
+                                                fit: BoxFit.cover,
+                                                errorBuilder:
+                                                    (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) => const Icon(
+                                                      Icons.broken_image,
+                                                      size: 30,
+                                                      color: Colors.grey,
+                                                    ),
+                                              )
+                                            : const Icon(
+                                                Icons.image,
+                                                size: 20,
+                                                color: Colors.grey,
+                                              ),
                                       ),
                                     ),
                                   ),
@@ -736,25 +732,23 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                                     ),
                                   ),
                                   DataCell(
-                                    Center(
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.shade50,
+                                        borderRadius: BorderRadius.circular(
+                                          12,
                                         ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue.shade50,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          "${file['duration'] ?? '30'}s",
-                                          style: TextStyle(
-                                            fontSize: 12.0,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.blue.shade900,
-                                          ),
+                                      ),
+                                      child: Text(
+                                        "${file['duration'] ?? '30'}s",
+                                        style: TextStyle(
+                                          fontSize: 12.0,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blue.shade900,
                                         ),
                                       ),
                                     ),
@@ -815,15 +809,15 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
           value: value,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Colors.black38, fontSize: 13.0),
+            hintStyle: const TextStyle(color: Colors.black38, fontSize: 12.0),
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.zero,
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.zero,
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             contentPadding: const EdgeInsets.symmetric(
@@ -841,7 +835,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
               value: id,
               child: Text(
                 name,
-                style: const TextStyle(fontSize: 13.0, color: Colors.black87),
+                style: const TextStyle(fontSize: 12.0, color: Colors.black87),
               ),
             );
           }).toList(),
@@ -883,11 +877,11 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.zero,
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.zero,
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             contentPadding: const EdgeInsets.symmetric(
@@ -957,11 +951,11 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.zero,
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.zero,
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             contentPadding: const EdgeInsets.symmetric(
@@ -1024,7 +1018,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.zero,
                       borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                   ),
@@ -1052,11 +1046,11 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.zero,
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.zero,
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 10),
@@ -1097,7 +1091,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
 
   Widget _buildPageBtn(String label, {bool isActive = false}) {
     return Container(
-      margin: const EdgeInsets.only(left: 4),
+      margin: EdgeInsets.zero,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           backgroundColor: isActive ? Colors.blue : Colors.white,
@@ -1106,7 +1100,7 @@ class _ScheduleAllocateViewState extends State<ScheduleAllocateView>
             color: isActive ? Colors.blue : Colors.grey.shade300,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         ),
         onPressed: () {},
         child: Text(

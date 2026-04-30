@@ -432,11 +432,11 @@ class _ScheduleListViewState extends State<ScheduleListView> {
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.zero,
                       borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.zero,
                       borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                   ),
@@ -479,11 +479,11 @@ class _ScheduleListViewState extends State<ScheduleListView> {
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.zero,
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.zero,
                   borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 10),
@@ -527,7 +527,7 @@ class _ScheduleListViewState extends State<ScheduleListView> {
     bool enabled = true,
   }) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2),
+      margin: EdgeInsets.zero,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           backgroundColor: active ? Colors.blue.shade600 : Colors.white,
@@ -535,7 +535,7 @@ class _ScheduleListViewState extends State<ScheduleListView> {
           side: BorderSide(
             color: active ? Colors.blue.shade600 : Colors.grey.shade300,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           minimumSize: const Size(0, 36),
         ),

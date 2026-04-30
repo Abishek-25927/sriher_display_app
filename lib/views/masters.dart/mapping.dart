@@ -843,15 +843,15 @@ class _MappingViewState extends State<MappingView> {
     filled: true,
     fillColor: const Color(0xFFF8FAFC),
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.zero,
       borderSide: BorderSide(color: Colors.grey.shade200),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.zero,
       borderSide: BorderSide(color: Colors.grey.shade200),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.zero,
       borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
     ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -986,7 +986,7 @@ class _MappingViewState extends State<MappingView> {
                     hintText: 'Search mappings...',
                     prefixIcon: const Icon(Icons.search),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.zero,
                     ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                   ),
@@ -1023,9 +1023,9 @@ class _MappingViewState extends State<MappingView> {
                     enabled: _page > 1,
                     onTap: () => setState(() => _page--),
                   ),
-                  const SizedBox(width: 8),
+                 
                   _pageNum('$_page / $_totalPages'),
-                  const SizedBox(width: 8),
+ 
                   _pageBtn(
                     'Next',
                     enabled: _page < _totalPages,
@@ -1214,7 +1214,7 @@ class _MappingViewState extends State<MappingView> {
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           side: BorderSide(
             color: enabled ? Colors.blue.shade100 : Colors.grey.shade200,
           ),

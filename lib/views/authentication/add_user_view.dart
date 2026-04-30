@@ -359,9 +359,7 @@ class _AddUserViewState extends State<AddUserView> {
               children: [
                 const AnimatedHeading(
                   text: "User List",
-                  style: TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.bold,
+                  style: TextStyle(  color: Color.fromARGB(255, 18, 28, 53),  fontWeight: FontWeight.bold,
                     fontSize: 22,
                   ),
                 ),
@@ -445,7 +443,7 @@ class _AddUserViewState extends State<AddUserView> {
                       headingRowHeight: 52,
                       dataRowMaxHeight: 56,
                       headingRowColor: WidgetStateProperty.all(
-                        Colors.blue.shade50,
+                          Color(0xFF0F172A),
                       ),
                       showCheckboxColumn: false,
                       border: TableBorder.all(color: Colors.grey.shade100),
@@ -477,19 +475,19 @@ class _AddUserViewState extends State<AddUserView> {
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           borderSide: const BorderSide(color: Colors.black45, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           borderSide: const BorderSide(color: Colors.black45, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           borderSide: const BorderSide(color: Colors.red, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -569,19 +567,19 @@ class _AddUserViewState extends State<AddUserView> {
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           borderSide: const BorderSide(color: Colors.black45, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           borderSide: const BorderSide(color: Colors.black45, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           borderSide: const BorderSide(color: Colors.red, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -607,15 +605,15 @@ class _AddUserViewState extends State<AddUserView> {
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           borderSide: const BorderSide(color: Colors.black45, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           borderSide: const BorderSide(color: Colors.black45, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -648,7 +646,7 @@ class _AddUserViewState extends State<AddUserView> {
             label: Text(
               c,
               style: TextStyle(
-                color: Colors.blue.shade800,
+                color: const Color.fromARGB(255, 244, 245, 246),
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
@@ -756,7 +754,7 @@ class _AddUserViewState extends State<AddUserView> {
               prefixIcon: const Icon(Icons.search, size: 20),
               contentPadding: const EdgeInsets.symmetric(vertical: 0),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
               ),
             ),
           ),
@@ -786,7 +784,7 @@ class _AddUserViewState extends State<AddUserView> {
 
   Widget _buildPageBtn(String t, {bool active = false, bool enabled = true}) {
     return Container(
-      margin: const EdgeInsets.only(left: 4),
+      margin: EdgeInsets.zero,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: active ? Colors.blue : Colors.white,
@@ -794,7 +792,7 @@ class _AddUserViewState extends State<AddUserView> {
           elevation: 0,
           side: BorderSide(color: active ? Colors.blue : Colors.grey.shade300),
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         ),
         onPressed: enabled ? () {} : null,
         child: Text(

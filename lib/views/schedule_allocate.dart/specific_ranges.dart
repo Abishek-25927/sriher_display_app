@@ -967,7 +967,7 @@ class _SpecificRangesViewState extends State<SpecificRangesView> {
             flex: 1,
             child: Center(
               child: Text(
-                "PLAY ORDE",
+                "PLAY ORDER",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
               ),
             ),
@@ -992,7 +992,7 @@ class _SpecificRangesViewState extends State<SpecificRangesView> {
             flex: 2,
             child: Center(
               child: Text(
-                "DURATIO",
+                "DURATION",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
               ),
             ),
@@ -1002,58 +1002,83 @@ class _SpecificRangesViewState extends State<SpecificRangesView> {
     );
   }
 
-  Widget _buildTableFooter() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            "Total Files: ${templateFiles.length}",
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.black54,
-            ),
-          ),
-          Row(
-            children: [
-              _buildMiniBtn("Prev"),
-              _buildMiniBtn("1", active: true),
-              _buildMiniBtn("Next"),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+ Widget _buildTableFooter() {
+  // Logic to calculate pages based on your actual data
+  int rowsPerPage = 10; // Change this to your actual pagination limit
+  int totalPages = (templateFiles.length / rowsPerPage).ceil();
+  if (totalPages == 0) totalPages = 1;
 
-  Widget _buildMiniBtn(String label, {bool active = false}) {
-    return Container(
-      margin: const EdgeInsets.only(left: 4),
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          backgroundColor: active ? Colors.blue.shade600 : Colors.white,
-          foregroundColor: active ? Colors.white : Colors.blue.shade600,
-          side: BorderSide(
-            color: active ? Colors.blue.shade600 : Colors.grey.shade300,
+  return Container(
+    padding: const EdgeInsets.all(16),
+    decoration: const BoxDecoration(
+      color: Colors.white,
+      // Keeping the bottom of the card rounded, but the buttons inside will be sharp
+      borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          "Total Files: ${templateFiles.length}",
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.black54,
           ),
-          minimumSize: const Size(0, 30),
         ),
-        onPressed: () {},
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
+        // This Row holds the connected sharp-edged bar
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildMiniBtn("Prev", isFirst: true),
+            
+            // DYNAMIC PAGE NUMBERS:
+            // This will show 1, 2, 3... based on your templateFiles length
+            ...List.generate(totalPages, (index) {
+              return _buildMiniBtn(
+                "${index + 1}", 
+                active: (index + 1) == 1, // Change '1' to your currentPage variable
+              );
+            }),
 
+            _buildMiniBtn("Next", isLast: true),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildMiniBtn(String label, {bool active = false, bool isFirst = false, bool isLast = false}) {
+  return Container(
+    // REMOVED margin to ensure buttons touch each other perfectly
+    child: OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        backgroundColor: active ? Colors.blue.shade700 : Colors.white,
+        foregroundColor: active ? Colors.white : Colors.black87,
+        // Sharp edges: borderRadius is zero
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero, 
+        ),
+        side: BorderSide(
+          color: active ? Colors.blue.shade700 : Colors.grey.shade300,
+          width: 1.0,
+        ),
+        minimumSize: const Size(0, 34),
+        // Removes extra padding that Flutter adds to buttons
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      onPressed: () {
+        // Handle your page change logic here
+      },
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+      ),
+    ),
+  );
+}
   Widget _buildDropdown({
     required String label,
     required String hint,
@@ -1159,11 +1184,11 @@ class _SpecificRangesViewState extends State<SpecificRangesView> {
               color: Colors.blue,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.zero,
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.zero,
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
           ),

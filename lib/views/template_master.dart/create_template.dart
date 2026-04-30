@@ -264,7 +264,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
         decoration: InputDecoration(
           labelText: 'Template Name',
           hintText: 'Enter template name',
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.zero),
           filled: true,
           fillColor: Colors.grey.shade50,
           contentPadding: const EdgeInsets.symmetric(
@@ -535,7 +535,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
             decoration: InputDecoration(
               hintText: "Search templates...",
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
               ),
               prefixIcon: const Icon(Icons.search),
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
@@ -623,7 +623,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: InkWell(
         onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.zero,
         child: Container(
           padding: EdgeInsets.symmetric(
             horizontal: label.length > 2 ? 12 : 8,
@@ -638,7 +638,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
             border: Border.all(
               color: isActive ? Colors.blue : Colors.grey.shade300,
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero,
           ),
           child: Text(
             label,
