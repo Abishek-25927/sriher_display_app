@@ -401,20 +401,20 @@ class _AssignDeviceViewState extends State<AssignDeviceView>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.blue.shade600,
+            color: Colors.blue.shade50,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [
-              const Icon(Icons.display_settings, size: 20, color: Colors.white),
+              Icon(Icons.display_settings, size: 20, color: Colors.blue.shade800),
               const SizedBox(width: 12),
               Text(
                 monthName,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                   letterSpacing: 1.5,
-                  color: Colors.white,
+                  color: Colors.blue.shade800,
                 ),
               ),
             ],

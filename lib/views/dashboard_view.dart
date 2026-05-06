@@ -170,11 +170,17 @@ class _DashboardViewState extends State<DashboardView>
       _error = null;
     });
     try {
-      final res = await http.post(
-        Uri.parse(_kApiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'api_key': _kApiKey}),
-      );
+      final res = await http
+          .post(
+            Uri.parse(_kApiUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'api_key': _kApiKey}),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception(
+                'Server did not respond. Please check your connection.'),
+          );
       if (res.statusCode == 200) {
         final body = jsonDecode(res.body);
         if (body['status'] == 'Success') {
@@ -1042,23 +1048,33 @@ class _DashboardViewState extends State<DashboardView>
     switch (_selectedCategory) {
       case 'Devices':
         return d.deviceList
-            .map((e) => [e['device_name'], e['device_code'], e['device_model']])
+            .map((e) => [
+                  e['device_name'] ?? '-',
+                  e['device_code'] ?? '-',
+                  e['device_model'] ?? '-',
+                ])
             .toList();
       case 'Templates':
-        return d.tempList.map((e) => [e['temp_name'], e['duration']]).toList();
+        return d.tempList
+            .map((e) => [e['temp_name'] ?? '-', e['duration'] ?? '-'])
+            .toList();
       case 'Locations':
         return d.locationList
-            .map((e) => [e['location_name'], e['floor'], e['sublocation']])
+            .map((e) => [
+                  e['location_name'] ?? '-',
+                  e['floor'] ?? '-',
+                  e['sublocation'] ?? '-',
+                ])
             .toList();
       case 'Over Views':
         return d.overview
             .map(
               (e) => [
-                e['device_name'],
-                e['schedule_name'],
-                e['template_name'],
-                e['template_duration'],
-                e['location_name'],
+                e['device_name'] ?? '-',
+                e['schedule_name'] ?? '-',
+                e['template_name'] ?? '-',
+                e['template_duration'] ?? '-',
+                e['location_name'] ?? '-',
               ],
             )
             .toList();
@@ -1145,3 +1161,4 @@ class _DashboardViewState extends State<DashboardView>
     );
   }
 }
+

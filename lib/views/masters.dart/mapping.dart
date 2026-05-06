@@ -238,11 +238,21 @@ class _MappingViewState extends State<MappingView> {
           }
         }
 
+        String? foundLocId;
+        final locNameStr = data['location_name']?.toString();
+        if (locNameStr != null) {
+          final loc = _locationList.firstWhere(
+            (l) => l['location_name']?.toString() == locNameStr,
+            orElse: () => <String, dynamic>{},
+          );
+          if ((loc as Map).isNotEmpty) foundLocId = loc['id']?.toString();
+        }
+
         if (!mounted) return;
         setState(() {
           _editingId = int.parse(id.toString());
           _selDeviceId = foundDeviceId;
-          _selLocationId = data['location_id']?.toString();
+          _selLocationId = foundLocId;
           _devNameCtrl.text = data['device_name'] ?? '';
           _devModelCtrl.text = data['device_model'] ?? '';
         });
@@ -486,7 +496,8 @@ class _MappingViewState extends State<MappingView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Expanded(
+                SizedBox(
+                  width: 100,
                   child: TextButton(
                     onPressed: () {
                       _clearForm();
@@ -508,8 +519,8 @@ class _MappingViewState extends State<MappingView> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
+                SizedBox(
+                  width: 140,
                   child: ElevatedButton(
                     onPressed: _submitting
                         ? null
@@ -631,7 +642,10 @@ class _MappingViewState extends State<MappingView> {
                   ),
                 ),
                 ElevatedButton.icon(
-                  onPressed: _showMappingDialog,
+                  onPressed: () {
+                    _clearForm();
+                    _showMappingDialog();
+                  },
                   icon: const Icon(Icons.add_link_rounded, size: 20),
                   label: const Text(
                     "CREATE MAPPING",
@@ -834,8 +848,8 @@ class _MappingViewState extends State<MappingView> {
   }
 
   InputDecoration _inputDec(String label) => InputDecoration(
-    labelText: label,
-    labelStyle: const TextStyle(
+    hintText: label,
+    hintStyle: const TextStyle(
       color: Color(0xFF64748B),
       fontSize: 13,
       fontWeight: FontWeight.w500,
@@ -844,11 +858,11 @@ class _MappingViewState extends State<MappingView> {
     fillColor: const Color(0xFFF8FAFC),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.zero,
-      borderSide: BorderSide(color: Colors.grey.shade200),
+      borderSide: BorderSide(color: Colors.grey.shade600),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.zero,
-      borderSide: BorderSide(color: Colors.grey.shade200),
+      borderSide: BorderSide(color: Colors.grey.shade600),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.zero,

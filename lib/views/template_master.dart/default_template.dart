@@ -300,19 +300,17 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
 
     StylishDialog.show(
       context: context,
-      title: _editingId == null ? "CREATE DEFAULT TEMPLATE" : "EDIT DEFAULT TEMPLATE",
+      title: _editingId == null
+          ? "Create Default Template"
+          : "Edit Default Template",
+      subtitle:
+          "Assign a default template to a device type",
+      subtitleStyle: const TextStyle(fontSize: 12, color: Color(0xFFCBD5E1)),
       maxWidth: 480,
       builder: (context, setDialogState) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Assign a default template to a device type for automatic fallback display.",
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
-            ),
-            const SizedBox(height: 24),
-            const Text("Device Type", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.0, color: Color(0xFF0F172A))),
-            const SizedBox(height: 8),
             _buildDropdown(
               dialogDeviceId,
               _deviceDropdownList,
@@ -324,9 +322,7 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
                 setState(() => _selectedDeviceId = val);
               },
             ),
-            const SizedBox(height: 20),
-            const Text("Template Name", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.0, color: Color(0xFF0F172A))),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             _buildDropdown(
               dialogCategoryId,
               _templateDropdownList,
@@ -338,38 +334,64 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
                 setState(() => _selectedCategoryId = val);
               },
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () {
-                      _resetForm();
-                      Navigator.pop(context);
-                    },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                TextButton(
+                  onPressed: () {
+                    _resetForm();
+                    Navigator.pop(context);
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 20,
                     ),
-                    child: const Text("Cancel", style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: _isSubmitting ? null : _submitAction,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitAction,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 32,
                     ),
-                    child: _isSubmitting
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text(_editingId == null ? 'SUBMIT' : 'UPDATE', style: const TextStyle(fontWeight: FontWeight.w900)),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _editingId == null ? 'Submit' : 'Update',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -669,9 +691,7 @@ class _DefaultTemplateViewState extends State<DefaultTemplateView> {
             decoration: InputDecoration(
               hintText: "Search devices...",
               prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.zero),
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
           ),

@@ -249,24 +249,44 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
   }
 
   // ─── POPUP DIALOG FOR TEMPLATE ───────────────────────────────────────────
-  void _showTemplateDialog() {
-    StylishDialog.show(
-      context: context,
-      title: editingId == null ? "Create New Template" : "Edit Template",
-      subtitle: "Define template metadata and layout settings",
-      icon: editingId == null
-          ? Icons.dashboard_customize_rounded
-          : Icons.edit_note_rounded,
-      width: 400,
-      child: TextFormField(
+ void _showTemplateDialog() {
+   StylishDialog.show(
+  context: context,
+  title: editingId == null ? "Create New Template" : "Edit Template",
+  subtitle: "Define the template layout",
+  subtitleStyle: const TextStyle(
+    fontSize: 12,
+    color: Color(0xFFCBD5E1),
+  ),
+  icon: editingId == null
+      ? Icons.dashboard_customize_rounded
+      : Icons.edit_note_rounded,
+  width: 430,
+  child: TextFormField(
         controller: _templateNameController,
         style: const TextStyle(fontSize: 14),
         decoration: InputDecoration(
-          labelText: 'Template Name',
-          hintText: 'Enter template name',
-          border: OutlineInputBorder(borderRadius: BorderRadius.zero),
+          hintText: 'Enter the template name',
           filled: true,
-          fillColor: Colors.grey.shade50,
+          fillColor: Colors.white,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(
+              color: Colors.grey.shade400,
+              width: 1.0,
+            ),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(
+              color: Color(0xFF0F172A),
+              width: 1.5,
+            ),
+          ),
+          errorBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide(color: Colors.red, width: 1.0),
+          ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 18,
@@ -274,67 +294,65 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
         ),
       ),
       actions: [
-        Expanded(
-          child: TextButton(
-            onPressed: () {
-              setState(() {
-                editingId = null;
-                _templateNameController.clear();
-              });
-              Navigator.pop(context);
-            },
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+        TextButton(
+          onPressed: () {
+            setState(() {
+              editingId = null;
+              _templateNameController.clear();
+            });
+            Navigator.pop(context);
+          },
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: const Text(
-              "Cancel",
-              style: TextStyle(
-                color: Color(0xFF64748B),
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          child: const Text(
+            "Cancel",
+            style: TextStyle(
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
             ),
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 2,
-          child: ElevatedButton(
-            onPressed: isSubmitting
-                ? null
-                : (editingId == null
-                      ? insertTemplateAction
-                      : updateTemplateAction),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F172A),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+        const SizedBox(width: 12),
+        ElevatedButton(
+          onPressed: isSubmitting
+              ? null
+              : (editingId == null
+                    ? insertTemplateAction
+                    : updateTemplateAction),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0F172A),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 32),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: isSubmitting
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : Text(
-                    editingId == null ? 'Save Template' : 'Update Metadata',
-                    style: const TextStyle(fontWeight: FontWeight.w900),
-                  ),
           ),
+          child: isSubmitting
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(
+                  editingId == null ? 'Save' : 'Update',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                  ),
+                ),
         ),
       ],
     );
   }
-
   // ─── UI BUILDER ──────────────────────────────────────────────────────────
 
   @override

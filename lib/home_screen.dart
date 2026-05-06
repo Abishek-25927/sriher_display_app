@@ -168,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       width: 260,
       margin: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A), // Slate 900
+        color: const Color(0xFF0F172A), // Sl  color: const Color(0xFF0F172A),ate 900
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -542,7 +542,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       title: "CONFIRM LOGOUT",
       subtitle: "Are you sure you want to end your session?",
       icon: Icons.logout_rounded,
-      maxWidth: 400,
+      maxWidth: 430,
       builder: (context, setPopupState) {
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -579,7 +579,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  flex: 2,
+                  flex: 1,
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context, true),
                     style: ElevatedButton.styleFrom(

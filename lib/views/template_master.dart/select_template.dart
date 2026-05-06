@@ -41,6 +41,10 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
     text: "10",
   );
   final TextEditingController _popupNameController = TextEditingController();
+  final TextEditingController _newTemplateNameController =
+      TextEditingController();
+  final TextEditingController _newDepartmentNameController =
+      TextEditingController();
 
   // Map to store controllers for each available file to prevent recreation
   final Map<int, TextEditingController> _availableFileControllers = {};
@@ -56,6 +60,8 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
   void dispose() {
     _durationController.dispose();
     _popupNameController.dispose();
+    _newTemplateNameController.dispose();
+    _newDepartmentNameController.dispose();
     for (var controller in _availableFileControllers.values) {
       controller.dispose();
     }
@@ -414,15 +420,15 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                               horizontal: 24,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.blue.shade600,
+                              color: Colors.blue.shade50,
                               borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(16),
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               "CURRENT SELECTION LIST",
                               style: TextStyle(
-                                color: Colors.white,
+                                color: Colors.blue.shade800,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1,
@@ -439,8 +445,8 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                                     child: ElevatedButton.icon(
                                       icon: const Icon(Icons.sort, size: 18),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blue.shade50,
-                                        foregroundColor: Colors.blue.shade900,
+                                        backgroundColor: Colors.green.shade600,
+                                        foregroundColor: Colors.white,
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 20,
                                           vertical: 14,
@@ -470,9 +476,7 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                         ],
                       ),
                     )
-                  : Center(
-                   
-                    ),
+                  : Center(),
             ),
           ],
         ),
@@ -602,7 +606,9 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                                 height: 75,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey.shade200),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                  ),
                                 ),
                                 clipBehavior: Clip.antiAlias,
                                 child: _buildFilePreview(file),
@@ -884,6 +890,7 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
     List<dynamic> items,
     ValueChanged<int?> onChanged,
   ) {
+    final bool isTemplate = label == 'Template';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -897,32 +904,352 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<int>(
-              value: value,
-              hint: Text(hint, style: const TextStyle(fontSize: 13)),
-              isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.blue),
-              onChanged: onChanged,
-              items: items.map<DropdownMenuItem<int>>((t) {
-                return DropdownMenuItem<int>(
-                  value: int.tryParse(t['id'].toString()),
-                  child: Text(
-                    t['temp_name'] ?? t['category_name'] ?? t['name'] ?? '',
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    value: value,
+                    hint: Text(hint, style: const TextStyle(fontSize: 13)),
+                    isExpanded: true,
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Colors.blue,
+                    ),
+                    onChanged: onChanged,
+                    items: items.map<DropdownMenuItem<int>>((t) {
+                      return DropdownMenuItem<int>(
+                        value: int.tryParse(t['id'].toString()),
+                        child: Text(
+                          t['temp_name'] ??
+                              t['category_name'] ??
+                              t['name'] ??
+                              '',
+                        ),
+                      );
+                    }).toList(),
                   ),
-                );
-              }).toList(),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 36,
+              height: 36,
+              child: Material(
+                color: Colors.blue.shade600,
+                borderRadius: BorderRadius.circular(6),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: isTemplate
+                      ? () => _showAddTemplateDialog()
+                      : () => _showAddDepartmentDialog(),
+                  child: const Icon(Icons.add, color: Colors.white, size: 20),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Future<void> _addNewTemplate(String name) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/insertNew_templateview'),
+        body: jsonEncode({"api_key": _apiKey, "temp_name": name}),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        _fetchTemplates();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Template added successfully")),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error adding template: $e");
+    }
+  }
+
+  Future<void> _addNewDepartment(String name) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/insertCategoryview'),
+        body: jsonEncode({"api_key": _apiKey, "category_name": name}),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode == 200) {
+        _fetchCategories();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Department added successfully")),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error adding department: $e");
+    }
+  }
+
+  void _showAddTemplateDialog() {
+    _newTemplateNameController.clear();
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 300,
+            vertical: 200,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "ADD NEW TEMPLATE",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _newTemplateNameController,
+                  style: const TextStyle(fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: "Enter the template name",
+                    hintStyle: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: Colors.blue,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 9,
+                        ),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        "Close",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        final name = _newTemplateNameController.text.trim();
+                        if (name.isNotEmpty) {
+                          Navigator.pop(ctx);
+                          _addNewTemplate(name);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 9,
+                        ),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        "Submit",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAddDepartmentDialog() {
+    _newDepartmentNameController.clear();
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 400,
+            vertical: 320,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "ADD NEW DEPARTMENT",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _newDepartmentNameController,
+                  style: const TextStyle(fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: "Enter the department name",
+                    hintStyle: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(
+                        color: Colors.blue,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 9,
+                        ),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        "Close",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        final name = _newDepartmentNameController.text.trim();
+                        if (name.isNotEmpty) {
+                          Navigator.pop(ctx);
+                          _addNewDepartment(name);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 9,
+                        ),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        "Submit",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -933,17 +1260,15 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
     StylishDialog.show(
       context: context,
       title: "CHANGE PLAY ORDER",
+      subtitle:
+          "Drag and drop to reorder files. This sequence determines the display loop.",
+      subtitleStyle: const TextStyle(fontSize: 12, color: Color(0xFFCBD5E1)),
       maxWidth: 700,
       builder: (context, setDialogState) {
         return SizedBox(
           height: MediaQuery.of(context).size.height * 0.7,
           child: Column(
             children: [
-              const Text(
-                "Drag and drop to reorder files. This sequence determines the display loop.",
-                style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
-              ),
-              const SizedBox(height: 24),
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
@@ -967,15 +1292,30 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                       return Container(
                         key: ValueKey(file['id']),
                         decoration: BoxDecoration(
-                          border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0).withOpacity(0.5))),
+                          border: Border(
+                            bottom: BorderSide(
+                              color: const Color(0xFFE2E8F0).withOpacity(0.5),
+                            ),
+                          ),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8.0,
+                            horizontal: 16.0,
+                          ),
                           child: Row(
                             children: [
                               Expanded(
                                 flex: 3,
-                                child: Text(file['user_filename'] ?? file['file_name'] ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                child: Text(
+                                  file['user_filename'] ??
+                                      file['file_name'] ??
+                                      '-',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ),
                               const SizedBox(width: 8),
                               Expanded(
@@ -985,7 +1325,9 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                                     width: 50,
                                     height: 50,
                                     decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey.shade300),
+                                      border: Border.all(
+                                        color: Colors.grey.shade300,
+                                      ),
                                       borderRadius: BorderRadius.zero,
                                     ),
                                     clipBehavior: Clip.antiAlias,
@@ -997,7 +1339,10 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                               Expanded(
                                 flex: 2,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.blue.shade50,
                                     borderRadius: BorderRadius.zero,
@@ -1005,7 +1350,11 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                                   child: Text(
                                     file['file_type']?.toString() ?? '-',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue.shade700),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue.shade700,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1015,9 +1364,19 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
                                 child: Container(
                                   width: 32,
                                   height: 32,
-                                  decoration: const BoxDecoration(color: Color(0xFF0F172A), borderRadius: BorderRadius.zero),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF0F172A),
+                                    borderRadius: BorderRadius.zero,
+                                  ),
                                   alignment: Alignment.center,
-                                  child: Text("${index + 1}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                                  child: Text(
+                                    "${index + 1}",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -1030,34 +1389,53 @@ class _SelectTemplateViewState extends State<SelectTemplateView> {
               ),
               const SizedBox(height: 32),
               Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 20,
                       ),
-                      child: const Text("Cancel", style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                    ),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        color: Color(0xFF64748B),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() => assignedFiles = List.from(dialogFiles));
-                        _updatePlayOrder();
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F172A),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() => assignedFiles = List.from(dialogFiles));
+                      _updatePlayOrder();
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 32,
                       ),
-                      child: const Text("Update Play Order", style: TextStyle(fontWeight: FontWeight.w900)),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero,
+                      ),
+                    ),
+                    child: const Text(
+                      "Update Play Order",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ],
@@ -1093,20 +1471,26 @@ class _VideoThumbnailState extends State<VideoThumbnail> {
     if (!_initialized) {
       final player = Player();
       final controller = VideoController(player);
-      
+
       // Performance properties for thumbnails
       if (player.platform is NativePlayer) {
-        (player.platform as NativePlayer).setProperty('hwdec', 'no'); // Fallback to software decoding if CUDA fails
+        (player.platform as NativePlayer).setProperty(
+          'hwdec',
+          'no',
+        ); // Fallback to software decoding if CUDA fails
         (player.platform as NativePlayer).setProperty('cache', 'yes');
-        (player.platform as NativePlayer).setProperty('demuxer-max-bytes', '10000000');
+        (player.platform as NativePlayer).setProperty(
+          'demuxer-max-bytes',
+          '10000000',
+        );
       }
 
       player.open(Media(widget.url), play: true);
-      
+
       player.stream.playing.listen((playing) {
         if (mounted) setState(() => _isPlaying = playing);
       });
-      
+
       setState(() {
         _player = player;
         _controller = controller;

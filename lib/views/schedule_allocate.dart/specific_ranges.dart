@@ -715,8 +715,8 @@ class _SpecificRangesViewState extends State<SpecificRangesView> {
             children: [
               Checkbox(
                 value: selectAllSlots,
-                activeColor: Colors.blue.shade600,
-                side: const BorderSide(color: Colors.white),
+                activeColor: const Color.fromARGB(255, 140, 193, 239),
+                side: const BorderSide(color: Color.fromARGB(255, 21, 97, 183),),
                 onChanged: (val) {
                   setState(() {
                     selectAllSlots = val!;
@@ -729,7 +729,7 @@ class _SpecificRangesViewState extends State<SpecificRangesView> {
               const Text(
                 "Select All",
                 style: TextStyle(
-                  color: Colors.white,
+                color: Color.fromARGB(255, 16, 96, 188),
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -930,7 +930,7 @@ class _SpecificRangesViewState extends State<SpecificRangesView> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.blue.shade900,
+        color: Colors.blue.shade50,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
       ),
       child: Row(
@@ -938,12 +938,12 @@ class _SpecificRangesViewState extends State<SpecificRangesView> {
         children: [
           Row(
             children: [
-              Icon(icon, color: Colors.white, size: 18),
+              Icon(icon, color: Colors.blue.shade800, size: 18),
               const SizedBox(width: 12),
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Colors.blue.shade800,
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                   letterSpacing: 0.5,

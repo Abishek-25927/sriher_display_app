@@ -337,7 +337,7 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
                       padding: const EdgeInsets.only(top: 24),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade600,
+                          backgroundColor: const Color(0xFF0F172A),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 40,
@@ -486,12 +486,11 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      flex: 2,
                       child: _buildDropdown(
-                        label: " ",
+                        label: "",
                         hintText: "Select device Name",
                         value: selectedWipeDeviceId,
                         items: deviceList,
@@ -500,6 +499,38 @@ class _CopyWipeoffViewState extends State<CopyWipeoffView> {
                       ),
                     ),
                     const SizedBox(width: 24),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 24),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 40,
+                            vertical: 20,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: isSubmitingWipe ? null : _wipeOff,
+                        child: isSubmitingWipe
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                "WIPE OFF DEVICE",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                      ),
+                    ),
+                    const Spacer(),
                   ],
                 ),
               ],

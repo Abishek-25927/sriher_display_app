@@ -198,69 +198,78 @@ class _DepartmentViewState extends State<DepartmentView> {
         children: [
           TextFormField(
             controller: _departmentNameController,
-            style: const TextStyle(color: Colors.black87),
+            style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
             decoration: InputDecoration(
               hintText: 'Department Name',
-              hintStyle: const TextStyle(color: Colors.black45),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
+              hintStyle: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF94A3B8),
               ),
               filled: true,
-              fillColor: Colors.grey.shade50,
+              fillColor: const Color(0xFFF8FAFC),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: Color(0xFFCBD5E1),
+                  width: 1.2,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: Color(0xFF334155),
+                  width: 1.6,
+                ),
+              ),
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 18,
+                horizontal: 14,
+                vertical: 14,
               ),
             ),
           ),
         ],
       ),
       actions: [
-        Expanded(
-          child: TextButton(
-            onPressed: () {
-              _clearForm();
-              Navigator.pop(context);
-            },
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+        TextButton(
+          onPressed: () {
+            _clearForm();
+            Navigator.pop(context);
+          },
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: const Text(
-              "Cancel",
-              style: TextStyle(
-                color: Color(0xFF64748B),
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          child: const Text(
+            "Cancel",
+            style: TextStyle(
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
             ),
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 2,
-          child: ElevatedButton(
-            onPressed: handleFormSubmit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F172A),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+        const SizedBox(width: 12),
+        ElevatedButton(
+          onPressed: handleFormSubmit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0F172A),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 28),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Text(
-              editingId == null ? "Save Department" : "Update Department",
-              style: const TextStyle(fontWeight: FontWeight.w900),
-            ),
+          ),
+          child: Text(
+            editingId == null ? "Save" : "Update",
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
           ),
         ),
       ],
     );
   }
-
   // ──────────────────────────────────────────────────────────────────────────
   // --- UI COMPONENTS ---
   // ──────────────────────────────────────────────────────────────────────────
@@ -347,9 +356,7 @@ class _DepartmentViewState extends State<DepartmentView> {
             decoration: InputDecoration(
               hintText: 'Enter Department Name',
               hintStyle: const TextStyle(color: Colors.white54),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.zero),
               filled: true,
               fillColor: Colors.white10,
             ),
@@ -564,9 +571,7 @@ class _DepartmentViewState extends State<DepartmentView> {
             decoration: InputDecoration(
               hintText: "Search Departments...",
               prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.zero),
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
           ),
@@ -575,124 +580,152 @@ class _DepartmentViewState extends State<DepartmentView> {
     );
   }
 
- Widget _buildTableFooter() {
-  int rowsPerPage = int.parse(entriesValue);
-  int totalPages = (filteredList.length / rowsPerPage).ceil();
-  if (totalPages == 0) totalPages = 1;
+  Widget _buildTableFooter() {
+    int rowsPerPage = int.parse(entriesValue);
+    int totalPages = (filteredList.length / rowsPerPage).ceil();
+    if (totalPages == 0) totalPages = 1;
 
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Text(
-        "Total: ${filteredList.length} Departments",
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: Colors.grey,
-        ),
-      ),
-      // Use a single Row for all buttons to keep them tight together
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // --- PREV BUTTON ---
-          GestureDetector(
-            onTap: currentPage > 0 ? () => setState(() => currentPage--) : null,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                // Removed right radius to connect to the next button
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(6),
-                  bottomLeft: Radius.circular(6),
-                ),
-                border: Border.all(
-                  color: currentPage > 0 ? Colors.blue.shade300 : Colors.grey.shade300,
-                ),
-              ),
-              child: Text(
-                "Prev",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: currentPage > 0 ? Colors.blue.shade700 : Colors.grey,
-                ),
-              ),
-            ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          "Total: ${filteredList.length} Departments",
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
           ),
-
-          // --- NUMBER BUTTONS ---
-          // Using a Wrap or simple Row without margins
-          ...List.generate(totalPages, (index) {
-            if (totalPages > 7) {
-              if (index != 0 &&
-                  index != totalPages - 1 &&
-                  (index < currentPage - 1 || index > currentPage + 1)) {
-                if (index == currentPage - 2 || index == currentPage + 2) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: const Text("...", style: TextStyle(color: Colors.grey)),
-                  );
-                }
-                return const SizedBox.shrink();
-              }
-            }
-            return InkWell(
-              onTap: () => setState(() => currentPage = index),
+        ),
+        // Use a single Row for all buttons to keep them tight together
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // --- PREV BUTTON ---
+            GestureDetector(
+              onTap: currentPage > 0
+                  ? () => setState(() => currentPage--)
+                  : null,
               child: Container(
-                // REMOVED MARGIN HERE to eliminate gaps
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: currentPage == index ? Colors.blue.shade600 : Colors.white,
-                  // Removed borderRadius to keep buttons flush against each other
+                  color: Colors.white,
+                  // Removed right radius to connect to the next button
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(6),
+                    bottomLeft: Radius.circular(6),
+                  ),
                   border: Border.all(
-                    color: currentPage == index ? Colors.blue.shade600 : Colors.grey.shade300,
+                    color: currentPage > 0
+                        ? Colors.blue.shade300
+                        : Colors.grey.shade300,
                   ),
                 ),
                 child: Text(
-                  "${index + 1}",
+                  "Prev",
                   style: TextStyle(
                     fontSize: 12,
-                    color: currentPage == index ? Colors.white : Colors.black87,
                     fontWeight: FontWeight.bold,
+                    color: currentPage > 0 ? Colors.blue.shade700 : Colors.grey,
                   ),
                 ),
               ),
-            );
-          }),
+            ),
 
-          // --- NEXT BUTTON ---
-          GestureDetector(
-            onTap: currentPage < totalPages - 1 ? () => setState(() => currentPage++) : null,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                // Removed left radius to connect to the previous button
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(6),
-                  bottomRight: Radius.circular(6),
+            // --- NUMBER BUTTONS ---
+            // Using a Wrap or simple Row without margins
+            ...List.generate(totalPages, (index) {
+              if (totalPages > 7) {
+                if (index != 0 &&
+                    index != totalPages - 1 &&
+                    (index < currentPage - 1 || index > currentPage + 1)) {
+                  if (index == currentPage - 2 || index == currentPage + 2) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: const Text(
+                        "...",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }
+              }
+              return InkWell(
+                onTap: () => setState(() => currentPage = index),
+                child: Container(
+                  // REMOVED MARGIN HERE to eliminate gaps
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: currentPage == index
+                        ? Colors.blue.shade600
+                        : Colors.white,
+                    // Removed borderRadius to keep buttons flush against each other
+                    border: Border.all(
+                      color: currentPage == index
+                          ? Colors.blue.shade600
+                          : Colors.grey.shade300,
+                    ),
+                  ),
+                  child: Text(
+                    "${index + 1}",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: currentPage == index
+                          ? Colors.white
+                          : Colors.black87,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-                border: Border.all(
-                  color: currentPage < totalPages - 1 ? Colors.blue.shade300 : Colors.grey.shade300,
+              );
+            }),
+
+            // --- NEXT BUTTON ---
+            GestureDetector(
+              onTap: currentPage < totalPages - 1
+                  ? () => setState(() => currentPage++)
+                  : null,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
                 ),
-              ),
-              child: Text(
-                "Next",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: currentPage < totalPages - 1 ? Colors.blue.shade700 : Colors.grey,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  // Removed left radius to connect to the previous button
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(6),
+                    bottomRight: Radius.circular(6),
+                  ),
+                  border: Border.all(
+                    color: currentPage < totalPages - 1
+                        ? Colors.blue.shade300
+                        : Colors.grey.shade300,
+                  ),
+                ),
+                child: Text(
+                  "Next",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: currentPage < totalPages - 1
+                        ? Colors.blue.shade700
+                        : Colors.grey,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    ],
-  );
-}
+          ],
+        ),
+      ],
+    );
+  }
 
   void _showSnackBar(String msg) {
     if (!mounted) return;

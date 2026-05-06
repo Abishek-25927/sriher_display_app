@@ -202,7 +202,7 @@ class _LocationMasterViewState extends State<LocationMasterView> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  void _showLocationDialog() {
+ void _showLocationDialog() {
     StylishDialog.show(
       context: context,
       title: editingId == null ? "Add Location Master" : "Edit Location",
@@ -236,7 +236,10 @@ class _LocationMasterViewState extends State<LocationMasterView> {
               padding: const EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
-            child: const Text("Cancel", style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Cancel",
+              style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.bold),
+            ),
           ),
         ),
         const SizedBox(width: 16),
@@ -252,7 +255,7 @@ class _LocationMasterViewState extends State<LocationMasterView> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
             child: Text(
-              editingId == null ? "Save Location" : "Update Location",
+              editingId == null ? "Save" : "Update",
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
           ),
@@ -417,22 +420,37 @@ class _LocationMasterViewState extends State<LocationMasterView> {
     );
   }
 
-  Widget _buildSmallTextField(String hint, TextEditingController controller) {
-    return SizedBox(
-      height: 40,
-      child: TextFormField(
-        controller: controller,
-        style: const TextStyle(fontSize: 13, color: Colors.black87),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.black45),
-          border: const OutlineInputBorder(),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+Widget _buildSmallTextField(String hint, TextEditingController controller) {
+    return TextFormField(
+      controller: controller,
+      style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(
+          fontSize: 12,
+          color: Color(0xFF94A3B8),
         ),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(
+            color: Color(0xFFCBD5E1),
+            width: 1.2,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(
+            color: Color(0xFF334155),
+            width: 1.6,
+          ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        errorStyle: const TextStyle(height: 0, fontSize: 0),
       ),
     );
   }
-
   Widget _buildListHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -440,20 +458,30 @@ class _LocationMasterViewState extends State<LocationMasterView> {
         Row(
           children: [
             const Text(
-              "Show ",
+              "Show",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
                 color: Colors.black87,
               ),
             ),
-            SizedBox(
-              width: 70,
-              height: 35,
+            const SizedBox(width: 4),
+            Container(
+             width: 70,
+                    height: 35,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                border: Border.all(color: Colors.grey.shade400),
+              ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: entriesValue,
+                  dropdownColor: Colors.white,
                   style: const TextStyle(color: Colors.black87, fontSize: 13),
+                  isDense: true,
+                  icon: Icon(Icons.arrow_drop_down,
+                      size: 16, color: Colors.grey.shade600),
                   items: ["10", "25", "50"]
                       .map((v) => DropdownMenuItem(value: v, child: Text(v)))
                       .toList(),
@@ -461,8 +489,9 @@ class _LocationMasterViewState extends State<LocationMasterView> {
                 ),
               ),
             ),
+            const SizedBox(width: 4),
             const Text(
-              " entries",
+              "entries",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 13,

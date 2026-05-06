@@ -70,11 +70,41 @@ class _ScheduleListViewState extends State<ScheduleListView> {
           scheduleData = data['data'] ?? [];
           isLoading = false;
         });
+      } else {
+        setState(() => isLoading = false);
+        _showServiceUnavailable();
       }
     } catch (e) {
       setState(() => isLoading = false);
-      _showSnack("Error loading data. Check server connection.", isError: true);
+      _showServiceUnavailable();
     }
+  }
+
+  void _showServiceUnavailable() {
+    if (!mounted) return;
+    StylishDialog.show(
+      context: context,
+      title: "Service Unavailable",
+      subtitle: "The backend server is currently unreachable or returned an error. Please try again later.",
+      icon: Icons.cloud_off,
+      maxWidth: 400,
+      builder: (context, setPopupState) {
+        return Center(
+          child: ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F172A),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 32),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text("OK", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _updateStatus(int id, int newStatus) async {
@@ -130,7 +160,7 @@ class _ScheduleListViewState extends State<ScheduleListView> {
                     ),
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade600,
+                        backgroundColor: const Color(0xFF0F172A),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
@@ -202,56 +232,62 @@ class _ScheduleListViewState extends State<ScheduleListView> {
   }
 
   Widget _buildTableContainer() {
-    if (scheduleData.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.calendar_today_outlined,
-              size: 64,
-              color: Colors.grey.shade300,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              "No schedules found",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
           padding: const EdgeInsets.all(0),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: DataTable(
-                headingRowColor: WidgetStateProperty.all(Colors.blue.shade50),
-                headingRowHeight: 52,
-                dataRowMaxHeight: 64,
-                horizontalMargin: 20,
-                columnSpacing: 20,
-                columns: [
-                  _buildCol('SCHEDULE NAME'),
-                  _buildCol('TEMPLATE NAME'),
-                  _buildCol('DURATION'),
-                  _buildCol('FROM DATE'),
-                  _buildCol('TO DATE'),
-                  _buildCol('ACTION'),
-                  _buildCol('CHANGES'),
-                ],
-                rows: scheduleData.map((item) => _buildDataRow(item)).toList(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                  child: DataTable(
+                    headingRowColor: WidgetStateProperty.all(Colors.blue.shade50),
+                    headingRowHeight: 52,
+                    dataRowMaxHeight: 64,
+                    horizontalMargin: 20,
+                    columnSpacing: 20,
+                    columns: [
+                      _buildCol('SCHEDULE NAME'),
+                      _buildCol('TEMPLATE NAME'),
+                      _buildCol('DURATION'),
+                      _buildCol('FROM DATE'),
+                      _buildCol('TO DATE'),
+                      _buildCol('ACTION'),
+                      _buildCol('CHANGES'),
+                    ],
+                    rows: scheduleData.map((item) => _buildDataRow(item)).toList(),
+                  ),
+                ),
               ),
-            ),
+              if (scheduleData.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 64,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No schedules found",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade500,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
           ),
         );
       },
@@ -548,23 +584,19 @@ class _ScheduleListViewState extends State<ScheduleListView> {
     );
   }
 
-  void _showInactivePopup(BuildContext context) {
+ void _showInactivePopup(BuildContext context) {
     int selectedYear = DateTime.now().year;
     int selectedMonth = DateTime.now().month;
 
     StylishDialog.show(
       context: context,
       title: "SELECT ARCHIVE PERIOD",
+      subtitle: "View schedules from a previous month and year.",
       maxWidth: 450,
       builder: (context, setPopupState) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "View schedules from a previous month and year.",
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
-            ),
-            const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
@@ -587,18 +619,17 @@ class _ScheduleListViewState extends State<ScheduleListView> {
                         ),
                         onChanged: (y) =>
                             setPopupState(() => selectedYear = y!),
-                        items:
-                            List.generate(
-                                  5,
-                                  (index) => DateTime.now().year - index,
-                                )
-                                .map(
-                                  (y) => DropdownMenuItem(
-                                    value: y,
-                                    child: Text(y.toString()),
-                                  ),
-                                )
-                                .toList(),
+                        items: List.generate(
+                          5,
+                          (index) => DateTime.now().year - index,
+                        )
+                            .map(
+                              (y) => DropdownMenuItem(
+                                value: y,
+                                child: Text(y.toString()),
+                              ),
+                            )
+                            .toList(),
                       ),
                     ],
                   ),
@@ -640,53 +671,59 @@ class _ScheduleListViewState extends State<ScheduleListView> {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 20,
                     ),
-                    child: const Text(
-                      "Cancel",
-                      style: TextStyle(
-                        color: Color(0xFF64748B),
-                        fontWeight: FontWeight.bold,
-                      ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        showActive = false;
-                        _dateRangeController.text =
-                            "$selectedYear-${selectedMonth.toString().padLeft(2, '0')}-01";
-                        scheduleData = [];
-                      });
-                      _fetchSchedules();
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      showActive = false;
+                      _dateRangeController.text =
+                          "$selectedYear-${selectedMonth.toString().padLeft(2, '0')}-01";
+                      scheduleData = [];
+                    });
+                    _fetchSchedules();
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 32,
                     ),
-                    child: const Text(
-                      "View Records",
-                      style: TextStyle(fontWeight: FontWeight.w900),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    "View Records",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
                     ),
                   ),
                 ),

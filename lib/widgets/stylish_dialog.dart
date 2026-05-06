@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class StylishDialog extends StatelessWidget {
   final String title;
   final String subtitle;
+  final TextStyle? subtitleStyle;
   final IconData icon;
   final Widget child;
   final List<Widget>? actions;
@@ -12,6 +13,7 @@ class StylishDialog extends StatelessWidget {
     super.key,
     required this.title,
     this.subtitle = '',
+    this.subtitleStyle,
     required this.icon,
     required this.child,
     this.actions,
@@ -22,6 +24,7 @@ class StylishDialog extends StatelessWidget {
     required BuildContext context,
     required String title,
     String subtitle = '',
+    TextStyle? subtitleStyle,
     IconData icon = Icons.info_outline_rounded,
     Widget? child,
     Widget Function(BuildContext, StateSetter)? builder,
@@ -47,6 +50,7 @@ class StylishDialog extends StatelessWidget {
                 return StylishDialog(
                   title: title,
                   subtitle: subtitle,
+                  subtitleStyle: subtitleStyle,
                   icon: icon,
                   width: effectiveWidth,
                   actions: actions,
@@ -85,7 +89,7 @@ class StylishDialog extends StatelessWidget {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
@@ -124,10 +128,11 @@ class StylishDialog extends StatelessWidget {
                         if (subtitle.isNotEmpty)
                           Text(
                             subtitle,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
+                            style: subtitleStyle ??
+                                const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                ),
                           ),
                       ],
                     ),

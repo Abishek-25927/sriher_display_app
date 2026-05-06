@@ -321,7 +321,7 @@ class _AddUserViewState extends State<AddUserView> {
                     : Text(
                         editingDatabaseId == null
                             ? "Create User Account"
-                            : "Update Account",
+                            : "Update",
                         style: const TextStyle(fontWeight: FontWeight.w900),
                       ),
               );
@@ -364,7 +364,10 @@ class _AddUserViewState extends State<AddUserView> {
                   ),
                 ),
                 ElevatedButton.icon(
-                  onPressed: _showFormDialog,
+                  onPressed: () {
+                    _resetForm(); // clear any leftover edit state
+                    _showFormDialog();
+                  },
                   icon: const Icon(Icons.person_add_alt_1, size: 20),
                   label: const Text(
                     "ADD USER",
@@ -443,7 +446,7 @@ class _AddUserViewState extends State<AddUserView> {
                       headingRowHeight: 52,
                       dataRowMaxHeight: 56,
                       headingRowColor: WidgetStateProperty.all(
-                          Color(0xFF0F172A),
+                          Colors.blue.shade50,
                       ),
                       showCheckboxColumn: false,
                       border: TableBorder.all(color: Colors.grey.shade100),
@@ -646,7 +649,7 @@ class _AddUserViewState extends State<AddUserView> {
             label: Text(
               c,
               style: TextStyle(
-                color: const Color.fromARGB(255, 244, 245, 246),
+                color: Colors.blue.shade800,
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
